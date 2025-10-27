@@ -41,7 +41,7 @@
   <div class="topbar">[aluno]</div>
 
   <main class="page-center" style="--center-offset: -40px;">
-    <img id="cursoLogo" class="curso-logo" src="Assets/logo.png" alt="Curso">
+    <img id="cursoLogo" class="curso-logo" src="Assets/logocomodesenhar.png" alt="Curso">
 
     <div id="diasRestantes" class="dias-restantes">Carregando...</div>
     <div id="cupomBox" class="cupom-box">
@@ -182,7 +182,7 @@
         }
 
         setTopbarName(bootstrap.nome || "aluno");
-        qs("#cursoLogo").src = bootstrap.logoUrl || "Assets/logo.png";
+        qs("#cursoLogo").src = bootstrap.logoUrl || "Assets/logocomodesenhar.png";
 
         const dr = Number(bootstrap.diasRestantes || 0);
         qs("#diasRestantes").textContent = dr > 0 ? `[${dr}] dias restantes de acesso ao curso` : `Seu acesso está expirado.`;
@@ -326,4 +326,5 @@
 </body>
 
 </html>
+
 
