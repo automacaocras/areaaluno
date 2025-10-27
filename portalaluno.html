@@ -9,14 +9,28 @@
   <meta property="og:site_name" content="Editora Crás">
   <meta property="og:title" content="Portal do Aluno – Editora Crás">
   <meta property="og:description" content="Envio de exercícios e link do feedback semanal.">
-  <meta property="og:image" content="Assets/og-index.jpg">
-  <link rel="icon" type="image/png" href="Assets/favicon.png" sizes="32x32">
-  <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" sizes="180x180">
-  <link rel="shortcut icon" href="Assets/favicon.ico">
+  <meta property="og:image" content="assets/og-index.jpg">
+  <link rel="icon" type="image/png" href="assets/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="assets/favicon.ico">
   <meta name="theme-color" content="#0286ff">
   <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- Estilos específicos desta página -->
   <style>
-    .topbar{width:100%;margin:0 calc(var(--gutter) * -1);background:#e6b200;color:#000;font-weight:800;text-align:center;padding:12px 0;box-shadow: inset 0 -2px 0 rgba(0,0,0,.08)}
+    /* === TOPBAR FULL WIDTH (corrigida) === */
+    .topbar{
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      background:#e6b200;
+      color:#000;
+      font-weight:800;
+      text-align:center;
+      padding:12px 0;
+      box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
+    }
+
     .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
     .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
     .dias-danger{color:#d93025}
@@ -37,11 +51,12 @@
     #overlay .loader-text{font-size:18px;color:#111}
   </style>
 </head>
+
 <body>
   <div class="topbar">[aluno]</div>
 
   <main class="page-center" style="--center-offset: -40px;">
-   <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
+    <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
 
     <div id="diasRestantes" class="dias-restantes">Carregando...</div>
     <div id="cupomBox" class="cupom-box">
@@ -125,44 +140,29 @@
   </footer>
 
   <script>
-    // ===== CONFIG =====
     const BUILD_VERSION = "4";
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-    const MAX_FILES = 3;
-
-    // ===== STATE/HELPERS =====
+    
     let sessao = null;
     let bootstrap = null;
 
-    const qs  = s => document.querySelector(s);
+    const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
-    function withVersion(urlLike){
-      const u = new URL(urlLike, location.href);
-      u.searchParams.set("v", BUILD_VERSION);
-      return u.pathname + u.search + u.hash;
-    }
-    window.addEventListener("pageshow", (e) => { if (e.persisted) location.reload(); });
-
-    function getParams(){
-      const p = new URLSearchParams(location.search);
-      return { curso: p.get("curso") || "", email: p.get("email") || "" };
-    }
     function setTopbarName(nome){ qs(".topbar").textContent = `[${nome || "aluno"}]`; }
-    function setLoading(state){ qs("#overlay").style.display = state ? "grid" : "none"; qs("#btnEnviar").disabled = state; }
+    function setLoading(state){ qs("#overlay").style.display = state ? "grid" : "none"; }
     function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-    // ===== BOOT =====
     document.addEventListener("DOMContentLoaded", async () => {
       try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
-      const params = getParams();
-      if (!sessao) sessao = { email: params.email, curso: params.curso };
+      const p = new URLSearchParams(location.search);
+      if (!sessao) sessao = { email: p.get("email"), curso: p.get("curso") };
 
       if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
         alert("Faça login novamente.");
-        location.href = withVersion("index.html?back=1");
+        location.href = "index.html";
         return;
       }
 
@@ -171,171 +171,39 @@
     });
 
     async function carregarBootstrap(curso, email){
-      try{
-        const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`, { cache:"no-store" });
-        bootstrap = await resp.json();
+      const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+      bootstrap = await resp.json();
+      if (!bootstrap.allowed) return location.href = "index.html";
 
-        if (!bootstrap || bootstrap.allowed !== true) {
-          alert("Seu acesso não pôde ser validado. Faça login novamente.");
-          location.href = withVersion("index.html?back=1");
-          return;
-        }
+      setTopbarName(bootstrap.nome);
+      
+      const logo = qs("#cursoLogo");
+      if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-       setTopbarName(bootstrap.nome || "aluno");
-const logoEl = qs("#cursoLogo");
-if (bootstrap.logoUrl) {
-  logoEl.src = bootstrap.logoUrl;
-  logoEl.style.display = "block";
-} else {
-  // se algum curso no futuro não tiver logo, esconde
-  logoEl.style.display = "none";
-}
+      qs("#diasRestantes").textContent = `[${bootstrap.diasRestantes}] dias restantes de acesso ao curso`;
+      
+      const fb = bootstrap.feedback;
+      qs("#fbTitulo").textContent = fb.titulo || "—";
+      qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link || "—";
+      qs("#fbSenha").textContent = fb.senha || "—";
+      qs("#fbHora").textContent  = fb.hora || "—";
+      qs("#fbDia").textContent   = fb.dia || "—";
+      qs("#fbInfo").textContent  = fb.info || "—";
 
-        const dr = Number(bootstrap.diasRestantes || 0);
-        qs("#diasRestantes").textContent = dr > 0 ? `[${dr}] dias restantes de acesso ao curso` : `Seu acesso está expirado.`;
-        if (dr <= 30) {
-          qs("#diasRestantes").classList.add("dias-danger");
-          if (bootstrap.desconto && bootstrap.desconto.cupom) {
-            qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-            qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem || "";
-            if (bootstrap.desconto.link) qs("#cupomLink").href = bootstrap.desconto.link;
-            qs("#cupomBox").style.display = "block";
-          }
-        }
-
-        const fb = bootstrap.feedback || {};
-        qs("#fbTitulo").textContent = fb.titulo || "—";
-        if (fb.link && /^https?:\/\//i.test(fb.link)) { qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
-        else { qs("#fbLink").removeAttribute("href"); qs("#fbLink").textContent = fb.link || "—"; }
-        qs("#fbSenha").textContent = fb.senha || "—";
-        qs("#fbHora").textContent  = fb.hora  || "—";
-        qs("#fbDia").textContent   = fb.dia   || "—";
-        qs("#fbInfo").textContent  = fb.info  || "—";
-
-        // ---- Última aula gravada: sempre mostra texto; vira link só se for URL
-        const ag = String(fb.aulaGravada || "");
-        qs("#ultimaGravada").textContent = ag || "—";
-        if (ag && /^https?:\/\//i.test(ag)) qs("#ultimaGravada").href = ag;
-        else qs("#ultimaGravada").removeAttribute("href");
-
-      } catch (e) {
-        console.error(e);
-        alert("Erro ao carregar a página. Tente novamente.");
-        location.href = withVersion("index.html?back=1");
-      }
+      const ag = fb.aulaGravada;
+      qs("#ultimaGravada").textContent = ag || "—";
+      if (ag && /^https?:\/\//.test(ag)) qs("#ultimaGravada").href = ag;
     }
 
-    // ===== UI =====
     function bindUI(){
-      qs("#btnAbrirEnvio").addEventListener("click", async () => {
-        hide(qs("#dashboard"));
-        await carregarModulos();
-        show(qs("#envio"));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-      qs("#btnVoltarMenu").addEventListener("click", () => { hide(qs("#sucesso")); show(qs("#dashboard")); window.scrollTo({ top: 0, behavior: "smooth" }); });
-      qs("#btnAddImagem").addEventListener("click", addFileInput);
-      qs("#btnResetar").addEventListener("click", resetFiles);
-      qs("#selModulo").addEventListener("change", carregarAulas);
-      qs("#btnEnviar").addEventListener("click", enviarExercicio);
-    }
-
-    async function carregarModulos(){
-      const sel = qs("#selModulo");
-      sel.disabled = true; sel.innerHTML = `<option value="">Carregando módulos…</option>`;
-      qs("#selAula").disabled = true; qs("#selAula").innerHTML = `<option value="">Selecione o módulo primeiro</option>`;
-      try{
-        const resp = await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`, { cache:"no-store" });
-        const data = await resp.json();
-        const mods = Array.isArray(data.modulos) ? data.modulos : [];
-        sel.innerHTML = `<option value="">Selecione seu curso / módulo</option>`;
-        mods.forEach(m => { const op = document.createElement("option"); op.value = m; op.textContent = m; sel.appendChild(op); });
-        sel.disabled = false;
-      }catch(e){ console.error(e); sel.innerHTML = `<option value="">Erro ao carregar módulos</option>`; }
-    }
-
-    async function carregarAulas(){
-      const modulo = qs("#selModulo").value;
-      const sel = qs("#selAula");
-      sel.disabled = true; sel.innerHTML = `<option value="">Carregando aulas…</option>`;
-      if (!modulo) { sel.innerHTML = `<option value="">Selecione o módulo primeiro</option>`; return; }
-      try{
-        const resp = await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`, { cache:"no-store" });
-        const data = await resp.json();
-        const aulas = Array.isArray(data.aulas) ? data.aulas : [];
-        sel.innerHTML = `<option value="">Selecione a aula</option>`;
-        aulas.forEach(a => { const op = document.createElement("option"); op.value = a; op.textContent = a; sel.appendChild(op); });
-        sel.disabled = false;
-      }catch(e){ console.error(e); sel.innerHTML = `<option value="">Erro ao carregar aulas</option>`; }
-    }
-
-    function addFileInput(){
-      const wrap = qs("#filesWrap");
-      const count = wrap.querySelectorAll("input[type='file']").length;
-      if (count >= MAX_FILES) return alert(`Você pode enviar no máximo ${MAX_FILES} imagens.`);
-      const input = document.createElement("input");
-      input.type = "file"; input.accept = "image/*"; input.className = "fileItem";
-      wrap.insertBefore(input, wrap.querySelector(".thumb-hint"));
-    }
-    function resetFiles(){
-      qs("#filesWrap").innerHTML = `<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos de imagem (JPG/PNG). Até 3 envios.</div>`;
-    }
-
-    function readFileAsBase64(file){
-      return new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onload = () => { const res = String(fr.result || ""); const b64 = res.split(",")[1] || ""; resolve({ name: file.name, type: file.type || "image/jpeg", content: b64 }); };
-        fr.onerror = () => reject(fr.error || new Error("erro no reader"));
-        fr.readAsDataURL(file);
-      });
-    }
-
-    // ===== ENVIO (sem preflight CORS) =====
-    async function enviarExercicio(){
-      const modulo = qs("#selModulo").value.trim();
-      const aula   = qs("#selAula").value.trim();
-      const desc   = qs("#descricao").value.trim();
-      if (!modulo) return alert("Selecione o módulo.");
-      if (!aula)   return alert("Selecione a aula.");
-
-      const chosen = qsa("#filesWrap input[type='file']").map(i => i.files && i.files[0]).filter(Boolean);
-      if (!chosen.length) return alert("Envie pelo menos uma imagem.");
-      if (chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
-
-      setLoading(true);
-      try{
-        const files = [];
-        for (const f of chosen) files.push(await readFileAsBase64(f));
-
-        const body = { action:"uploadExercise", curso:sessao.curso, email:sessao.email, nome:bootstrap?.nome || "", modulo, aula, descricao: desc, files };
-
-        // Sem header Content-Type para evitar preflight CORS
-        const resp = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
-
-        if (!resp.ok) {
-          const txt = await resp.text();
-          throw new Error(`HTTP ${resp.status} – ${txt.slice(0,200)}`);
-        }
-        let data = null; try { data = await resp.json(); } catch {}
-        if (!data || data.ok !== true) {
-          const msg = (data && (data.message || data.error)) || "Falha no envio";
-          throw new Error(msg);
-        }
-
-        hide(qs("#envio")); show(qs("#sucesso")); window.scrollTo({ top: 0, behavior: "smooth" });
-
-      } catch (e){
-        console.error("uploadExercise error:", e);
-        alert("Erro ao enviar. Detalhe: " + e.message);
-      } finally { setLoading(false); }
+      qs("#btnAbrirEnvio").onclick = () => { hide(qs("#dashboard")); show(qs("#envio")); };
+      qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
+      qs("#btnAddImagem").onclick = addFileInput;
+      qs("#btnResetar").onclick = resetFiles;
+      qs("#selModulo").onchange = carregarAulas;
+      qs("#btnEnviar").onclick = enviarExercicio;
     }
   </script>
+
 </body>
-
 </html>
-
-
-
-
-
-
