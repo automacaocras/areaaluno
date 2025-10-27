@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="style.css?v=3">
 
   <style>
-    /* Topbar full-bleed */
+    /* topbar full-bleed */
     .topbar{
       width:100vw;
       margin-left:calc(50% - 50vw);
@@ -22,44 +22,57 @@
     }
 
     .wrap{max-width:900px;margin:20px auto;}
-    .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
-    .panel h3{margin:0 0 10px;text-align:center;}
-    .hidden{display:none !important;}
 
-    /* Botões e campos */
-    .btn-hero{display:block;width:100%;max-width:520px;margin:14px auto;padding:14px 18px;border:none;border-radius:12px;background:#ff6767;color:#fff;font-weight:800;cursor:pointer;}
-    .btn-hero.secondary{background:#ffa24f;color:#fff;}
-    .btn-submit{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer;}
-    .btn-neutral{display:block;width:100%;max-width:260px;margin:14px auto;padding:12px 18px;border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer;}
+    /* faixa para deixar os botões com a MESMA largura do box branco */
+    .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
+    .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
+      font-weight:800;cursor:pointer;text-align:center;color:#fff}
+    .btn-live{background:#ff6b6b}
+    .btn-grav{background:#ff9f45}
 
-    .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center;}
+    .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;
+      box-shadow:0 8px 24px rgba(0,0,0,.06)}
+    .panel h3{margin:0 0 10px;text-align:center}
 
-    .field{margin:10px auto;max-width:520px;}
-    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px;}
-    .field textarea{min-height:90px;}
+    .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;
+      background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center}
 
-    /* Título “área do professor” fora do cartão branco */
-    .prof-title{font-size:28px;font-weight:800;text-align:center;margin:4px 0 8px;}
+    /* forms mais largos */
+    .field{margin:10px auto;max-width:720px}
+    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
+    .field textarea{min-height:110px}
 
-    /* Overlay */
-    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center;}
-    #overlay .loader-text{font-size:18px;color:#111;}
+    .btn-primary{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;
+      border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer}
+    .btn-neutral{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;
+      border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer}
+
+    .btn-exit{display:block;width:140px;margin:18px auto 0;padding:12px 18px;border:none;
+      border-radius:12px;background:#d64545;color:#fff;font-weight:800;cursor:pointer}
+
+    .hidden{display:none !important}
+
+    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
+    #overlay .loader-text{font-size:18px;color:#111}
   </style>
 </head>
 <body>
   <div class="topbar" id="topbar">[professor]</div>
 
-  <main class="page-center" style="--center-offset: -40px;">
+  <main class="page-center" style="--center-offset:-40px;">
     <div class="wrap">
 
-      <!-- ======== HOME VIEW: título, botões e links úteis + sair ======== -->
-      <div id="homeView">
-        <div class="prof-title">área do professor</div>
+      <!-- HOME (botões + links úteis + sair) -->
+      <section id="home">
 
-        <button id="btnOpenLive" class="btn-hero">Atualizar próxima aula ao vivo</button>
-        <button id="btnOpenRecorded" class="btn-hero secondary">Atualizar link da aula gravada</button>
+        <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
-        <section id="linksCard" class="panel" style="margin-top:16px;">
+        <div class="band">
+          <button class="btn-band btn-live" id="btnAbrirLive">Atualizar próxima aula ao vivo</button>
+          <button class="btn-band btn-grav" id="btnAbrirGrav">Atualizar link da aula gravada</button>
+        </div>
+
+        <section class="panel" id="linksPanel">
           <h3>Links úteis:</h3>
           <div class="links-box">
             <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
@@ -67,35 +80,34 @@
           </div>
         </section>
 
-        <button id="btnSair" class="btn-neutral">sair</button>
-      </div>
-
-      <!-- ======== FORM: Próxima aula ao vivo ======== -->
-      <section id="formLive" class="panel hidden">
-        <h3>Próxima aula ao vivo</h3>
-        <div class="field"><input   id="fLink"     placeholder="Link"></div>
-        <div class="field"><input   id="fSenha"    placeholder="Senha"></div>
-        <div class="field"><input   id="fHora"     placeholder="Hora (ex.: 20:00)"></div>
-        <div class="field"><input   id="fDia"      placeholder="Dia (ex.: quinta-feira)"></div>
-        <div class="field"><textarea id="fInfo"    placeholder="Info"></textarea></div>
-
-        <button id="btnEnviarLive" class="btn-submit">Atualizar</button>
-        <button class="btn-neutral" type="button" onclick="goHome()">Voltar</button>
+        <button id="btnSair" class="btn-exit">Sair</button>
       </section>
 
-      <!-- ======== FORM: Aula gravada (só H) ======== -->
-      <section id="formRecorded" class="panel hidden">
-        <h3>Aula gravada</h3>
+      <!-- FORM: Próxima aula ao vivo -->
+      <section id="formLive" class="panel hidden">
+        <h3>Próxima aula ao vivo</h3>
+        <div class="field"><input   id="fLink"  placeholder="Link"></div>
+        <div class="field"><input   id="fSenha" placeholder="Senha"></div>
+        <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
+        <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
+        <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
+
+        <button id="btnEnviarLive" class="btn-primary">Atualizar</button>
+        <button id="btnVoltar1" class="btn-neutral" type="button">Voltar</button>
+      </section>
+
+      <!-- FORM: Aula gravada -->
+      <section id="formGrav" class="panel hidden">
+        <h3>Atualizar link da aula gravada</h3>
         <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
 
-        <button id="btnEnviarRecorded" class="btn-submit">Atualizar</button>
-        <button class="btn-neutral" type="button" onclick="goHome()">Voltar</button>
+        <button id="btnEnviarGrav" class="btn-primary">Atualizar</button>
+        <button id="btnVoltar2" class="btn-neutral" type="button">Voltar</button>
       </section>
 
     </div>
   </main>
 
-  <!-- Overlay -->
   <div id="overlay"><div class="loader-text">Processando…</div></div>
 
   <footer class="site-footer">
@@ -107,45 +119,24 @@
   </footer>
 
   <script>
-    // Mesmo endpoint do aluno
+    // mesmo endpoint do aluno
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 
     const qs  = s => document.querySelector(s);
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
-    let sessao = null;
-    let bootstrap = null;
+    let sessao = null, bootstrap = null;
 
-    function setLoading(b, which){
+    function setLoading(b){
       qs('#overlay').style.display = b ? 'grid' : 'none';
-      if (which === 'live') qs('#btnEnviarLive').disabled = b;
-      if (which === 'rec')  qs('#btnEnviarRecorded').disabled = b;
+      ['#btnEnviarLive','#btnEnviarGrav'].forEach(id => { const el = qs(id); if (el) el.disabled = b; });
     }
-
     function getParams(){
       const p = new URLSearchParams(location.search);
       return { curso: p.get('curso') || '', email: p.get('email') || '' };
     }
     function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-    // Navegação entre visões
-    function goHome(){
-      hide(qs('#formLive'));
-      hide(qs('#formRecorded'));
-      show(qs('#homeView'));
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-    function openLive(){
-      hide(qs('#homeView'));
-      show(qs('#formLive'));
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-    function openRecorded(){
-      hide(qs('#homeView'));
-      show(qs('#formRecorded'));
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
 
     document.addEventListener('DOMContentLoaded', boot);
 
@@ -158,13 +149,12 @@
         alert('Faça login novamente.'); location.href='index.html'; return;
       }
 
-      // valida e carrega dados mínimos (links e nome)
       const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
       bootstrap = await resp.json();
 
       if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
         alert('Acesso de professor não validado. Faça login novamente.');
-        location.href = 'index.html'; return;
+        location.href='index.html'; return;
       }
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
@@ -175,75 +165,62 @@
       qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
       qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
 
-      // ações
-      qs('#btnOpenLive').addEventListener('click', openLive);
-      qs('#btnOpenRecorded').addEventListener('click', openRecorded);
+      // navegação
+      qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
+      qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
+      qs('#btnVoltar1').addEventListener('click', goHome);
+      qs('#btnVoltar2').addEventListener('click', goHome);
       qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.href='index.html'; });
 
-      // submits
+      // ações
       qs('#btnEnviarLive').addEventListener('click', enviarLive);
-      qs('#btnEnviarRecorded').addEventListener('click', enviarRecorded);
+      qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
+    }
+
+    function goHome(){
+      hide(qs('#formLive')); hide(qs('#formGrav'));
+      show(qs('#home'));
+      window.scrollTo({top:0,behavior:'smooth'});
     }
 
     async function enviarLive(){
       const body = {
-        action: 'updateFeedback',
+        action: 'updateFeedbackLive',
         curso: sessao.curso,
-        email: sessao.email, // revalida prof
-        // sem título (removido do formulário)
-        link: qs('#fLink').value.trim(),
+        email: sessao.email,
+        link:  qs('#fLink').value.trim(),
         senha: qs('#fSenha').value.trim(),
-        hora: qs('#fHora').value.trim(),
-        dia:  qs('#fDia').value.trim(),
-        info: qs('#fInfo').value.trim()
+        hora:  qs('#fHora').value.trim(),
+        dia:   qs('#fDia').value.trim(),
+        info:  qs('#fInfo').value.trim()
       };
-
-      setLoading(true, 'live');
+      setLoading(true);
       try{
-        const r = await fetch(API_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'text/plain;charset=UTF-8' },
-          body: JSON.stringify(body)
-        });
+        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-
         alert('Próxima aula ao vivo atualizada!');
         goHome();
-      }catch(e){
-        console.error(e);
-        alert('Erro ao atualizar: ' + e.message);
-      }finally{
-        setLoading(false, 'live');
-      }
+      }catch(e){ alert('Erro ao atualizar: ' + e.message); }
+      finally{ setLoading(false); }
     }
 
-    async function enviarRecorded(){
+    async function enviarGrav(){
       const body = {
-        action: 'updateRecordedOnly',
+        action: 'updateGravada',
         curso: sessao.curso,
         email: sessao.email,
         aulaGravada: qs('#fGravada').value.trim()
       };
-
-      setLoading(true, 'rec');
+      setLoading(true);
       try{
-        const r = await fetch(API_URL, {
-          method:'POST',
-          headers:{ 'Content-Type':'text/plain;charset=UTF-8' },
-          body: JSON.stringify(body)
-        });
+        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-
         alert('Link da aula gravada atualizado!');
         goHome();
-      }catch(e){
-        console.error(e);
-        alert('Erro ao atualizar: ' + e.message);
-      }finally{
-        setLoading(false, 'rec');
-      }
+      }catch(e){ alert('Erro ao atualizar: ' + e.message); }
+      finally{ setLoading(false); }
     }
   </script>
 </body>
