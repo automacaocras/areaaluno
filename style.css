@@ -62,4 +62,18 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 .site-footer a:hover{ opacity:.9; }
 @supports (padding: env(safe-area-inset-bottom)) {
   .site-footer .footer-inner{ padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+
+}
+
+.topbar{
+  width: 100vw;                      /* ocupa toda a largura da viewport */
+  margin-left: calc(50% - 50vw);     /* puxa para a borda esquerda real */
+  margin-right: calc(50% - 50vw);    /* puxa para a borda direita real */
+
+  background:#e6b200;                /* sua cor atual */
+  color:#000;
+  font-weight:800;
+  text-align:center;
+  padding:12px 0;
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
 }
