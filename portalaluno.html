@@ -181,8 +181,15 @@
           return;
         }
 
-        setTopbarName(bootstrap.nome || "aluno");
-        qs("#cursoLogo").src = bootstrap.logoUrl || "Assets/logocomodesenhar.png";
+       setTopbarName(bootstrap.nome || "aluno");
+const logoEl = qs("#cursoLogo");
+if (bootstrap.logoUrl) {
+  logoEl.src = bootstrap.logoUrl;
+  logoEl.style.display = "block";
+} else {
+  // se algum curso no futuro não tiver logo, esconde
+  logoEl.style.display = "none";
+}
 
         const dr = Number(bootstrap.diasRestantes || 0);
         qs("#diasRestantes").textContent = dr > 0 ? `[${dr}] dias restantes de acesso ao curso` : `Seu acesso está expirado.`;
@@ -326,6 +333,7 @@
 </body>
 
 </html>
+
 
 
 
