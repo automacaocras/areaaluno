@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Portal do Professor – Editora Crás</title>
+  <meta name="description" content="Atualizar link da aula e limpar exercícios dos alunos.">
+  <link rel="icon" type="image/png" href="Assets/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="Assets/favicon.ico">
+  <meta name="theme-color" content="#0286ff">
+  <link rel="stylesheet" href="style.css?v=3">
+
+  <style>
+    .topbar{width:100%;margin:0 calc(var(--gutter) * -1);background:#f4c200;color:#000;font-weight:800;text-align:center;padding:14px 0;box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);}
+    .wrap{max-width:900px;margin:20px auto;}
+    .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
+    .panel h3{margin:0 0 10px;text-align:center;}
+    .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center;}
+    .btn-big{display:block;width:100%;max-width:360px;margin:22px auto 4px;padding:14px 18px;border:none;border-radius:12px;background:#ff5757;color:#fff;font-weight:800;cursor:pointer;}
+    .btn-neutral{display:block;width:100%;max-width:260px;margin:14px auto;padding:12px 18px;border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer;}
+    .form-card{margin-top:20px;}
+    .hidden{display:none !important;}
+    .hint{text-align:center;color:#333;font-size:14px;}
+    .field{margin:10px auto;max-width:520px;}
+    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px;}
+    .field textarea{min-height:90px;}
+    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center;}
+    #overlay .loader-text{font-size:18px;color:#111;}
+  </style>
+</head>
+<body>
+  <div class="topbar" id="topbar">[professor]</div>
+
+  <main class="page-center" style="--center-offset: -40px;">
+    <div class="wrap">
+
+      <!-- PAINEL INICIAL -->
+      <section id="painelInicial" class="panel">
+        <h3>Professor:</h3>
+        <button id="btnAbrirForm" class="btn-big">atualizar aula</button>
+
+        <div class="panel form-card">
+          <h3>Exercícios:</h3>
+          <div class="links-box">
+            <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
+            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
+          </div>
+        </div>
+
+        <button id="btnSair" class="btn-neutral">sair</button>
+      </section>
+
+      <!-- FORM ATUALIZAÇÃO -->
+      <section id="formSec" class="panel hidden">
+        <h3>Aula:</h3>
+
+        <div class="field"><input   id="fTitulo"   placeholder="Título"></div>
+        <div class="field"><input   id="fLink"     placeholder="Link"></div>
+        <div class="field"><input   id="fSenha"    placeholder="Senha"></div>
+        <div class="field"><input   id="fHora"     placeholder="Hora (ex.: 20:00)"></div>
+        <div class="field"><input   id="fDia"      placeholder="Dia (ex.: quarta)"></div>
+        <div class="field"><textarea id="fInfo"    placeholder="Info"></textarea></div>
+        <div class="field"><input   id="fGravada"  placeholder="Link aula gravada"></div>
+
+        <button id="btnEnviar" class="btn-big" style="background:#f4c200;color:#111">Atualizar</button>
+        <button id="btnVoltar" class="btn-neutral">Voltar</button>
+
+        <p class="hint">Ao enviar, a planilha de exercícios (linha 2 pra baixo) e a pasta do Drive deste curso serão limpas antes de gravar os novos dados.</p>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Overlay -->
+  <div id="overlay"><div class="loader-text">Processando…</div></div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <strong>Editora Crás • </strong>
+      <a href="mailto:contato@editoracras.com">Suporte</a>
+      <small>© 2025. Todos os direitos reservados.</small>
+    </div>
+  </footer>
+
+  <script>
+    // Usa o MESMO endpoint do portal do aluno
+    const API_URL = "https://script.google.com/macros/s/AKfycbwvA2wyHf-SBlHq4AqstFRTq4ieBhXa96LsV43K_YZ6hbVmUnJ9c5xs_H8zjOGUKlyB/exec";
+
+    const qs  = s => document.querySelector(s);
+    const show = el => el.classList.remove('hidden');
+    const hide = el => el.classList.add('hidden');
+
+    let sessao = null;
+    let bootstrap = null;
+
+    function setLoading(b){
+      qs('#overlay').style.display = b ? 'grid' : 'none';
+      qs('#btnEnviar').disabled = b;
+    }
+    function getParams(){
+      const p = new URLSearchParams(location.search);
+      return { curso: p.get('curso') || '', email: p.get('email') || '' };
+    }
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    document.addEventListener('DOMContentLoaded', boot);
+
+    async function boot(){
+      try { sessao = JSON.parse(localStorage.getItem('sessao_portal') || 'null'); } catch {}
+      const params = getParams();
+      if (!sessao) sessao = { email: params.email, curso: params.curso };
+
+      if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
+        alert('Faça login novamente.'); location.href='index.html'; return;
+      }
+
+      // valida e carrega dados mínimos (links e nome)
+      const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
+      bootstrap = await resp.json();
+
+      if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
+        alert('Acesso de professor não validado. Faça login novamente.');
+        location.href = 'index.html'; return;
+      }
+
+      qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
+
+      // links (padrões)
+      const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
+      const driveHub = bootstrap?.profLinks?.driveHubUrl || '#';
+      qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
+      qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
+
+      // formulário deve abrir LIMPO (sem prefill)
+      qs('#btnAbrirForm').addEventListener('click', () => {
+        // limpa campos sempre que abrir
+        ['#fTitulo','#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel => { const el = qs(sel); if (el) el.value = ''; });
+        hide(qs('#painelInicial')); show(qs('#formSec')); window.scrollTo({top:0,behavior:'smooth'});
+      });
+
+      qs('#btnVoltar').addEventListener('click', () => { hide(qs('#formSec')); show(qs('#painelInicial')); window.scrollTo({top:0,behavior:'smooth'}); });
+      qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.href='index.html'; });
+      qs('#btnEnviar').addEventListener('click', enviar);
+    }
+
+    async function enviar(){
+      const body = {
+        action: 'updateFeedback',
+        curso: sessao.curso,
+        email: sessao.email, // revalida prof
+        titulo: qs('#fTitulo').value.trim(),
+        link: qs('#fLink').value.trim(),
+        senha: qs('#fSenha').value.trim(),
+        hora: qs('#fHora').value.trim(),
+        dia:  qs('#fDia').value.trim(),
+        info: qs('#fInfo').value.trim(),
+        aulaGravada: qs('#fGravada').value.trim()
+      };
+
+      setLoading(true);
+      try {
+        // text/plain evita preflight CORS
+        const r = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(body)
+        });
+        const data = await r.json();
+        if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
+        alert('Atualizado! Limpeza feita e nova aula gravada na linha 2.');
+        hide(qs('#formSec')); show(qs('#painelInicial'));
+      } catch (e) {
+        console.error(e);
+        alert('Erro ao atualizar: ' + e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  </script>
+</body>
+</html>

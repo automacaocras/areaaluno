@@ -1,0 +1,65 @@
+/* ===== Base / layout ===== */
+*, *::before, *::after { box-sizing: border-box; }
+:root{ --gutter: clamp(12px, 4vw, 20px); }
+html { height: 100%; overflow-x: hidden; }
+body{
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding-inline: var(--gutter);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f1cf00 0%, #fefbd3 100%);
+  background-attachment: fixed;
+}
+h1, h2, h3 { text-align: center; margin: 0 0 14px 0; }
+
+/* ===== Estrutura de página ===== */
+.page-center{
+  flex:1; display:flex; flex-direction:column; justify-content:center;
+  align-items:center; gap:12px; padding:24px 0;
+}
+.header-logo{
+  display:block; width:clamp(160px, 50vw, 280px); height:auto; margin:0 auto 8px;
+}
+#login-area{ width:100%; max-width:420px; }
+
+/* ===== Inputs / botões ===== */
+input, button, select.input-like{
+  width:100%; margin:10px auto; padding:12px; font-size:16px; display:block;
+  border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433;
+}
+select.input-like{
+  appearance:none;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
+}
+button{
+  background:#e9bc00; color:#fff; border:none; font-weight:700; cursor:pointer;
+}
+button:disabled{ background:#fffaaa; cursor:not-allowed; }
+.help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
+
+/* ===== Overlay de loading ===== */
+#loading{
+  position:fixed; inset:0; width:100svw; height:100svh;
+  display:none; place-items:center; background:rgba(0,0,0,.35); z-index:10000;
+}
+#loading .loading-bubble{
+  padding:12px 16px; background:#fff; border-radius:10px; font-weight:700;
+  box-shadow:0 6px 18px rgba(0,0,0,.15); color:#000;
+}
+
+/* ===== Rodapé ===== */
+.site-footer{
+  margin:24px calc(var(--gutter) * -1) 0; background:#e9bc00; color:#fff;
+}
+.site-footer .footer-inner{
+  max-width:1200px; margin:0 auto; padding:14px var(--gutter);
+  text-align:center; line-height:1.5;
+}
+.site-footer a{ color:#fff; text-decoration:underline; }
+.site-footer a:hover{ opacity:.9; }
+@supports (padding: env(safe-area-inset-bottom)) {
+  .site-footer .footer-inner{ padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+}
