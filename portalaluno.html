@@ -16,7 +16,6 @@
   <meta name="theme-color" content="#0286ff">
   <link rel="stylesheet" href="style.css?v=3">
 
-  <!-- Estilos específicos desta página -->
   <style>
     /* === TOPBAR FULL WIDTH (corrigida) === */
     .topbar{
@@ -51,7 +50,6 @@
     #overlay .loader-text{font-size:18px;color:#111}
   </style>
 </head>
-
 <body>
   <div class="topbar">[aluno]</div>
 
@@ -142,11 +140,11 @@
   <script>
     const BUILD_VERSION = "4";
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-    
+
     let sessao = null;
     let bootstrap = null;
 
-    const qs = s => document.querySelector(s);
+    const qs  = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
@@ -157,8 +155,8 @@
 
     document.addEventListener("DOMContentLoaded", async () => {
       try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
-      const p = new URLSearchParams(location.search);
-      if (!sessao) sessao = { email: p.get("email"), curso: p.get("curso") };
+      const params = new URLSearchParams(location.search);
+      if (!sessao) sessao = { email: params.get("email"), curso: params.get("curso") };
 
       if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
         alert("Faça login novamente.");
@@ -167,43 +165,59 @@
       }
 
       await carregarBootstrap(sessao.curso, sessao.email);
-      bindUI();
     });
 
     async function carregarBootstrap(curso, email){
-      const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-      bootstrap = await resp.json();
-      if (!bootstrap.allowed) return location.href = "index.html";
+      try{
+        const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`, { cache:"no-store" });
+        bootstrap = await resp.json();
 
-      setTopbarName(bootstrap.nome);
-      
-      const logo = qs("#cursoLogo");
-      if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+        if (!bootstrap || bootstrap.allowed !== true) return location.href = "index.html";
 
-      qs("#diasRestantes").textContent = `[${bootstrap.diasRestantes}] dias restantes de acesso ao curso`;
-      
-      const fb = bootstrap.feedback;
-      qs("#fbTitulo").textContent = fb.titulo || "—";
-      qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link || "—";
-      qs("#fbSenha").textContent = fb.senha || "—";
-      qs("#fbHora").textContent  = fb.hora || "—";
-      qs("#fbDia").textContent   = fb.dia || "—";
-      qs("#fbInfo").textContent  = fb.info || "—";
+        setTopbarName(bootstrap.nome);
 
-      const ag = fb.aulaGravada;
-      qs("#ultimaGravada").textContent = ag || "—";
-      if (ag && /^https?:\/\//.test(ag)) qs("#ultimaGravada").href = ag;
-    }
+        const logoEl = qs("#cursoLogo");
+        if (bootstrap.logoUrl) { logoEl.src = bootstrap.logoUrl; logoEl.style.display = "block"; }
 
-    function bindUI(){
-      qs("#btnAbrirEnvio").onclick = () => { hide(qs("#dashboard")); show(qs("#envio")); };
-      qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
-      qs("#btnAddImagem").onclick = addFileInput;
-      qs("#btnResetar").onclick = resetFiles;
-      qs("#selModulo").onchange = carregarAulas;
-      qs("#btnEnviar").onclick = enviarExercicio;
+        // ✅ CUPOM + DIAS RESTANTES (restaurado)
+        const dr = Number(bootstrap.diasRestantes || 0);
+        qs("#diasRestantes").textContent = dr > 0
+          ? `[${dr}] dias restantes de acesso ao curso`
+          : `Seu acesso está expirado.`;
+
+        if (dr <= 30) {
+          qs("#diasRestantes").classList.add("dias-danger");
+          const cup = bootstrap.desconto;
+          if (cup && cup.cupom) {
+            qs("#cupomCod").textContent = cup.cupom;
+            qs("#cupomPerc").textContent = String(cup.porcentagem || "").replace(/%/g, "");
+            if (cup.link) qs("#cupomLink").href = cup.link;
+            qs("#cupomBox").style.display = "block";
+          }
+        }
+
+        const fb = bootstrap.feedback || {};
+        qs("#fbTitulo").textContent = fb.titulo || "—";
+        qs("#fbSenha").textContent = fb.senha || "—";
+        qs("#fbHora").textContent  = fb.hora  || "—";
+        qs("#fbDia").textContent   = fb.dia   || "—";
+        qs("#fbInfo").textContent  = fb.info  || "—";
+
+        const linkEl = qs("#fbLink");
+        if (fb.link && /^https?:\/\//i.test(fb.link)) { linkEl.href = fb.link; linkEl.textContent = fb.link; }
+        else { linkEl.removeAttribute("href"); linkEl.textContent = fb.link || "—"; }
+
+        const ag = String(fb.aulaGravada || "");
+        const grav = qs("#ultimaGravada");
+        grav.textContent = ag || "—";
+        if (ag && /^https?:\/\//i.test(ag)) grav.href = ag;
+        else grav.removeAttribute("href");
+
+      } catch(e){
+        alert("Erro ao carregar a página.");
+        location.href = "index.html";
+      }
     }
   </script>
-
 </body>
 </html>
