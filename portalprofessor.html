@@ -12,73 +12,99 @@
   <link rel="stylesheet" href="style.css?v=3">
 
   <style>
-    /* ===== APENAS este bloco foi ajustado para full-bleed ===== */
+    /* topbar full-bleed */
     .topbar{
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-      background:#f4c200;
-      color:#000;
-      font-weight:800;
-      text-align:center;
-      padding:14px 0;
-      box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
+      width:100vw;
+      margin-left:calc(50% - 50vw);
+      margin-right:calc(50% - 50vw);
+      background:#f4c200;color:#000;font-weight:800;text-align:center;
+      padding:14px 0; box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
     }
 
     .wrap{max-width:900px;margin:20px auto;}
+    .area-title{font-weight:800;text-align:center;margin:0 0 16px 0;}
+
+    /* botões principais (fora do cartão) */
+    .btn-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+    .btn-primary{
+      background:#ff5757;color:#fff;border:none;border-radius:12px;
+      padding:14px 18px;font-weight:800;cursor:pointer;min-width:260px;
+    }
+
+    /* cartão branco só para “Links úteis” */
     .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
     .panel h3{margin:0 0 10px;text-align:center;}
     .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center;}
-    .btn-big{display:block;width:100%;max-width:360px;margin:22px auto 4px;padding:14px 18px;border:none;border-radius:12px;background:#ff5757;color:#fff;font-weight:800;cursor:pointer;}
-    .btn-neutral{display:block;width:100%;max-width:260px;margin:14px auto;padding:12px 18px;border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer;}
-    .form-card{margin-top:20px;}
-    .hidden{display:none !important;}
-    .hint{text-align:center;color:#333;font-size:14px;}
-    .field{margin:10px auto;max-width:520px;}
-    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px;}
-    .field textarea{min-height:90px;}
-    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center;}
-    #overlay .loader-text{font-size:18px;color:#111;}
+
+    /* botão sair pequeno (fora do cartão) */
+    .btn-exit{
+      background:#e23f3f;color:#fff;border:none;border-radius:10px;
+      padding:10px 16px;font-weight:800;cursor:pointer;display:block;margin:16px auto 0; width:auto;
+    }
+
+    /* formulários (cada um no seu cartão) */
+    .form-card{margin-top:20px}
+    .field{margin:10px auto;max-width:520px}
+    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
+    .field textarea{min-height:90px}
+    .btn-submit{
+      display:block;width:100%;max-width:360px;margin:22px auto 0;
+      padding:14px 18px;border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer;
+    }
+    .btn-back{
+      display:block;margin:12px auto 0;background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 16px;font-weight:800;cursor:pointer;width:auto;
+    }
+
+    .hidden{display:none!important}
+    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
+    #overlay .loader-text{font-size:18px;color:#111}
   </style>
 </head>
 <body>
   <div class="topbar" id="topbar">[professor]</div>
 
-  <main class="page-center" style="--center-offset: -40px;">
+  <main class="page-center" style="--center-offset:-40px;">
     <div class="wrap">
 
-      <!-- PAINEL INICIAL -->
-      <section id="painelInicial" class="panel">
-        <h3>Professor:</h3>
-        <button id="btnAbrirForm" class="btn-big">atualizar aula</button>
+      <!-- título fora do cartão -->
+      <h2 class="area-title">área do professor</h2>
 
-        <div class="panel form-card">
-          <h3>Exercícios:</h3>
-          <div class="links-box">
-            <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
-            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
-          </div>
+      <!-- dois botões, fora do cartão -->
+      <div class="btn-row">
+        <button id="btnAbrirLive" class="btn-primary">Atualizar próxima aula ao vivo</button>
+        <button id="btnAbrirGravada" class="btn-primary" style="background:#ff8a3d">Atualizar link da aula gravada</button>
+      </div>
+
+      <!-- cartão branco só com Links úteis -->
+      <section class="panel" id="painelLinks">
+        <h3>Links úteis:</h3>
+        <div class="links-box">
+          <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
+          <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
         </div>
-
-        <button id="btnSair" class="btn-neutral">sair</button>
       </section>
 
-      <!-- FORM ATUALIZAÇÃO -->
-      <section id="formSec" class="panel hidden">
-        <h3>Aula:</h3>
+      <!-- sair (fora do cartão) -->
+      <button id="btnSair" class="btn-exit">sair</button>
 
-        <div class="field"><input   id="fTitulo"   placeholder="Título"></div>
-        <div class="field"><input   id="fLink"     placeholder="Link"></div>
-        <div class="field"><input   id="fSenha"    placeholder="Senha"></div>
-        <div class="field"><input   id="fHora"     placeholder="Hora (ex.: 20:00)"></div>
-        <div class="field"><input   id="fDia"      placeholder="Dia (ex.: quarta)"></div>
-        <div class="field"><textarea id="fInfo"    placeholder="Info"></textarea></div>
-        <div class="field"><input   id="fGravada"  placeholder="Link aula gravada"></div>
+      <!-- FORM: Próxima aula ao vivo -->
+      <section id="formLive" class="panel form-card hidden">
+        <h3>Próxima aula ao vivo</h3>
+        <div class="field"><input   id="fLink"  placeholder="Link"></div>
+        <div class="field"><input   id="fSenha" placeholder="Senha"></div>
+        <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
+        <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
+        <div class="field"><textarea id="fInfo" placeholder="Info"></textarea></div>
+        <button id="btnEnviarLive" class="btn-submit">Atualizar</button>
+        <button id="btnVoltarLive" class="btn-back">Voltar</button>
+      </section>
 
-        <button id="btnEnviar" class="btn-big" style="background:#f4c200;color:#111">Atualizar</button>
-        <button id="btnVoltar" class="btn-neutral">Voltar</button>
-
-        <p class="hint">Ao enviar, a planilha de exercícios (linha 2 pra baixo) e a pasta do Drive deste curso serão limpas antes de gravar os novos dados.</p>
+      <!-- FORM: Aula gravada -->
+      <section id="formGravada" class="panel form-card hidden">
+        <h3>Aula gravada</h3>
+        <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
+        <button id="btnEnviarGravada" class="btn-submit">Salvar link</button>
+        <button id="btnVoltarGravada" class="btn-back">Voltar</button>
       </section>
 
     </div>
@@ -96,10 +122,10 @@
   </footer>
 
   <script>
-    // Usa o MESMO endpoint do portal do aluno
+    // mesmo endpoint do aluno
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 
-    const qs  = s => document.querySelector(s);
+    const qs = s => document.querySelector(s);
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
@@ -108,7 +134,8 @@
 
     function setLoading(b){
       qs('#overlay').style.display = b ? 'grid' : 'none';
-      qs('#btnEnviar').disabled = b;
+      const liveBtn = qs('#btnEnviarLive'); if (liveBtn) liveBtn.disabled = b;
+      const recBtn  = qs('#btnEnviarGravada'); if (recBtn) recBtn.disabled = b;
     }
     function getParams(){
       const p = new URLSearchParams(location.search);
@@ -127,7 +154,7 @@
         alert('Faça login novamente.'); location.href='index.html'; return;
       }
 
-      // valida e carrega dados mínimos (links e nome)
+      // valida prof e carrega links
       const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
       bootstrap = await resp.json();
 
@@ -138,56 +165,81 @@
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
 
-      // links (padrões)
       const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
       const driveHub = bootstrap?.profLinks?.driveHubUrl || '#';
       qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
       qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
 
-      // formulário deve abrir LIMPO (sem prefill)
-      qs('#btnAbrirForm').addEventListener('click', () => {
-        ['#fTitulo','#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel => { const el = qs(sel); if (el) el.value = ''; });
-        hide(qs('#painelInicial')); show(qs('#formSec')); window.scrollTo({top:0,behavior:'smooth'});
+      // navegação
+      qs('#btnAbrirLive').addEventListener('click', () => {
+        // limpa campos
+        ['#fLink','#fSenha','#fHora','#fDia','#fInfo'].forEach(sel => { const el = qs(sel); if (el) el.value=''; });
+        hide(qs('#painelLinks')); hide(qs('#btnSair').parentElement ? qs('#btnSair') : qs('#btnSair')); // não faz diferença, só para forçar foco
+        show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'});
+      });
+      qs('#btnAbrirGravada').addEventListener('click', () => {
+        qs('#fGravada').value = '';
+        hide(qs('#painelLinks')); show(qs('#formGravada')); window.scrollTo({top:0,behavior:'smooth'});
       });
 
-      qs('#btnVoltar').addEventListener('click', () => { hide(qs('#formSec')); show(qs('#painelInicial')); window.scrollTo({top:0,behavior:'smooth'}); });
+      qs('#btnVoltarLive').addEventListener('click', () => {
+        hide(qs('#formLive')); show(qs('#painelLinks')); window.scrollTo({top:0,behavior:'smooth'});
+      });
+      qs('#btnVoltarGravada').addEventListener('click', () => {
+        hide(qs('#formGravada')); show(qs('#painelLinks')); window.scrollTo({top:0,behavior:'smooth'});
+      });
+
       qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.href='index.html'; });
-      qs('#btnEnviar').addEventListener('click', enviar);
+
+      // envios
+      qs('#btnEnviarLive').addEventListener('click', enviarLive);
+      qs('#btnEnviarGravada').addEventListener('click', enviarGravada);
     }
 
-    async function enviar(){
+    async function enviarLive(){
       const body = {
         action: 'updateFeedback',
         curso: sessao.curso,
-        email: sessao.email, // revalida prof
-        titulo: qs('#fTitulo').value.trim(),
-        link: qs('#fLink').value.trim(),
+        email: sessao.email,     // valida que é professor
+        // sem título
+        titulo: '',
+        link:  qs('#fLink').value.trim(),
         senha: qs('#fSenha').value.trim(),
-        hora: qs('#fHora').value.trim(),
-        dia:  qs('#fDia').value.trim(),
-        info: qs('#fInfo').value.trim(),
-        aulaGravada: qs('#fGravada').value.trim()
+        hora:  qs('#fHora').value.trim(),
+        dia:   qs('#fDia').value.trim(),
+        info:  qs('#fInfo').value.trim(),
+        // não mexe na gravada aqui
+        aulaGravada: ''
       };
-
       setLoading(true);
-      try {
-        // text/plain evita preflight CORS
-        const r = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-          body: JSON.stringify(body)
-        });
+      try{
+        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
-        if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+        if (!data || data.ok !== true) throw new Error((data && (data.message||data.error)) || 'Falha ao atualizar');
+        alert('Próxima aula ao vivo atualizada!');
+        qs('#btnVoltarLive').click();
+      }catch(e){ alert('Erro: ' + e.message); }
+      finally{ setLoading(false); }
+    }
 
-        alert('Atualizado! Limpeza feita e nova aula gravada na linha 2.');
-        hide(qs('#formSec')); show(qs('#painelInicial'));
-      } catch (e) {
-        console.error(e);
-        alert('Erro ao atualizar: ' + e.message);
-      } finally {
-        setLoading(false);
-      }
+    async function enviarGravada(){
+      const link = qs('#fGravada').value.trim();
+      if (!link) { alert('Informe o link.'); return; }
+      const body = {
+        action: 'updateRecordedOnly',  // nova ação no Apps Script
+        curso: sessao.curso,
+        email: sessao.email,
+        aulaGravada: link
+      };
+      setLoading(true);
+      try{
+        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+        const data = await r.json();
+        if (!data || data.ok !== true) throw new Error((data && (data.message||data.error)) || 'Falha ao salvar link');
+        alert('Link da aula gravada atualizado!');
+        qs('#btnVoltarGravada').click();
+      }catch(e){ alert('Erro: ' + e.message); }
+      finally{ setLoading(false); }
     }
   </script>
 </body>
