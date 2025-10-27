@@ -177,9 +177,20 @@
       qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
     }
 
+    function clearForms(){
+      ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
+        const el = qs(sel); if (el) el.value = '';
+      });
+    }
+
     function goHome(){
+      // volta para a Home
       hide(qs('#formLive')); hide(qs('#formGrav'));
       show(qs('#home'));
+      // limpa campos (opcional)
+      clearForms();
+      // evita que o Voltar do navegador retorne ao form
+      history.replaceState({}, "", location.pathname + location.search);
       window.scrollTo({top:0,behavior:'smooth'});
     }
 
@@ -199,10 +210,16 @@
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-        alert('Próxima aula ao vivo atualizada!');
+
+        // volta imediatamente para o início
         goHome();
-      }catch(e){ alert('Erro ao atualizar: ' + e.message); }
-      finally{ setLoading(false); }
+        // mostra confirmação logo depois
+        setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
+      }catch(e){
+        alert('Erro ao atualizar: ' + e.message);
+      }finally{
+        setLoading(false);
+      }
     }
 
     async function enviarGrav(){
@@ -217,10 +234,16 @@
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-        alert('Link da aula gravada atualizado!');
+
+        // volta imediatamente para o início
         goHome();
-      }catch(e){ alert('Erro ao atualizar: ' + e.message); }
-      finally{ setLoading(false); }
+        // mostra confirmação logo depois
+        setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
+      }catch(e){
+        alert('Erro ao atualizar: ' + e.message);
+      }finally{
+        setLoading(false);
+      }
     }
   </script>
 </body>
