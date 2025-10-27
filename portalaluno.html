@@ -17,62 +17,39 @@
   <link rel="stylesheet" href="style.css?v=3">
 
   <style>
-    /* TOPBAR full-bleed preservando seu layout */
+    /* Topbar full width */
     .topbar{
-      width: 100vw;
-      margin-left: calc(50% - 50vw);
-      margin-right: calc(50% - 50vw);
-      background:#e6b200;
-      color:#000;
-      font-weight:800;
-      text-align:center;
-      padding:12px 0;
+      width:100vw; margin-left:calc(50% - 50vw); margin-right:calc(50% - 50vw);
+      background:#e6b200; color:#000; font-weight:800; text-align:center; padding:12px 0;
       box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
     }
-
     .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
     .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
     .dias-danger{color:#d93025}
 
-    .cupom-box{max-width:780px;margin:6px auto 14px;background:#fff7d6;border:1px solid #ffe08a;border-radius:12px;padding:10px 14px;color:#111;text-align:center;display:none}
-    .cupom-box .cupom{background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800}
-
-    .box-feedback{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center}
-    .box-feedback h3{margin:0 0 12px}
-    .box-feedback p{margin:6px 0;line-height:1.5}
+    /* Cartões brancos */
+    .box-card{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;
+      border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
+    .box-card h3{margin:0 0 14px; text-align:center}
+    .box-card p{margin:6px 0;line-height:1.5; text-align:center}
 
     .btn-cta{display:block;width:100%;max-width:520px;margin:18px auto 6px;padding:12px 18px;border:none;border-radius:12px;background:#e6b200;color:#111;font-weight:800;cursor:pointer}
     .btn-cta:disabled{opacity:.6;cursor:not-allowed}
 
-    /* “Última aula gravada” com mesmo cartão do topo */
-    .last-class{ max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06) }
-    .last-class h3{margin:0 0 8px}
-
-    /* Bloco Links úteis */
-    .links-card{ max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06) }
-    .links-card h3{margin:0 0 8px}
-    .links-card ul{margin:6px 0 0 18px}
-
-    /* Botão sair (menor e vermelho) */
-    .btn-exit{
-      display:inline-block;
-      margin:18px auto 0;
-      padding:10px 18px;
-      border:none; border-radius:10px;
-      background:#e53935; color:#fff;
-      font-weight:800; cursor:pointer;
-    }
-
-    /* Área de envio (igual ao que você já usa) */
-    .card{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
-    .row{margin:10px auto;max-width:520px}
-    .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-    .thumb-hint{font-size:12px;color:#666;text-align:center;margin-top:4px}
-
     .hidden{display:none!important}
     #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
     #overlay .loader-text{font-size:18px;color:#111}
+
+    /* Links úteis (sem cartão branco) */
+    .links-uteis{max-width:900px;margin:22px auto 10px;}
+    .links-uteis h3{margin:8px 0 10px;text-align:center}
+
+    /* Botão sair compacto */
+    .btn-exit{
+      display:inline-block; margin:12px auto; padding:10px 18px; background:#e53935; color:#fff;
+      border:none; border-radius:10px; font-weight:800; cursor:pointer;
+    }
+    .exit-wrap{ text-align:center; }
   </style>
 </head>
 <body>
@@ -83,55 +60,46 @@
 
     <div id="diasRestantes" class="dias-restantes">Carregando...</div>
 
-    <div id="cupomBox" class="cupom-box">
-      <div>Poxa, seu acesso ao curso está acabando 😢</div>
-      <div style="margin-top:6px">
-        Use o cupom <span id="cupomCod" class="cupom">---</span> e receba
-        <strong id="cupomPerc">---</strong>% de desconto para adquirir novamente.
-        <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
-      </div>
-    </div>
-
-    <section id="dashboard">
-      <!-- PRÓXIMO FEEDBACK -->
-      <div class="box-feedback">
-        <h3>Próximo feedback:</h3>
-        <p><strong id="fbQuando">—</strong></p>
-        <p>Professor: <strong id="fbProfessor">—</strong></p>
-        <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
-        <p>Senha: <strong id="fbSenha">—</strong></p>
-        <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
-      </div>
-
-      <!-- ÚLTIMA AULA GRAVADA (cartão branco) -->
-      <div class="last-class">
-        <h3 style="margin-top:0;">Última aula gravada:</h3>
-        <p class="hint">Aproveite para baixar pois ela expira.</p>
-        <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
-      </div>
-
-      <!-- Botão de envio DEPOIS do bloco acima -->
-      <button id="btnAbrirEnvio" class="btn-cta" type="button" onclick="abrirEnvio()">
-        Envie os exercícios para feedback
-      </button>
-
-      <!-- LINKS ÚTEIS (você preenche depois) -->
-      <div class="links-card">
-        <h3>Links úteis</h3>
-        <ul id="linksUteis">
-          <!-- Ex.: <li><a href="#" target="_blank" rel="noopener">Grupo do curso</a></li> -->
-        </ul>
-        <div style="text-align:center">
-          <button class="btn-exit" type="button" onclick="sair()">sair</button>
-        </div>
-      </div>
+    <!-- Próximo feedback -->
+    <section class="box-card" id="cardFeedback">
+      <h3>Próximo feedback:</h3>
+      <p id="fbWhen" style="font-weight:800">—</p>
+      <p>Professor: <strong id="fbProfessor">—</strong></p>
+      <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
+      <p>Senha: <strong id="fbSenha">—</strong></p>
+      <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
     </section>
 
-    <!-- ENVIO -->
+    <!-- Última aula gravada (agora cartão branco) -->
+    <section class="box-card" id="cardGravada">
+      <h3 style="margin-top:0;">Última aula gravada:</h3>
+      <p class="hint">Aproveite para baixar pois ela expira.</p>
+      <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
+    </section>
+
+    <!-- Botão de envio vem depois -->
+    <button id="btnAbrirEnvio" class="btn-cta" type="button" onclick="abrirEnvio()">
+      Envie os exercícios para feedback
+    </button>
+
+    <!-- Links úteis simples -->
+    <section class="links-uteis">
+      <h3>Links úteis</h3>
+      <!-- Coloque seus links aqui depois (exemplos comentados)
+      <p style="text-align:center"><a href="#" target="_blank">Regulamento do feedback</a></p>
+      -->
+    </section>
+
+    <!-- Botão sair compacto -->
+    <div class="exit-wrap">
+      <button class="btn-exit" type="button" id="btnSair">sair</button>
+    </div>
+
+    <!-- Área de envio -->
     <section id="envio" class="hidden">
-      <div class="card">
-        <h2>Envio de exercício para feedback</h2>
-        <div class="hint">*No máximo 3 artes por semana. Envie apenas no dia do feedback.</div>
+      <div class="box-card">
+        <h3>Envio de exercício para feedback</h3>
+        <div class="hint" style="text-align:center">*No máximo 3 artes por semana. Envie apenas no dia do feedback.</div>
 
         <label class="title-label">Selecione o módulo do exercício:</label>
         <select id="selModulo" class="input-like" disabled>
@@ -149,7 +117,7 @@
           <div class="thumb-hint">Formatos de imagem (JPG/PNG). Até 3 envios.</div>
         </div>
 
-        <div class="flex-row">
+        <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
           <button id="btnAddImagem" class="btn-sec" type="button">Quero enviar outra imagem</button>
           <button id="btnResetar" class="btn-sec" type="button">Resetar</button>
         </div>
@@ -162,10 +130,10 @@
     </section>
 
     <section id="sucesso" class="hidden">
-      <div class="final-card">
-        <h2>✅ Enviado!</h2>
-        <p>Pronto! Logo menos seu desenho será avaliado!</p>
-        <button id="btnVoltarMenu" class="btn-menu" type="button">Menu</button>
+      <div class="box-card">
+        <h3>✅ Enviado!</h3>
+        <p style="text-align:center">Pronto! Logo menos seu desenho será avaliado!</p>
+        <div class="exit-wrap"><button id="btnVoltarMenu" class="btn-sec" type="button">Menu</button></div>
       </div>
     </section>
   </main>
@@ -193,37 +161,50 @@
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
-    function setTopbarName(n){ qs(".topbar").textContent = `[${n || "aluno"}]`; }
-    function setLoading(b){
-      qs("#overlay").style.display = b ? "grid" : "none";
-      const btn = qs("#btnEnviar"); if (btn) btn.disabled = b;
+    function setTopbarName(nome){ qs(".topbar").textContent = `[${nome || "aluno"}]`; }
+    function setLoading(state){ qs("#overlay").style.display = state ? "grid" : "none"; const b=qs("#btnEnviar"); if(b) b.disabled = state; }
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+    // util: normaliza hora (20:00) mesmo se vier Date "1899..."
+    function normalizeHora(h){
+      if (!h) return "—";
+      if (/^\d{1,2}:\d{2}$/.test(h)) return h;
+      const d = new Date(h);
+      if (!isNaN(d.getTime())){
+        const hh = String(d.getHours()).padStart(2,"0");
+        const mm = String(d.getMinutes()).padStart(2,"0");
+        return `${hh}:${mm}`;
+      }
+      return String(h);
     }
-    const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
     document.addEventListener("DOMContentLoaded", async () => {
       try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
-      const p = new URLSearchParams(location.search);
-      if (!sessao) sessao = { email: p.get("email"), curso: p.get("curso") };
+      const params = new URLSearchParams(location.search);
+      if (!sessao) sessao = { email: params.get("email"), curso: params.get("curso") };
 
       if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
-        alert("Faça login novamente."); location.href = "index.html"; return;
+        alert("Faça login novamente.");
+        location.href = "index.html";
+        return;
       }
 
       await carregarBootstrap(sessao.curso, sessao.email);
 
-      // binds envio
-      qs("#btnAddImagem")?.addEventListener("click", addFileInput);
-      qs("#btnResetar")?.addEventListener("click", resetFiles);
-      qs("#btnEnviar")?.addEventListener("click", enviarExercicio);
-      qs("#btnVoltarMenu")?.addEventListener("click", () => {
-        hide(qs("#sucesso")); show(qs("#dashboard")); window.scrollTo({ top: 0, behavior: "smooth" });
-      });
+      // Binds
+      qs("#btnAbrirEnvio").addEventListener("click", abrirEnvio);
+      qs("#btnAddImagem").addEventListener("click", addFileInput);
+      qs("#btnResetar").addEventListener("click", resetFiles);
+      qs("#btnEnviar").addEventListener("click", enviarExercicio);
+      qs("#btnVoltarMenu").addEventListener("click", () => { hide(qs("#sucesso")); show(qs("#dashboard")); window.scrollTo({ top: 0, behavior: "smooth" }); });
+      qs("#btnSair").addEventListener("click", () => { localStorage.removeItem("sessao_portal"); location.href = "index.html"; });
     });
 
     async function carregarBootstrap(curso, email){
       try{
         const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`, { cache:"no-store" });
         bootstrap = await resp.json();
+
         if (!bootstrap || bootstrap.allowed !== true) { location.href = "index.html"; return; }
 
         setTopbarName(bootstrap.nome);
@@ -234,45 +215,45 @@
         // Dias restantes + cupom
         const dr = Number(bootstrap.diasRestantes || 0);
         qs("#diasRestantes").textContent = dr > 0 ? `[${dr}] dias restantes de acesso ao curso` : `Seu acesso está expirado.`;
-        if (dr <= 30) {
-          qs("#diasRestantes").classList.add("dias-danger");
+        if (dr <= 30 && bootstrap.desconto && bootstrap.desconto.cupom) {
           const cup = bootstrap.desconto;
-          if (cup && cup.cupom) {
-            qs("#cupomCod").textContent = cup.cupom;
-            qs("#cupomPerc").textContent = String(cup.porcentagem || "").replace(/%/g, "");
-            if (cup.link) qs("#cupomLink").href = cup.link;
-            qs("#cupomBox").style.display = "block";
-          }
+          // (A caixa do cupom ficou removida no layout novo – se quiser reexibir, basta recolocar aqui)
         }
 
-        // Próximo feedback (novo formato)
+        // Monta bloco do próximo feedback
         const fb = bootstrap.feedback || {};
-        const quando = [(fb.dia || "").trim(), (fb.hora || "").trim()].filter(Boolean).join(" às ");
-        qs("#fbQuando").textContent   = quando || "—";
+        const dataStr = (fb.titulo || "").trim(); // use o Título como data (ex.: 30/10)
+        const diaStr  = (fb.dia || "").trim();     // ex.: Quinta-feira
+        const horaStr = normalizeHora(fb.hora || "");
+        const whenOut = (dataStr || diaStr || horaStr)
+          ? `${dataStr ? dataStr + " - " : ""}${diaStr ? diaStr + " " : ""}${horaStr ? "às " + horaStr + " horas." : ""}`.trim()
+          : "—";
+        qs("#fbWhen").textContent = whenOut;
         qs("#fbProfessor").textContent = bootstrap.professorNome || "—";
+        qs("#fbSenha").textContent = fb.senha || "—";
+        qs("#fbInfo").textContent  = fb.info  || "—";
 
         const linkEl = qs("#fbLink");
         if (fb.link && /^https?:\/\//i.test(fb.link)) { linkEl.href = fb.link; linkEl.textContent = fb.link; }
         else { linkEl.removeAttribute("href"); linkEl.textContent = fb.link || "—"; }
 
-        qs("#fbSenha").textContent = fb.senha || "—";
-        qs("#fbInfo").textContent  = fb.info  || "—";
-
-        // Última aula gravada
         const ag = String(fb.aulaGravada || "");
         const grav = qs("#ultimaGravada");
         grav.textContent = ag || "—";
         if (ag && /^https?:\/\//i.test(ag)) grav.href = ag; else grav.removeAttribute("href");
 
       } catch(e){
-        console.error(e);
-        alert("Erro ao carregar a página."); location.href = "index.html";
+        alert("Erro ao carregar a página.");
+        location.href = "index.html";
       }
     }
 
     // Abrir envio
     async function abrirEnvio(){
-      hide(qs("#dashboard"));
+      hide(qs("#cardFeedback").parentElement); // esconde tudo acima (dias + cards)
+      hide(qs("#cardGravada").parentElement);
+      hide(qs(".links-uteis"));
+      hide(qs(".exit-wrap"));
       await carregarModulos().catch(()=>{});
       show(qs("#envio"));
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -280,7 +261,8 @@
 
     // Módulos/Aulas
     async function carregarModulos(){
-      const sel = qs("#selModulo"); const selA = qs("#selAula");
+      const sel = qs("#selModulo");
+      const selA = qs("#selAula");
       sel.disabled = true; sel.innerHTML = `<option value="">Carregando módulos…</option>`;
       selA.disabled = true; selA.innerHTML = `<option value="">Selecione o módulo primeiro</option>`;
       try{
@@ -292,9 +274,10 @@
         sel.disabled = false;
         sel.onchange = carregarAulas;
       }catch(e){
-        console.error(e); sel.innerHTML = `<option value="">Erro ao carregar módulos</option>`;
+        sel.innerHTML = `<option value="">Erro ao carregar módulos</option>`;
       }
     }
+
     async function carregarAulas(){
       const modulo = qs("#selModulo").value;
       const sel = qs("#selAula");
@@ -308,11 +291,11 @@
         aulas.forEach(a => { const op = document.createElement("option"); op.value = a; op.textContent = a; sel.appendChild(op); });
         sel.disabled = false;
       }catch(e){
-        console.error(e); sel.innerHTML = `<option value="">Erro ao carregar aulas</option>`;
+        sel.innerHTML = `<option value="">Erro ao carregar aulas</option>`;
       }
     }
 
-    // Upload helpers
+    // Upload
     function addFileInput(){
       const wrap = qs("#filesWrap");
       const count = wrap.querySelectorAll("input[type='file']").length;
@@ -332,8 +315,6 @@
         fr.readAsDataURL(file);
       });
     }
-
-    // Enviar exercício
     async function enviarExercicio(){
       const modulo = (qs("#selModulo").value || "").trim();
       const aula   = (qs("#selAula").value   || "").trim();
@@ -351,18 +332,14 @@
         for (const f of chosen) files.push(await readFileAsBase64(f));
         const body = { action:"uploadExercise", curso:sessao.curso, email:sessao.email, nome:bootstrap?.nome || "", modulo, aula, descricao: desc, files };
         const resp = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
-        if (!resp.ok) { const txt = await resp.text(); throw new Error(`HTTP ${resp.status} – ${txt.slice(0,200)}`); }
-        let data=null; try{ data=await resp.json(); }catch{}
-        if (!data || data.ok!==true) throw new Error((data && (data.message||data.error)) || "Falha no envio");
+        if (!resp.ok){ const txt = await resp.text(); throw new Error(`HTTP ${resp.status} – ${txt.slice(0,200)}`); }
+        let data = null; try { data = await resp.json(); } catch {}
+        if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || "Falha no envio");
         hide(qs("#envio")); show(qs("#sucesso")); window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e){
-        console.error("uploadExercise error:", e);
         alert("Erro ao enviar. Detalhe: " + e.message);
       } finally { setLoading(false); }
     }
-
-    // Botão sair
-    function sair(){ localStorage.removeItem("sessao_portal"); location.href = "index.html"; }
   </script>
 </body>
 </html>
