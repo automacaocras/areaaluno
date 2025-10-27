@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
   <link rel="shortcut icon" href="assets/favicon.ico">
   <meta name="theme-color" content="#0286ff">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 
   <style>
     /* Topbar full-bleed */
@@ -38,11 +38,11 @@
     }
     .btn-cta:disabled{opacity:.6;cursor:not-allowed}
 
-    .row{margin:10px auto;max-width:520px}
+    .row{margin:10px auto;max-width:900px}
     .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
     .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
 
-    .thumb-hint{font-size:12px;color:#666;text-align:center;margin-top:4px}
+    .thumb-hint{font-size:12px;color:#666;text-align:center;margin-top:6px}
     .hidden{display:none!important}
 
     /* Links úteis (sem cartão) */
@@ -56,15 +56,27 @@
       color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;
     }
 
-    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
-    #overlay .loader-text{font-size:18px;color:#111}
-
     /* “Resumo” em negrito (mostra exatamente o que veio da planilha) */
     .fb-raw strong{font-weight:800;display:block}
+
     /* Inputs do envio em largura total dentro do card */
     #envio .card .title-label{display:block;margin:10px auto 6px;font-weight:700}
     #envio .card select, #envio .card textarea{width:100%;max-width:900px}
     #envio .card textarea{min-height:120px;border-radius:12px;border:1px solid #cfd6e4;padding:10px}
+
+    /* Botão Voltar pequeno fora do card de envio */
+    .envio-back{max-width:900px;margin:8px auto 22px;text-align:center}
+    .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
+
+    /* Rodapé full-bleed */
+    .site-footer{
+      width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
+      background:#e0ae00;box-shadow:inset 0 2px 0 rgba(0,0,0,.06);
+    }
+    .site-footer .footer-inner{
+      max-width:900px;margin:24px auto 40px;padding:12px 0;text-align:center;color:#222;
+    }
+    .site-footer a{color:#222;text-decoration:underline}
   </style>
 </head>
 <body>
@@ -136,21 +148,25 @@
         </select>
 
         <label class="title-label">Envie a arte:</label>
-        <div id="filesWrap" class="row" style="max-width:900px">
+        <div id="filesWrap" class="row">
           <input type="file" class="fileItem" accept="image/*">
           <div class="thumb-hint">Formatos de imagem (JPG/PNG). Até 3 envios.</div>
         </div>
 
-        <div class="flex-row">
+        <div class="flex-row" style="margin-top:6px">
           <button id="btnAddImagem" class="btn-sec" type="button">Adicionar outra imagem</button>
-          <button id="btnResetar" class="btn-sec" type="button">Resetar</button>
+          <button id="btnResetar" class="btn-sec" type="button">Cancelar imagens</button>
         </div>
 
         <label class="title-label">Descrição</label>
         <textarea id="descricao" rows="6" placeholder="Conte sobre suas dificuldades/pensamentos ao fazer esses desenhos."></textarea>
 
-        <button id="btnEnviar" class="btn-cta" type="button" style="max-width:420px">Enviar</button>
-        <button id="btnVoltarEnvio" class="btn-sec" type="button" style="margin-top:6px">Voltar</button>
+        <button id="btnEnviar" class="btn-cta" type="button">Enviar</button>
+      </div>
+
+      <!-- Voltar pequeno fora do card -->
+      <div class="envio-back">
+        <button id="btnVoltarEnvio" class="btn-back" type="button">Voltar</button>
       </div>
     </section>
 
@@ -166,9 +182,9 @@
 
   <div id="overlay"><div class="loader"><div class="loader-text">Enviando…</div></div></div>
 
-  <!-- Rodapé de volta -->
+  <!-- Rodapé -->
   <footer class="site-footer">
-    <div class="footer-inner" style="max-width:900px;margin:24px auto 40px;text-align:center;color:#222">
+    <div class="footer-inner">
       <strong>Editora Crás • </strong>
       <a href="mailto:contato@editoracras.com">Suporte</a>
       <small> • © 2025. Todos os direitos reservados.</small>
@@ -176,7 +192,7 @@
   </footer>
 
   <script>
-    const BUILD_VERSION = "6";
+    const BUILD_VERSION = "7";
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
     const MAX_FILES = 3;
 
@@ -221,11 +237,11 @@
       qs("#btnAbrirEnvio").addEventListener("click", abrirEnvio);
       qs("#btnVoltarEnvio").addEventListener("click", () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({ top: 0, behavior: "smooth" }); });
 
-      const addBtn = qs("#btnAddImagem");
+      const addBtn   = qs("#btnAddImagem");
       const resetBtn = qs("#btnResetar");
-      const enviarBtn = qs("#btnEnviar");
-      const voltarBtn = qs("#btnVoltarMenu");
-      const sairBtn = qs("#btnSair");
+      const enviarBtn= qs("#btnEnviar");
+      const voltarBtn= qs("#btnVoltarMenu");
+      const sairBtn  = qs("#btnSair");
 
       addBtn.addEventListener("click", addFileInput);
       resetBtn.addEventListener("click", resetFiles);
@@ -259,7 +275,7 @@
           }
         }
 
-        // Feedback: mostrar exatamente os campos (sem Date / sem “às … horas” automático)
+        // Feedback: mostrar exatamente os campos da planilha
         const fb = bootstrap.feedback || {};
         const dia  = (fb.dia   || "").toString().trim();
         const hora = (fb.hora  || "").toString().trim();
@@ -294,6 +310,8 @@
     async function abrirEnvio(){
       hide(qs("#dashboard"));
       await carregarModulos().catch(()=>{});
+      // controlar visibilidade do “Adicionar outra imagem”
+      updateAddBtnVisibility();
       show(qs("#envio"));
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -335,17 +353,28 @@
     }
 
     // === Upload helpers ===
+    function updateAddBtnVisibility(){
+      const wrap = qs("#filesWrap");
+      const count = wrap.querySelectorAll("input[type='file']").length;
+      const addBtn = qs("#btnAddImagem");
+      if (addBtn) addBtn.style.display = (count >= MAX_FILES) ? "none" : "inline-block";
+    }
+
     function addFileInput(){
       const wrap = qs("#filesWrap");
       const count = wrap.querySelectorAll("input[type='file']").length;
-      if (count >= MAX_FILES) return alert(`Você pode enviar no máximo ${MAX_FILES} imagens.`);
+      if (count >= MAX_FILES) return; // já escondeu o botão
       const input = document.createElement("input");
       input.type = "file"; input.accept = "image/*"; input.className = "fileItem";
       wrap.insertBefore(input, wrap.querySelector(".thumb-hint"));
+      updateAddBtnVisibility();
     }
+
     function resetFiles(){
       qs("#filesWrap").innerHTML = `<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos de imagem (JPG/PNG). Até 3 envios.</div>`;
+      updateAddBtnVisibility(); // volta a mostrar
     }
+
     function readFileAsBase64(file){
       return new Promise((resolve, reject) => {
         const fr = new FileReader();
