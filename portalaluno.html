@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="style.css?v=3">
 
   <style>
-    /* === TOPBAR FULL WIDTH (corrigida) === */
+    /* TOPBAR full-bleed preservando seu layout */
     .topbar{
       width: 100vw;
       margin-left: calc(50% - 50vw);
@@ -33,18 +33,43 @@
     .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
     .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
     .dias-danger{color:#d93025}
+
     .cupom-box{max-width:780px;margin:6px auto 14px;background:#fff7d6;border:1px solid #ffe08a;border-radius:12px;padding:10px 14px;color:#111;text-align:center;display:none}
     .cupom-box .cupom{background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800}
+
     .box-feedback{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center}
-    .box-feedback h3{margin:0 0 14px}
+    .box-feedback h3{margin:0 0 12px}
     .box-feedback p{margin:6px 0;line-height:1.5}
+
     .btn-cta{display:block;width:100%;max-width:520px;margin:18px auto 6px;padding:12px 18px;border:none;border-radius:12px;background:#e6b200;color:#111;font-weight:800;cursor:pointer}
     .btn-cta:disabled{opacity:.6;cursor:not-allowed}
+
+    /* “Última aula gravada” com mesmo cartão do topo */
+    .last-class{ max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06) }
+    .last-class h3{margin:0 0 8px}
+
+    /* Bloco Links úteis */
+    .links-card{ max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06) }
+    .links-card h3{margin:0 0 8px}
+    .links-card ul{margin:6px 0 0 18px}
+
+    /* Botão sair (menor e vermelho) */
+    .btn-exit{
+      display:inline-block;
+      margin:18px auto 0;
+      padding:10px 18px;
+      border:none; border-radius:10px;
+      background:#e53935; color:#fff;
+      font-weight:800; cursor:pointer;
+    }
+
+    /* Área de envio (igual ao que você já usa) */
     .card{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06)}
     .row{margin:10px auto;max-width:520px}
     .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
     .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
     .thumb-hint{font-size:12px;color:#666;text-align:center;margin-top:4px}
+
     .hidden{display:none!important}
     #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
     #overlay .loader-text{font-size:18px;color:#111}
@@ -57,6 +82,7 @@
     <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
 
     <div id="diasRestantes" class="dias-restantes">Carregando...</div>
+
     <div id="cupomBox" class="cupom-box">
       <div>Poxa, seu acesso ao curso está acabando 😢</div>
       <div style="margin-top:6px">
@@ -67,27 +93,41 @@
     </div>
 
     <section id="dashboard">
+      <!-- PRÓXIMO FEEDBACK -->
       <div class="box-feedback">
         <h3>Próximo feedback:</h3>
-        <p id="fbTitulo">Carregando…</p>
+        <p><strong id="fbQuando">—</strong></p>
+        <p>Professor: <strong id="fbProfessor">—</strong></p>
         <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
         <p>Senha: <strong id="fbSenha">—</strong></p>
-        <p>[<span id="fbHora">—</span>] – [<span id="fbDia">—</span>]</p>
         <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
       </div>
 
-      <!-- agora com onclick direto -->
-      <button id="btnAbrirEnvio" class="btn-cta" type="button" onclick="abrirEnvio()">
-        Envie os exercícios para feedback
-      </button>
-
-      <div class="intro-box" style="max-width:780px;">
+      <!-- ÚLTIMA AULA GRAVADA (cartão branco) -->
+      <div class="last-class">
         <h3 style="margin-top:0;">Última aula gravada:</h3>
         <p class="hint">Aproveite para baixar pois ela expira.</p>
         <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
       </div>
+
+      <!-- Botão de envio DEPOIS do bloco acima -->
+      <button id="btnAbrirEnvio" class="btn-cta" type="button" onclick="abrirEnvio()">
+        Envie os exercícios para feedback
+      </button>
+
+      <!-- LINKS ÚTEIS (você preenche depois) -->
+      <div class="links-card">
+        <h3>Links úteis</h3>
+        <ul id="linksUteis">
+          <!-- Ex.: <li><a href="#" target="_blank" rel="noopener">Grupo do curso</a></li> -->
+        </ul>
+        <div style="text-align:center">
+          <button class="btn-exit" type="button" onclick="sair()">sair</button>
+        </div>
+      </div>
     </section>
 
+    <!-- ENVIO -->
     <section id="envio" class="hidden">
       <div class="card">
         <h2>Envio de exercício para feedback</h2>
@@ -153,40 +193,30 @@
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
-    function setTopbarName(nome){ qs(".topbar").textContent = `[${nome || "aluno"}]`; }
-    function setLoading(state){
-      qs("#overlay").style.display = state ? "grid" : "none";
-      const btn = qs("#btnEnviar");
-      if (btn) btn.disabled = state;
+    function setTopbarName(n){ qs(".topbar").textContent = `[${n || "aluno"}]`; }
+    function setLoading(b){
+      qs("#overlay").style.display = b ? "grid" : "none";
+      const btn = qs("#btnEnviar"); if (btn) btn.disabled = b;
     }
-    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+    const validEmail = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
     document.addEventListener("DOMContentLoaded", async () => {
       try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
-      const params = new URLSearchParams(location.search);
-      if (!sessao) sessao = { email: params.get("email"), curso: params.get("curso") };
+      const p = new URLSearchParams(location.search);
+      if (!sessao) sessao = { email: p.get("email"), curso: p.get("curso") };
 
       if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
-        alert("Faça login novamente.");
-        location.href = "index.html";
-        return;
+        alert("Faça login novamente."); location.href = "index.html"; return;
       }
 
       await carregarBootstrap(sessao.curso, sessao.email);
 
-      // binds da área de envio
-      const addBtn = qs("#btnAddImagem");
-      const resetBtn = qs("#btnResetar");
-      const enviarBtn = qs("#btnEnviar");
-      const voltarBtn = qs("#btnVoltarMenu");
-
-      if (addBtn)   addBtn.addEventListener("click", addFileInput);
-      if (resetBtn) resetBtn.addEventListener("click", resetFiles);
-      if (enviarBtn) enviarBtn.addEventListener("click", enviarExercicio);
-      if (voltarBtn) voltarBtn.addEventListener("click", () => {
-        hide(qs("#sucesso"));
-        show(qs("#dashboard"));
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      // binds envio
+      qs("#btnAddImagem")?.addEventListener("click", addFileInput);
+      qs("#btnResetar")?.addEventListener("click", resetFiles);
+      qs("#btnEnviar")?.addEventListener("click", enviarExercicio);
+      qs("#btnVoltarMenu")?.addEventListener("click", () => {
+        hide(qs("#sucesso")); show(qs("#dashboard")); window.scrollTo({ top: 0, behavior: "smooth" });
       });
     });
 
@@ -194,22 +224,16 @@
       try{
         const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`, { cache:"no-store" });
         bootstrap = await resp.json();
-
-        if (!bootstrap || bootstrap.allowed !== true) {
-          location.href = "index.html"; return;
-        }
+        if (!bootstrap || bootstrap.allowed !== true) { location.href = "index.html"; return; }
 
         setTopbarName(bootstrap.nome);
 
         const logoEl = qs("#cursoLogo");
         if (bootstrap.logoUrl) { logoEl.src = bootstrap.logoUrl; logoEl.style.display = "block"; }
 
-        // ✅ CUPOM + DIAS RESTANTES (mantido)
+        // Dias restantes + cupom
         const dr = Number(bootstrap.diasRestantes || 0);
-        qs("#diasRestantes").textContent = dr > 0
-          ? `[${dr}] dias restantes de acesso ao curso`
-          : `Seu acesso está expirado.`;
-
+        qs("#diasRestantes").textContent = dr > 0 ? `[${dr}] dias restantes de acesso ao curso` : `Seu acesso está expirado.`;
         if (dr <= 30) {
           qs("#diasRestantes").classList.add("dias-danger");
           const cup = bootstrap.desconto;
@@ -221,30 +245,32 @@
           }
         }
 
+        // Próximo feedback (novo formato)
         const fb = bootstrap.feedback || {};
-        qs("#fbTitulo").textContent = fb.titulo || "—";
-        qs("#fbSenha").textContent = fb.senha || "—";
-        qs("#fbHora").textContent  = fb.hora  || "—";
-        qs("#fbDia").textContent   = fb.dia   || "—";
-        qs("#fbInfo").textContent  = fb.info  || "—";
+        const quando = [(fb.dia || "").trim(), (fb.hora || "").trim()].filter(Boolean).join(" às ");
+        qs("#fbQuando").textContent   = quando || "—";
+        qs("#fbProfessor").textContent = bootstrap.professorNome || "—";
 
         const linkEl = qs("#fbLink");
         if (fb.link && /^https?:\/\//i.test(fb.link)) { linkEl.href = fb.link; linkEl.textContent = fb.link; }
         else { linkEl.removeAttribute("href"); linkEl.textContent = fb.link || "—"; }
 
+        qs("#fbSenha").textContent = fb.senha || "—";
+        qs("#fbInfo").textContent  = fb.info  || "—";
+
+        // Última aula gravada
         const ag = String(fb.aulaGravada || "");
         const grav = qs("#ultimaGravada");
         grav.textContent = ag || "—";
-        if (ag && /^https?:\/\//i.test(ag)) grav.href = ag;
-        else grav.removeAttribute("href");
+        if (ag && /^https?:\/\//i.test(ag)) grav.href = ag; else grav.removeAttribute("href");
 
       } catch(e){
-        alert("Erro ao carregar a página.");
-        location.href = "index.html";
+        console.error(e);
+        alert("Erro ao carregar a página."); location.href = "index.html";
       }
     }
 
-    // === AÇÃO: abrir área de envio ===
+    // Abrir envio
     async function abrirEnvio(){
       hide(qs("#dashboard"));
       await carregarModulos().catch(()=>{});
@@ -252,10 +278,9 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    // === Módulos/Aulas ===
+    // Módulos/Aulas
     async function carregarModulos(){
-      const sel = qs("#selModulo");
-      const selA = qs("#selAula");
+      const sel = qs("#selModulo"); const selA = qs("#selAula");
       sel.disabled = true; sel.innerHTML = `<option value="">Carregando módulos…</option>`;
       selA.disabled = true; selA.innerHTML = `<option value="">Selecione o módulo primeiro</option>`;
       try{
@@ -263,47 +288,31 @@
         const data = await resp.json();
         const mods = Array.isArray(data.modulos) ? data.modulos : [];
         sel.innerHTML = `<option value="">Selecione seu curso / módulo</option>`;
-        mods.forEach(m => {
-          const op = document.createElement("option");
-          op.value = m; op.textContent = m;
-          sel.appendChild(op);
-        });
+        mods.forEach(m => { const op = document.createElement("option"); op.value = m; op.textContent = m; sel.appendChild(op); });
         sel.disabled = false;
-
-        // quando escolher módulo, carregar aulas
         sel.onchange = carregarAulas;
       }catch(e){
-        console.error(e);
-        sel.innerHTML = `<option value="">Erro ao carregar módulos</option>`;
+        console.error(e); sel.innerHTML = `<option value="">Erro ao carregar módulos</option>`;
       }
     }
-
     async function carregarAulas(){
       const modulo = qs("#selModulo").value;
       const sel = qs("#selAula");
       sel.disabled = true; sel.innerHTML = `<option value="">Carregando aulas…</option>`;
-      if (!modulo) {
-        sel.innerHTML = `<option value="">Selecione o módulo primeiro</option>`;
-        return;
-      }
+      if (!modulo) { sel.innerHTML = `<option value="">Selecione o módulo primeiro</option>`; return; }
       try{
         const resp = await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`, { cache:"no-store" });
         const data = await resp.json();
         const aulas = Array.isArray(data.aulas) ? data.aulas : [];
         sel.innerHTML = `<option value="">Selecione a aula</option>`;
-        aulas.forEach(a => {
-          const op = document.createElement("option");
-          op.value = a; op.textContent = a;
-          sel.appendChild(op);
-        });
+        aulas.forEach(a => { const op = document.createElement("option"); op.value = a; op.textContent = a; sel.appendChild(op); });
         sel.disabled = false;
       }catch(e){
-        console.error(e);
-        sel.innerHTML = `<option value="">Erro ao carregar aulas</option>`;
+        console.error(e); sel.innerHTML = `<option value="">Erro ao carregar aulas</option>`;
       }
     }
 
-    // === Upload helpers ===
+    // Upload helpers
     function addFileInput(){
       const wrap = qs("#filesWrap");
       const count = wrap.querySelectorAll("input[type='file']").length;
@@ -318,28 +327,21 @@
     function readFileAsBase64(file){
       return new Promise((resolve, reject) => {
         const fr = new FileReader();
-        fr.onload = () => {
-          const res = String(fr.result || "");
-          const b64 = res.split(",")[1] || "";
-          resolve({ name: file.name, type: file.type || "image/jpeg", content: b64 });
-        };
+        fr.onload = () => { const res = String(fr.result || ""); const b64 = res.split(",")[1] || ""; resolve({ name: file.name, type: file.type || "image/jpeg", content: b64 }); };
         fr.onerror = () => reject(fr.error || new Error("erro no reader"));
         fr.readAsDataURL(file);
       });
     }
 
-    // === Enviar exercício ===
+    // Enviar exercício
     async function enviarExercicio(){
       const modulo = (qs("#selModulo").value || "").trim();
       const aula   = (qs("#selAula").value   || "").trim();
       const desc   = (qs("#descricao").value || "").trim();
-
       if (!modulo) return alert("Selecione o módulo.");
       if (!aula)   return alert("Selecione a aula.");
 
-      const chosen = qsa("#filesWrap input[type='file']")
-        .map(i => i.files && i.files[0])
-        .filter(Boolean);
+      const chosen = qsa("#filesWrap input[type='file']").map(i => i.files && i.files[0]).filter(Boolean);
       if (!chosen.length) return alert("Envie pelo menos uma imagem.");
       if (chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
 
@@ -347,40 +349,20 @@
       try{
         const files = [];
         for (const f of chosen) files.push(await readFileAsBase64(f));
-
-        const body = {
-          action: "uploadExercise",
-          curso: sessao.curso,
-          email: sessao.email,
-          nome: bootstrap?.nome || "",
-          modulo, aula,
-          descricao: desc,
-          files
-        };
-
-        // Sem preflight: sem Content-Type JSON
-        const resp = await fetch(API_URL, { method: "POST", body: JSON.stringify(body) });
-        if (!resp.ok) {
-          const txt = await resp.text();
-          throw new Error(`HTTP ${resp.status} – ${txt.slice(0,200)}`);
-        }
-        let data = null; try { data = await resp.json(); } catch {}
-        if (!data || data.ok !== true) {
-          const msg = (data && (data.message || data.error)) || "Falha no envio";
-          throw new Error(msg);
-        }
-
-        hide(qs("#envio"));
-        show(qs("#sucesso"));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-
+        const body = { action:"uploadExercise", curso:sessao.curso, email:sessao.email, nome:bootstrap?.nome || "", modulo, aula, descricao: desc, files };
+        const resp = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
+        if (!resp.ok) { const txt = await resp.text(); throw new Error(`HTTP ${resp.status} – ${txt.slice(0,200)}`); }
+        let data=null; try{ data=await resp.json(); }catch{}
+        if (!data || data.ok!==true) throw new Error((data && (data.message||data.error)) || "Falha no envio");
+        hide(qs("#envio")); show(qs("#sucesso")); window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (e){
         console.error("uploadExercise error:", e);
         alert("Erro ao enviar. Detalhe: " + e.message);
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     }
+
+    // Botão sair
+    function sair(){ localStorage.removeItem("sessao_portal"); location.href = "index.html"; }
   </script>
 </body>
 </html>
