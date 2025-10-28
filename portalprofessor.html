@@ -52,6 +52,10 @@
 
     .hidden{display:none !important}
 
+    /* confirmação visual do próximo evento + link da gravada */
+    .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
+    .next-live strong, .gravada-info strong{ font-weight:800; }
+    .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
     /* (removidos estilos antigos do #overlay) */
   </style>
 </head>
@@ -66,10 +70,23 @@
 
         <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
+        <!-- CONFIRMAÇÃO VISUAL: Próximo evento ao vivo -->
+        <p id="nextLive" class="next-live hidden">
+          <strong>Próximo evento ao vivo:</strong><br>
+          <span id="nextLiveText">—</span><br>
+          <a id="nextLiveHref" href="#" target="_blank" rel="noopener" class="live-link hidden"></a>
+        </p>
+
         <div class="band">
           <button class="btn-band btn-live" id="btnAbrirLive" data-busy>Atualizar próxima aula ao vivo</button>
           <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
         </div>
+
+        <!-- CONFIRMAÇÃO VISUAL: Aula gravada -->
+        <p id="gravadaInfo" class="gravada-info hidden">
+          <strong>Aula gravada:</strong>
+          <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
+        </p>
 
         <section class="panel" id="linksPanel">
           <h3>Links úteis:</h3>
@@ -145,6 +162,60 @@
     }
     function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+    /* === NOVO: renderização das confirmações === */
+    function renderNextLive(src){
+      const box = qs('#nextLive');
+      const txt = qs('#nextLiveText');
+      const a   = qs('#nextLiveHref');
+
+      const dia  = String(src?.dia || '').trim();
+      const hora = String(src?.hora || '').trim();
+      const prof = String(src?.professor || bootstrap?.nome || '').trim();
+      const link = String(src?.link || '').trim();
+
+      const parts = [];
+      if (dia)  parts.push(dia);
+      if (hora) parts.push(hora);
+
+      let texto = parts.join(', ');
+      if (prof) texto += (texto ? ' com ' : 'Com ') + prof;
+
+      const hasText = !!texto;
+      const hasLink = !!link;
+
+      txt.textContent = hasText ? texto : '—';
+
+      if (hasLink){
+        a.textContent = link;
+        a.href = link;
+        a.classList.remove('hidden');
+      } else {
+        a.textContent = '';
+        a.removeAttribute('href');
+        a.classList.add('hidden');
+      }
+
+      if (hasText || hasLink) box.classList.remove('hidden');
+      else box.classList.add('hidden');
+    }
+
+    function renderGravada(src){
+      const p = qs('#gravadaInfo');
+      const a = qs('#gravadaHref');
+      const url = String(src?.aulaGravada || '').trim();
+
+      if (url){
+        a.textContent = url;
+        a.href = url;
+        p.classList.remove('hidden');
+      } else {
+        a.textContent = '';
+        a.removeAttribute('href');
+        p.classList.add('hidden');
+      }
+    }
+    /* === FIM NOVO === */
+
     document.addEventListener('DOMContentLoaded', boot);
 
     async function boot(){
@@ -169,6 +240,12 @@
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
 
+      /* === NOVO: popula confirmações com dados do backend === */
+      if (bootstrap?.feedback){
+        renderNextLive(bootstrap.feedback);
+        renderGravada(bootstrap.feedback);
+      }
+      /* === FIM NOVO === */
 
       // navegação
       qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -216,6 +293,15 @@
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
 
+        /* === NOVO: atualiza confirmação imediatamente === */
+        renderNextLive({
+          dia:  qs('#fDia').value.trim(),
+          hora: qs('#fHora').value.trim(),
+          professor: bootstrap?.nome || '',
+          link: qs('#fLink').value.trim()
+        });
+        /* === FIM NOVO === */
+
         goHome();
         setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
       }catch(e){
@@ -237,6 +323,10 @@
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
+        /* === NOVO: atualiza confirmação imediatamente === */
+        renderGravada({ aulaGravada: qs('#fGravada').value.trim() });
+        /* === FIM NOVO === */
 
         goHome();
         setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
@@ -268,5 +358,3 @@
   </div>
 </body>
 </html>
-
-
