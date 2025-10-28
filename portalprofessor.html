@@ -74,8 +74,8 @@
         <section class="panel" id="linksPanel">
           <h3>Links úteis:</h3>
           <div class="links-box">
-            <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
-            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
+            <a href="http://www.google.com" target="_blank" rel="noopener">—</a>
+            <a href="http://www.google.com" target="_blank" rel="noopener">—</a>
           </div>
         </section>
 
@@ -157,11 +157,6 @@
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
 
-      // links úteis
-      const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
-      const driveHub = bootstrap?.profLinks?.driveHubUrl || '#';
-      qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
-      qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
 
       // navegação
       qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -261,3 +256,4 @@
   </div>
 </body>
 </html>
+
