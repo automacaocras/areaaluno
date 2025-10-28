@@ -52,8 +52,7 @@
 
     .hidden{display:none !important}
 
-    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
-    #overlay .loader-text{font-size:18px;color:#111}
+    /* (removidos estilos antigos do #overlay) */
   </style>
 </head>
 <body>
@@ -68,8 +67,8 @@
         <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
         <div class="band">
-          <button class="btn-band btn-live" id="btnAbrirLive">Atualizar próxima aula ao vivo</button>
-          <button class="btn-band btn-grav" id="btnAbrirGrav">Atualizar link da aula gravada</button>
+          <button class="btn-band btn-live" id="btnAbrirLive" data-busy>Atualizar próxima aula ao vivo</button>
+          <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
         </div>
 
         <section class="panel" id="linksPanel">
@@ -80,7 +79,7 @@
           </div>
         </section>
 
-        <button id="btnSair" class="btn-exit">Sair</button>
+        <button id="btnSair" class="btn-exit" data-busy>Sair</button>
       </section>
 
       <!-- FORM: Próxima aula ao vivo -->
@@ -92,8 +91,8 @@
         <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
         <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
 
-        <button id="btnEnviarLive" class="btn-primary">Atualizar</button>
-        <button id="btnVoltar1" class="btn-neutral" type="button">Voltar</button>
+        <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
+        <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
       </section>
 
       <!-- FORM: Aula gravada -->
@@ -101,14 +100,14 @@
         <h3>Atualizar link da aula gravada</h3>
         <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
 
-        <button id="btnEnviarGrav" class="btn-primary">Atualizar</button>
-        <button id="btnVoltar2" class="btn-neutral" type="button">Voltar</button>
+        <button id="btnEnviarGrav" class="btn-primary" data-busy>Atualizar</button>
+        <button id="btnVoltar2" class="btn-neutral" type="button" data-busy>Voltar</button>
       </section>
 
     </div>
   </main>
 
-  <div id="overlay"><div class="loader-text">Processando…</div></div>
+  <!-- (removido o overlay antigo #overlay) -->
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -128,10 +127,6 @@
 
     let sessao = null, bootstrap = null;
 
-    function setLoading(b){
-      qs('#overlay').style.display = b ? 'grid' : 'none';
-      ['#btnEnviarLive','#btnEnviarGrav'].forEach(id => { const el = qs(id); if (el) el.disabled = b; });
-    }
     function getParams(){
       const p = new URLSearchParams(location.search);
       return { curso: p.get('curso') || '', email: p.get('email') || '' };
@@ -149,8 +144,11 @@
         alert('Faça login novamente.'); location.href='index.html'; return;
       }
 
+      // overlay global enquanto carrega o painel do professor
+      setLoading(true, "Carregando painel…");
       const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
       bootstrap = await resp.json();
+      setLoading(false);
 
       if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
         alert('Acesso de professor não validado. Faça login novamente.');
@@ -205,15 +203,13 @@
         dia:   qs('#fDia').value.trim(),
         info:  qs('#fInfo').value.trim()
       };
-      setLoading(true);
+      setLoading(true, "Atualizando informações…");
       try{
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
 
-        // volta imediatamente para o início
         goHome();
-        // mostra confirmação logo depois
         setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
       }catch(e){
         alert('Erro ao atualizar: ' + e.message);
@@ -229,15 +225,13 @@
         email: sessao.email,
         aulaGravada: qs('#fGravada').value.trim()
       };
-      setLoading(true);
+      setLoading(true, "Atualizando aula gravada…");
       try{
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
         if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
 
-        // volta imediatamente para o início
         goHome();
-        // mostra confirmação logo depois
         setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
       }catch(e){
         alert('Erro ao atualizar: ' + e.message);
@@ -248,26 +242,22 @@
   </script>
 
   <script>
-  // Controle único do overlay + trava/destrava de botões marcados
-  function setLoading(state, msg = "Carregando…") {
-    const box = document.getElementById("global-loading");
-    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
-    if (bubble) bubble.textContent = msg;
+    // Controle único do overlay + trava/destrava de botões marcados
+    function setLoading(state, msg = "Carregando…") {
+      const box = document.getElementById("global-loading");
+      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+      if (bubble) bubble.textContent = msg;
 
-    // (Opcional) desabilita/rehabilita todos elementos com [data-busy]
-    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+      // desabilita/rehabilita todos elementos com [data-busy]
+      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
 
-    if (box) box.style.display = state ? "grid" : "none";
-  }
-</script>
+      if (box) box.style.display = state ? "grid" : "none";
+    }
+  </script>
 
-  
   <!-- Overlay global -->
-<div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
-  <div class="global-loading-bubble">Carregando…</div>
-</div>
-
+  <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
+    <div class="global-loading-bubble">Carregando…</div>
+  </div>
 </body>
 </html>
-
-
