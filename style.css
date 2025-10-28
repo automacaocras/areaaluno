@@ -111,6 +111,22 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 }
 
 
+#cupomBox {
+  background: #d64545 !important;   /* vermelho */
+  color: #fff !important;            /* texto branco */
+  border-radius: 18px;
+  padding: 14px 18px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+#cupomBox a {
+  color: #fff;                       /* link branco */
+  text-decoration: underline;
+}
+#cupomBox a:hover {
+  opacity: .8;
+}
+
 
 
 
