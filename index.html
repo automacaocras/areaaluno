@@ -60,8 +60,7 @@
       />
       <button id="btnEntrar" data-busy onclick="login()">Entrar</button>
       <p class="help-text">
-        Seu acesso a essa plataforma de feedbacks só é válido depois de um mês que você adquiriu o curso.
-        Aproveite esse início para assistir as aulas!
+        Portal do aluno disponível após 30 dias da compra do curso.
       </p>
     </div>
   </div>
@@ -174,7 +173,7 @@
             const infoInicio = data.data_inicio ? ` O acesso tem duração de um ano e você adquiriu em ${data.data_inicio}.` : "";
             alert("Poxa artista, seu acesso expirou. Adquira o curso novamente para ter acesso às aulas e aos feedbacks." + infoInicio);
           } else if (data && data.status === "nao_cadastrado") {
-            alert("Hmm... Seu email não consta em nosso cadastro de alunos. Caso tenha adquirido o curso agora, espere até o próximo mês para conseguir logar. Aproveite esse tempo para estudar as aulas!");
+            alert("Seu email não consta em nosso cadastro de alunos. Caso tenha adquirido o curso agora, espere até o próximo mês para conseguir logar. Aproveite esse tempo para estudar as aulas!");
           } else if (data && data.status === "curso_invalido") {
             alert("Curso inválido. Tente selecionar novamente.");
           } else {
@@ -231,3 +230,4 @@
   </div>
 </body>
 </html>
+
