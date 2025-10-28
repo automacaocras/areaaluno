@@ -105,6 +105,11 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.20);
 }
 
+/* aproxima o texto "Aula gravada" do botão laranja apenas nesse caso */
+.band + .gravada-info { 
+  margin-top: 6px;   /* antes era ~1em do <p> padrão */
+}
+
 
 
 
