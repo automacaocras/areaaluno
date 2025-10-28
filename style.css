@@ -81,10 +81,19 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 #global-loading {
   position: fixed;
   inset: 0;
-  display: none;
+  display: none;            /* controlado via setLoading() */
   place-items: center;
+  z-index: 2147483647;
+
+  /* Precisa ser semitransparente para o blur aparecer */
   background: rgba(0,0,0,0.45);
-  z-index: 999999;
+
+  /* Aqui está o desfoque – igual ao do professor */
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari/iOS */
+
+  /* opcional: pequena suavização de animações do blur */
+  will-change: backdrop-filter;
 }
 
 .global-loading-bubble {
@@ -95,6 +104,7 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   font-size: 18px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.20);
 }
+
 
 
 
