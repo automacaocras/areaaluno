@@ -114,7 +114,6 @@
  <section id="envio" class="hidden">
   <div class="card">
 
-    <!-- AVISO quando acabou os tokens -->
     <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
       <button class="btn-cta" type="button" disabled>
         ❗ Você já enviou o máximo desta semana
@@ -125,7 +124,6 @@
       <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
     </div>
 
-    <!-- FORMULÁRIO NORMAL -->
     <div id="envioFields">
       <h2>Envio de exercício para feedback</h2>
       <div class="hint">*No máximo 5 artes por semana.</div>
@@ -152,61 +150,15 @@
 
       <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
     </div>
+
   </div>
 
   <div class="envio-back" style="text-align:center;margin-top:10px;">
     <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
   </div>
+
 </section>
-
-
-  <!-- Quando tokens acabarem -->
-  <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
-    <button class="btn-cta" type="button" disabled>
-      ❗ Você já enviou o máximo desta semana
-    </button>
-    <p style="margin-top:16px; font-size:16px; font-weight:600;">
-      Semana que vem você poderá enviar suas artes novamente para o feedback dos professores.
-    </p>
-    <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
-  </div>
-
-  <!-- FORMULÁRIO NORMAL -->
-  <div id="envioFields">
-
-    <h2>Envio de exercício para feedback</h2>
-    <div class="hint">*No máximo 3 artes por semana.</div>
-
-    <label>Módulo:</label>
-    <select id="selModulo" disabled><option>Carregando...</option></select>
-
-    <label>Aula:</label>
-    <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
-
-    <label>Envie a arte:</label>
-    <div id="filesWrap" class="row">
-      <input type="file" class="fileItem" accept="image/*">
-      <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
-    </div>
-
-    <div class="flex-row">
-      <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
-      <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
-    </div>
-
-    <label>Descrição</label>
-    <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
-
-    <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
-
-  </div>
-</div>
-
-
-      <div class="envio-back" style="text-align:center;margin-top:10px;">
-        <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
-      </div>
-    </section>
+   
 
     <!-- SUCESSO -->
     <section id="sucesso" class="hidden">
@@ -529,5 +481,6 @@
   </div>
 </body>
 </html>
+
 
 
