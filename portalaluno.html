@@ -4,6 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Portal do Aluno – Editora Crás</title>
+  <meta name="description" content="Acompanhe o próximo feedback, envie exercícios e acesse conteúdos gravados.">
+  <link rel="icon" type="image/png" href="assets/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="assets/favicon.ico">
+  <meta name="theme-color" content="#0286ff">
   <link rel="stylesheet" href="style.css?v=7">
 
   <style>
@@ -15,14 +20,16 @@
     .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
     .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
     .dias-danger{color:#d93025}
+
     .card,.box-feedback{
       max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;
       border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center;
     }
-    label{display:block;text-align:left;font-weight:700;margin-top:8px;margin-bottom:3px}
-    select,textarea,input[type="file"]{
-      width:100%;max-width:100%;box-sizing:border-box;
-    }
+
+    label{display:block;text-align:left;font-weight:700;margin-top:10px;margin-bottom:4px}
+    select,textarea,input[type="file"]{width:100%;max-width:100%;box-sizing:border-box}
+    textarea{min-height:120px;border-radius:10px;border:1px solid #ccc;padding:10px}
+
     .btn-cta{
       display:block;width:100%;max-width:900px;margin:16px auto 10px;padding:16px 18px;
       border:none;border-radius:18px;background:#e6b200;color:#111;font-weight:800;cursor:pointer;
@@ -32,7 +39,11 @@
     .btn-exit{display:inline-block;margin:8px auto 24px;padding:10px 18px;background:#e53935;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer}
     .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
     .hidden{display:none!important}
-    #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(0,0,0,.35);z-index:10000;place-items:center;}
+
+    #overlay{
+      display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(0,0,0,.35);
+      z-index:10000;place-items:center;
+    }
     #overlay .loader{padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);}
     #overlay .loader-text{font-weight:700;color:#000;}
     #filesWrap input[type="file"]{display:block;margin:6px auto;}
@@ -42,7 +53,44 @@
   <div class="topbar">[aluno]</div>
 
   <main class="page-center" style="--center-offset:-40px;">
-    <section id="envio" class="">
+    <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
+    <div id="diasRestantes" class="dias-restantes">Carregando...</div>
+
+    <!-- Cupom -->
+    <div id="cupomBox" class="card" style="display:none">
+      <div>Poxa, seu acesso ao curso está acabando 😢</div>
+      <div style="margin-top:6px">
+        Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
+        e receba <strong id="cupomPerc">---</strong>% de desconto para adquirir novamente.
+        <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="dashboard">
+      <div class="box-feedback">
+        <h3>Próximo feedback:</h3>
+        <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
+        <p>Professor: <strong id="fbProf">—</strong></p>
+        <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
+        <p>Senha: <strong id="fbSenha">—</strong></p>
+        <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
+      </div>
+
+      <button id="btnAbrirEnvio" class="btn-cta" type="button">Envie os exercícios para feedback</button>
+
+      <div class="card">
+        <h3>Última aula gravada:</h3>
+        <p class="hint">Aproveite para baixar pois ela expira.</p>
+        <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
+      </div>
+
+      <div class="links-uteis">Links úteis</div>
+      <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button">Sair</button></div>
+    </section>
+
+    <!-- ENVIO -->
+    <section id="envio" class="hidden">
       <div class="card">
         <h2>Envio de exercício para feedback</h2>
         <div class="hint">*No máximo 3 artes por semana.</div>
@@ -74,6 +122,15 @@
         <button id="btnVoltarEnvio" class="btn-back" type="button">Voltar</button>
       </div>
     </section>
+
+    <!-- SUCESSO -->
+    <section id="sucesso" class="hidden">
+      <div class="card">
+        <h2>✅ Enviado!</h2>
+        <p>Seu desenho será avaliado em breve.</p>
+        <button id="btnVoltarMenu" class="btn-sec" type="button">Menu</button>
+      </div>
+    </section>
   </main>
 
   <div id="overlay"><div class="loader"><div class="loader-text">Enviando…</div></div></div>
@@ -87,39 +144,114 @@
   </footer>
 
   <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
     const MAX_FILES = 3;
+    let sessao = null, bootstrap = null;
     const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
+    const show = el => el.classList.remove('hidden');
+    const hide = el => el.classList.add('hidden');
+    function setLoading(state){qs("#overlay").style.display=state?"grid":"none";const b=qs("#btnEnviar");if(b)b.disabled=state;}
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try{ sessao=JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
+      const params=new URLSearchParams(location.search);
+      if(!sessao) sessao={email:params.get("email"),curso:params.get("curso")};
+      if(!sessao||!sessao.email||!sessao.curso){alert("Faça login novamente.");location.href="index.html";return;}
+
+      await carregarBootstrap(sessao.curso,sessao.email);
+      qs("#btnAbrirEnvio").onclick=abrirEnvio;
+      qs("#btnVoltarEnvio").onclick=()=>{hide(qs("#envio"));show(qs("#dashboard"));window.scrollTo({top:0,behavior:"smooth"});}
+      qs("#btnAddImagem").onclick=addFileInput;
+      qs("#btnResetar").onclick=resetFiles;
+      qs("#btnEnviar").onclick=enviarExercicio;
+      qs("#btnVoltarMenu").onclick=()=>{hide(qs("#sucesso"));show(qs("#dashboard"));};
+      qs("#btnSair").onclick=()=>{localStorage.removeItem("sessao_portal");location.href="index.html";};
+      updateAddBtnVisibility();
+    });
+
+    async function carregarBootstrap(curso,email){
+      try{
+        const r=await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+        bootstrap=await r.json(); if(!bootstrap||bootstrap.allowed!==true){location.href="index.html";return;}
+        qs(".topbar").textContent=`[${bootstrap.nome||"aluno"}]`;
+        const logo=qs("#cursoLogo"); if(bootstrap.logoUrl){logo.src=bootstrap.logoUrl;logo.style.display="block";}
+        const dr=+bootstrap.diasRestantes||0; qs("#diasRestantes").textContent=dr>0?`[${dr}] dias restantes`:"Acesso expirado.";
+        if(dr<=30&&bootstrap.desconto?.cupom){qs("#cupomBox").style.display="block";qs("#cupomCod").textContent=bootstrap.desconto.cupom;qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;qs("#cupomLink").href=bootstrap.desconto.link;}
+
+        const fb=bootstrap.feedback||{};
+        if(fb.dia){qs("#fbDiaTxt").textContent=fb.dia;qs("#fbDiaTxt").style.display="block";}
+        if(fb.hora){qs("#fbHoraTxt").textContent=fb.hora;qs("#fbHoraTxt").style.display="block";}
+        qs("#fbProf").textContent=bootstrap.professorNome||"—";
+        qs("#fbSenha").textContent=fb.senha||"—";
+        qs("#fbInfo").textContent=fb.info||"—";
+        if(fb.link){qs("#fbLink").href=fb.link;qs("#fbLink").textContent=fb.link;}
+        if(fb.aulaGravada){qs("#ultimaGravada").href=fb.aulaGravada;qs("#ultimaGravada").textContent=fb.aulaGravada;}
+      }catch(e){alert("Erro ao carregar.");location.href="index.html";}
+    }
+
+    async function abrirEnvio(){hide(qs("#dashboard"));await carregarModulos();show(qs("#envio"));window.scrollTo({top:0,behavior:"smooth"});}
+    async function carregarModulos(){
+      const sel=qs("#selModulo"),selA=qs("#selAula");
+      sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
+      selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
+      try{
+        const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
+        const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
+        sel.innerHTML="<option value=''>Selecione o módulo</option>";
+        mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
+        sel.disabled=false; sel.onchange=carregarAulas;
+      }catch{sel.innerHTML="<option>Erro ao carregar módulos</option>";}
+    }
+    async function carregarAulas(){
+      const modulo=qs("#selModulo").value,sel=qs("#selAula");
+      if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
+      sel.innerHTML="<option>Carregando aulas...</option>";
+      try{
+        const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
+        const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
+        sel.innerHTML="<option value=''>Selecione a aula</option>";
+        aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
+        sel.disabled=false;
+      }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
+    }
 
     function addFileInput(){
-      const wrap = qs("#filesWrap");
-      const count = qsa("#filesWrap input[type='file']").length;
-      if (count >= MAX_FILES) return;
-      const inp = document.createElement("input");
-      inp.type = "file";
-      inp.accept = "image/*";
-      inp.className = "fileItem";
-      wrap.insertBefore(inp, wrap.lastElementChild);
+      const wrap=qs("#filesWrap"); const count=qsa("#filesWrap input[type='file']").length;
+      if(count>=MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
+      const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.className="fileItem";
+      wrap.insertBefore(inp,wrap.lastElementChild);
       updateAddBtnVisibility();
     }
 
     function resetFiles(){
-      qs("#filesWrap").innerHTML =
-        '<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
+      qs("#filesWrap").innerHTML='<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
       updateAddBtnVisibility();
     }
 
     function updateAddBtnVisibility(){
-      const count = qsa("#filesWrap input[type='file']").length;
-      qs("#btnAddImagem").style.display = count >= MAX_FILES ? "none" : "inline-block";
+      const count=qsa("#filesWrap input[type='file']").length;
+      qs("#btnAddImagem").style.display=count>=MAX_FILES?"none":"inline-block";
     }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      qs("#btnAddImagem").onclick = addFileInput;
-      qs("#btnResetar").onclick = resetFiles;
-      qs("#btnVoltarEnvio").onclick = () => alert("Voltar ao dashboard (aqui voltaria para tela principal)");
-      updateAddBtnVisibility();
-    });
+    async function enviarExercicio(){
+      const modulo=qs("#selModulo").value.trim(),aula=qs("#selAula").value.trim(),desc=qs("#descricao").value.trim();
+      if(!modulo)return alert("Selecione o módulo."); if(!aula)return alert("Selecione a aula.");
+      const chosen=qsa("#filesWrap input[type='file']").map(i=>i.files[0]).filter(Boolean);
+      if(!chosen.length)return alert("Envie pelo menos uma imagem."); if(chosen.length>MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
+      setLoading(true);
+      try{
+        const files=[];
+        for(const f of chosen){
+          const base64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=()=>rej();fr.readAsDataURL(f);});
+          files.push({name:f.name,type:f.type,content:base64});
+        }
+        const body={action:"uploadExercise",curso:sessao.curso,email:sessao.email,nome:bootstrap.nome,modulo,aula,descricao:desc,files};
+        const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});const d=await r.json();
+        if(!d.ok)throw new Error(d.message||"Falha");
+        hide(qs("#envio"));show(qs("#sucesso"));
+      }catch(e){alert("Erro: "+e.message);}finally{setLoading(false);}
+    }
   </script>
 </body>
 </html>
