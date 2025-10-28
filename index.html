@@ -58,7 +58,7 @@
         inputmode="email"
         autocomplete="email"
       />
-      <button id="btnEntrar" onclick="login()">Entrar</button>
+      <button id="btnEntrar" data-busy onclick="login()">Entrar</button>
       <p class="help-text">
         Seu acesso a essa plataforma de feedbacks só é válido depois de um mês que você adquiriu o curso.
         Aproveite esse início para assistir as aulas!
@@ -66,29 +66,11 @@
     </div>
   </div>
 
-  <!-- Overlay de loading (usado só no login/validação) -->
-  <div id="loading">
-    <div class="loading-bubble">Verificando…</div>
-  </div>
-
   <script>
     // URL do seu Apps Script publicado como Web App
     const API_URL = "https://script.google.com/macros/s/AKfycbxd2zvI-C_E0QNQDhRGAy7UpZvHU1oNmumeB6J6QyVTwSshkbDeMMxxm0LRLad6TLQMOQ/exec";
 
     let isLoading = false;
-
-    function setLoading(state, msg = "Verificando…") {
-      isLoading = state;
-      const btn = document.getElementById("btnEntrar");
-      const loading = document.getElementById("loading");
-      const bubble = document.querySelector("#loading .loading-bubble");
-      if (btn) {
-        btn.disabled = state;
-        btn.textContent = state ? "Carregando..." : "Entrar";
-      }
-      if (bubble) bubble.textContent = msg;
-      loading.style.display = state ? "grid" : "none";
-    }
 
     // estado visual do select
     function setSelectState(state) {
@@ -107,7 +89,7 @@
       document.getElementById("email").addEventListener("keydown", (e) => {
         if (e.key === "Enter") login();
       });
-      carregarCursos(); // sem overlay na abertura
+      carregarCursos(); // sem overlay na abertura (opcional ativar com setLoading se quiser)
     });
 
     function renderCursos(lista) {
@@ -165,7 +147,9 @@
       if (!curso) return alert("Selecione o curso.");
       if (!email || !emailValido(email)) return alert("Digite um e-mail válido.");
 
-      setLoading(true);
+      // overlay global padronizado
+      isLoading = true;
+      setLoading(true, "Verificando…");
 
       try {
         const url = `${API_URL}?action=checkAuth&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
@@ -202,6 +186,7 @@
         alert("Erro ao validar seu acesso. Tente novamente.");
       } finally {
         setLoading(false);
+        isLoading = false;
       }
     }
   </script>
@@ -217,20 +202,20 @@
     window.addEventListener('orientationchange', setRealVh);
   </script>
 
+  <!-- Função global do overlay -->
   <script>
-  // Controle único do overlay + trava/destrava de botões marcados
-  function setLoading(state, msg = "Carregando…") {
-    const box = document.getElementById("global-loading");
-    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
-    if (bubble) bubble.textContent = msg;
+    // Controle único do overlay + trava/destrava de botões marcados
+    function setLoading(state, msg = "Carregando…") {
+      const box = document.getElementById("global-loading");
+      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+      if (bubble) bubble.textContent = msg;
 
-    // (Opcional) desabilita/rehabilita todos elementos com [data-busy]
-    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+      // desabilita/rehabilita todos elementos com [data-busy]
+      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
 
-    if (box) box.style.display = state ? "grid" : "none";
-  }
-</script>
-
+      if (box) box.style.display = state ? "grid" : "none";
+    }
+  </script>
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -241,17 +226,8 @@
   </footer>
 
   <!-- Overlay global -->
-<div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
-  <div class="global-loading-bubble">Carregando…</div>
-</div>
-
-
+  <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
+    <div class="global-loading-bubble">Carregando…</div>
+  </div>
 </body>
-
 </html>
-
-
-
-
-
-
