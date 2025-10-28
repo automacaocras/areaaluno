@@ -58,6 +58,16 @@
     }
     select:hover { border-color: #999; }
     select:disabled { background-color: #f8f8f8; color: #888; }
+
+    /* Linha “Você já enviou X artes...” (aparece só no Envio) */
+    .envio-arts-info{
+      max-width:900px;
+      margin:10px auto 0;
+      text-align:center;
+      font-weight:800;
+      font-size:14.5px;
+      color:#222;
+    }
   </style>
 </head>
 <body>
@@ -69,13 +79,13 @@
 
     <!-- Cupom -->
     <div id="cupomBox" class="card" style="display:none">
-  <div>Seu acesso ao curso está acabando 😢</div>
-  <div style="margin-top:6px">
-    Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
-    e receba <strong id="cupomPerc">---</strong>% de desconto para continuar.
-    <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
-  </div>
-</div>
+      <div>Seu acesso ao curso está acabando 😢</div>
+      <div style="margin-top:6px">
+        Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
+        e receba <strong id="cupomPerc">---</strong>% de desconto para continuar.
+        <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
+      </div>
+    </div>
 
     <!-- DASHBOARD -->
     <section id="dashboard">
@@ -105,63 +115,63 @@
           💬 Grupo dos alunos no WhatsApp
         </a>
       </div>
-<br>
+      <br>
       <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button" data-busy>Sair</button></div>
       <p style="font-size:11px; text-align:center; color:#666; margin-top:0px;">
-  <em>Nunca compartilhe seu acesso com outras pessoas, sua conta pode ser suspensa.</em>
-</p>
+        <em>Nunca compartilhe seu acesso com outras pessoas, sua conta pode ser suspensa.</em>
+      </p>
     </section>
 
-    
     <!-- ENVIO -->
- <section id="envio" class="hidden">
-  <div class="card">
-
-    <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
-      <button class="btn-cta" type="button" disabled>
-        ❗ Você já enviou o máximo desta semana
-      </button>
-      <p style="margin-top:16px; font-size:16px; font-weight:600;">
-        Semana que vem você poderá enviar suas artes novamente para o feedback dos professores.
+    <section id="envio" class="hidden">
+      <!-- NOVO: linha com total de artes -->
+      <p id="artsInfo" class="envio-arts-info hidden">
+        Você já enviou <strong id="artsCount">0</strong> artes durante o curso!
       </p>
-      <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
-    </div>
 
-    <div id="envioFields">
-      <h2>Envio de exercício para feedback</h2>
-      <div class="hint">Envie no máximo 5 artes por semana.</div>
+      <div class="card">
+        <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
+          <button class="btn-cta" type="button" disabled>
+            ❗ Você já enviou o máximo desta semana
+          </button>
+          <p style="margin-top:16px; font-size:16px; font-weight:600;">
+            Semana que vem você poderá enviar suas artes novamente para o feedback dos professores.
+          </p>
+          <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
+        </div>
 
-      <label>Módulo:</label>
-      <select id="selModulo" disabled><option>Carregando...</option></select>
+        <div id="envioFields">
+          <h2>Envio de exercício para feedback</h2>
+          <div class="hint">Envie no máximo 5 artes por semana.</div>
 
-      <label>Aula:</label>
-      <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
+          <label>Módulo:</label>
+          <select id="selModulo" disabled><option>Carregando...</option></select>
 
-      <label>Envie a arte:</label>
-      <div id="filesWrap" class="row">
-        <input type="file" class="fileItem" accept="image/*">
-        <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
+          <label>Aula:</label>
+          <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
+
+          <label>Envie a arte:</label>
+          <div id="filesWrap" class="row">
+            <input type="file" class="fileItem" accept="image/*">
+            <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
+          </div>
+
+          <div class="flex-row">
+            <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
+            <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
+          </div>
+
+          <label>Descrição</label>
+          <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
+
+          <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
+        </div>
       </div>
 
-      <div class="flex-row">
-        <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
-        <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
+      <div class="envio-back" style="text-align:center;margin-top:10px;">
+        <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
       </div>
-
-      <label>Descrição</label>
-      <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
-
-      <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
-    </div>
-
-  </div>
-
-  <div class="envio-back" style="text-align:center;margin-top:10px;">
-    <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
-  </div>
-
-</section>
-   
+    </section>
 
     <!-- SUCESSO -->
     <section id="sucesso" class="hidden">
@@ -183,6 +193,7 @@
 
   <script>
     let tokensRestantes = 0; // recebe do bootstrap
+    let artesTotal = 0;      // ✅ novo: total vitalício
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
     const MAX_FILES = 3;
     let sessao = null, bootstrap = null;
@@ -215,59 +226,71 @@
       updateAddBtnVisibility();
     });
 
-   async function carregarBootstrap(curso, email){
-  try{
-    const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-    bootstrap = await r.json();
-    if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
+    async function carregarBootstrap(curso, email){
+      try{
+        const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+        bootstrap = await r.json();
+        if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
 
-    // Topbar + logo
-    qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
-    const logo = qs("#cursoLogo");
-    if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+        // Topbar + logo
+        qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
+        const logo = qs("#cursoLogo");
+        if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-    // Dias restantes
-    const dr = +bootstrap.diasRestantes || 0;
-    qs("#diasRestantes").textContent = dr > 0
-      ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
-      : "Acesso expirado.";
+        // Dias restantes
+        const dr = +bootstrap.diasRestantes || 0;
+        qs("#diasRestantes").textContent = dr > 0
+          ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+          : "Acesso expirado.";
 
-    // Cupom (<= 30 dias)
-    if (dr <= 30 && bootstrap.desconto?.cupom){
-      qs("#cupomBox").style.display = "block";
-      qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-      qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
-      qs("#cupomLink").href = bootstrap.desconto.link;
+        // Cupom (<= 30 dias)
+        if (dr <= 30 && bootstrap.desconto?.cupom){
+          qs("#cupomBox").style.display = "block";
+          qs("#cupomCod").textContent = bootstrap.desconto.cupom;
+          qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
+          qs("#cupomLink").href = bootstrap.desconto.link;
+        }
+
+        // Próximo feedback / aula gravada
+        const fb = bootstrap.feedback || {};
+        if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
+        if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
+        qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
+        qs("#fbSenha").textContent = fb.senha || "—";
+        qs("#fbInfo").textContent  = fb.info  || "—";
+        if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
+        if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
+
+        // TOKENS
+        tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+
+        // ✅ novo: total vitalício de artes
+        artesTotal = Number(bootstrap.artesTotal || 0);
+
+        updateUIForTokens();
+      }catch(e){
+        alert("Erro ao carregar.");
+        location.href = "index.html";
+      }
     }
-
-    // Próximo feedback / aula gravada
-    const fb = bootstrap.feedback || {};
-    if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
-    if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
-    qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
-    qs("#fbSenha").textContent = fb.senha || "—";
-    qs("#fbInfo").textContent  = fb.info  || "—";
-    if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
-    if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
-
-    // TOKENS → delega tudo para updateUIForTokens()
-    tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
-    updateUIForTokens(); // esta função deve esconder/mostrar #envioFields e #limiteWrap
-
-  }catch(e){
-    alert("Erro ao carregar.");
-    location.href = "index.html";
-  }
-}
-
 
     async function abrirEnvio(){
       setLoading(true, "Carregando envio…");
       hide(qs("#dashboard"));
 
-      // Sempre limpar os campos ao entrar na tela (evita reabrir com arquivos antigos)
+      // Sempre limpar os campos ao entrar na tela
       resetFiles();
       qs("#descricao").value = "";
+
+      // ✅ mostrar a linha de artes só aqui
+      const info = qs("#artsInfo");
+      const count = qs("#artsCount");
+      if (artesTotal > 0){
+        count.textContent = artesTotal;
+        show(info);
+      } else {
+        hide(info);
+      }
 
       await carregarModulos();
       show(qs("#envio"));
@@ -308,51 +331,46 @@
       return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
     }
 
-   function updateUIForTokens(){
-  const btnEnviar  = qs("#btnEnviar");
-  const btnAdd     = qs("#btnAddImagem");
-  const btnReset   = qs("#btnResetar");
-  const wrapForm   = qs("#envioFields");
-  const wrapLimit  = qs("#limiteWrap");
+    function updateUIForTokens(){
+      const btnEnviar  = qs("#btnEnviar");
+      const btnAdd     = qs("#btnAddImagem");
+      const btnReset   = qs("#btnResetar");
+      const wrapForm   = qs("#envioFields");
+      const wrapLimit  = qs("#limiteWrap");
 
-  const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
-  const inputsQtd  = qsa("#filesWrap input[type='file']").length;
+      const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+      const inputsQtd  = qsa("#filesWrap input[type='file']").length;
 
-  if (tokensRestantes <= 0){
-    // mostra aviso e esconde o formulário
-    if (wrapForm)  wrapForm.style.display = "none";
-    if (wrapLimit) wrapLimit.classList.remove("hidden");
+      if (tokensRestantes <= 0){
+        if (wrapForm)  wrapForm.style.display = "none";
+        if (wrapLimit) wrapLimit.classList.remove("hidden");
+        if (btnEnviar){
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
+          btnEnviar.style.opacity = "0.9";
+        }
+        if (btnAdd)   btnAdd.style.display   = "none";
+        if (btnReset) btnReset.style.display = "none";
+        return;
+      }
 
-    // deixa o "enviar" como tarja informativa (clicável p/ mensagem)
-    if (btnEnviar){
-      btnEnviar.disabled = false;
-      btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-      btnEnviar.style.opacity = "0.9";
+      if (wrapForm)  wrapForm.style.display = "block";
+      if (wrapLimit) wrapLimit.classList.add("hidden");
+
+      if (btnEnviar){
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = "Enviar";
+        btnEnviar.style.opacity = "";
+      }
+
+      const deveMostrarAdd = (
+        tokensRestantes > 1 &&
+        selected < tokensRestantes &&
+        inputsQtd < MAX_FILES
+      );
+      if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
+      if (btnReset) btnReset.style.display = "inline-block";
     }
-    if (btnAdd)   btnAdd.style.display   = "none";
-    if (btnReset) btnReset.style.display = "none";
-    return;
-  }
-
-  // há tokens → mostra formulário e esconde aviso
-  if (wrapForm)  wrapForm.style.display = "block";
-  if (wrapLimit) wrapLimit.classList.add("hidden");
-
-  if (btnEnviar){
-    btnEnviar.disabled = false;
-    btnEnviar.textContent = "Enviar";
-    btnEnviar.style.opacity = "";
-  }
-
-  const deveMostrarAdd = (
-    tokensRestantes > 1 &&
-    selected < tokensRestantes &&
-    inputsQtd < MAX_FILES
-  );
-  if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
-  if (btnReset) btnReset.style.display = "inline-block";
-}
-
 
     function resetFiles(){
       qs("#filesWrap").innerHTML =
@@ -363,14 +381,13 @@
 
     function addFileInput(){
       if (tokensRestantes <= 0){ return; }
-
       const wrap         = qs("#filesWrap");
       const inputs       = qsa("#filesWrap input[type='file']");
       const inputsQtd    = inputs.length;
       const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
 
       if (inputsQtd >= MAX_FILES) return;
-      if (tokensRestantes <= 1)   return; // com 1 token, não abre novos
+      if (tokensRestantes <= 1)   return;
       if (selectedNow >= tokensRestantes) return;
 
       const inp = document.createElement("input");
@@ -484,13 +501,3 @@
   </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
