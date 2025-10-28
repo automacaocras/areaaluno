@@ -54,33 +54,6 @@
 
     #overlay{display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(255,255,255,.85);z-index:9999;place-items:center}
     #overlay .loader-text{font-size:18px;color:#111}
-    
-    /* NOVO: Snack/Toastbar para mensagens de sucesso/erro */
-    #snackbar {
-        visibility: hidden; 
-        min-width: 250px; 
-        margin-left: -125px;
-        background-color: #333; 
-        color: #fff; 
-        text-align: center; 
-        border-radius: 8px; 
-        padding: 16px; 
-        position: fixed; 
-        z-index: 10000; 
-        left: 50%; 
-        bottom: 30px; 
-        font-size: 17px; 
-        box-shadow: 0 6px 20px rgba(0,0,0,.2);
-    }
-    #snackbar.show {
-        visibility: visible; 
-        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-        animation: fadein 0.5s, fadeout 0.5s 2.5s;
-    }
-    @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
-    @-webkit-keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
-    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
   </style>
 </head>
 <body>
@@ -89,9 +62,10 @@
   <main class="page-center" style="--center-offset:-40px;">
     <div class="wrap">
 
+      <!-- HOME (botões + links úteis + sair) -->
       <section id="home">
 
-        <h2 id="saudacaoProf" style="text-align:center;margin:8px 0 6px">Área do professor</h2>
+        <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
         <div class="band">
           <button class="btn-band btn-live" id="btnAbrirLive">Atualizar próxima aula ao vivo</button>
@@ -102,28 +76,30 @@
           <h3>Links úteis:</h3>
           <div class="links-box">
             <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
-            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
+            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
           </div>
         </section>
 
         <button id="btnSair" class="btn-exit">Sair</button>
       </section>
 
+      <!-- FORM: Próxima aula ao vivo -->
       <section id="formLive" class="panel hidden">
         <h3>Próxima aula ao vivo</h3>
-        <div class="field"><input   id="fLink"  placeholder="Link (Obrigatório)"></div>
-        <div class="field"><input   id="fSenha" placeholder="Senha"></div>
-        <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
-        <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
-        <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
+        <div class="field"><input   id="fLink"  placeholder="Link"></div>
+        <div class="field"><input   id="fSenha" placeholder="Senha"></div>
+        <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
+        <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
+        <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
 
-        <button id="btnEnviarLive" class="btn-primary">Atualizar e Limpar Exercícios</button>
+        <button id="btnEnviarLive" class="btn-primary">Atualizar</button>
         <button id="btnVoltar1" class="btn-neutral" type="button">Voltar</button>
       </section>
 
+      <!-- FORM: Aula gravada -->
       <section id="formGrav" class="panel hidden">
         <h3>Atualizar link da aula gravada</h3>
-        <div class="field"><input id="fGravada" placeholder="Link da aula gravada (Obrigatório)"></div>
+        <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
 
         <button id="btnEnviarGrav" class="btn-primary">Atualizar</button>
         <button id="btnVoltar2" class="btn-neutral" type="button">Voltar</button>
@@ -133,8 +109,6 @@
   </main>
 
   <div id="overlay"><div class="loader-text">Processando…</div></div>
-  
-  <div id="snackbar"></div>
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -148,7 +122,7 @@
     // mesmo endpoint do aluno
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 
-    const qs  = s => document.querySelector(s);
+    const qs  = s => document.querySelector(s);
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
@@ -163,20 +137,6 @@
       return { curso: p.get('curso') || '', email: p.get('email') || '' };
     }
     function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-    
-    // NOVO: Função para validação básica de URL (inicia com http ou https)
-    function isValidUrl(s) {
-        if (!s) return false;
-        return s.startsWith('http://') || s.startsWith('https://');
-    }
-    
-    // NOVO: Função para mostrar a notificação (Snack/Toastbar)
-    function showSnackbar(message) {
-        const snack = qs("#snackbar");
-        snack.textContent = message;
-        snack.className = "show";
-        setTimeout(function(){ snack.className = snack.className.replace("show", ""); }, 3000);
-    }
 
     document.addEventListener('DOMContentLoaded', boot);
 
@@ -186,29 +146,24 @@
       if (!sessao) sessao = { email: params.email, curso: params.curso };
 
       if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
-        showSnackbar('Faça login novamente.'); location.href='index.html'; return;
+        alert('Faça login novamente.'); location.href='index.html'; return;
       }
 
-      setLoading(true);
       const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
       bootstrap = await resp.json();
-      setLoading(false);
 
       if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
-        showSnackbar('Acesso de professor não validado. Faça login novamente.');
+        alert('Acesso de professor não validado. Faça login novamente.');
         location.href='index.html'; return;
       }
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
-      
-      // NOVO: Saudação personalizada
-      qs('#saudacaoProf').textContent = `Oi professor(a) ${bootstrap.nome || 'sem nome'}!`;
 
       // links úteis
-      const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
+      const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
       const driveHub = bootstrap?.profLinks?.driveHubUrl || '#';
-      qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
-      qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
+      qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
+      qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
 
       // navegação
       qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -240,28 +195,17 @@
     }
 
     async function enviarLive(){
-      setLoading(true);
-      
-      const link = qs('#fLink').value.trim();
-      
-      // NOVO: Validação de URL
-      if (!isValidUrl(link)) {
-          showSnackbar('Por favor, insira um link de aula ao vivo válido (começando com http:// ou https://).');
-          setLoading(false);
-          return;
-      }
-      
       const body = {
         action: 'updateFeedbackLive',
         curso: sessao.curso,
         email: sessao.email,
-        link:  link,
+        link:  qs('#fLink').value.trim(),
         senha: qs('#fSenha').value.trim(),
-        hora:  qs('#fHora').value.trim(),
-        dia:   qs('#fDia').value.trim(),
-        info:  qs('#fInfo').value.trim()
+        hora:  qs('#fHora').value.trim(),
+        dia:   qs('#fDia').value.trim(),
+        info:  qs('#fInfo').value.trim()
       };
-      
+      setLoading(true);
       try{
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
@@ -269,34 +213,23 @@
 
         // volta imediatamente para o início
         goHome();
-        // mostra confirmação NÃO-BLOQUEANTE
-        setTimeout(()=>showSnackbar('Próxima aula ao vivo atualizada e exercícios arquivados!'), 50);
+        // mostra confirmação logo depois
+        setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
       }catch(e){
-        showSnackbar('Erro ao atualizar: ' + e.message);
+        alert('Erro ao atualizar: ' + e.message);
       }finally{
         setLoading(false);
       }
     }
 
     async function enviarGrav(){
-      setLoading(true);
-      
-      const aulaGravada = qs('#fGravada').value.trim();
-      
-      // NOVO: Validação de URL
-      if (!isValidUrl(aulaGravada)) {
-          showSnackbar('Por favor, insira um link de aula gravada válido (começando com http:// ou https://).');
-          setLoading(false);
-          return;
-      }
-      
       const body = {
         action: 'updateGravada',
         curso: sessao.curso,
         email: sessao.email,
-        aulaGravada: aulaGravada
+        aulaGravada: qs('#fGravada').value.trim()
       };
-      
+      setLoading(true);
       try{
         const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
         const data = await r.json();
@@ -304,10 +237,10 @@
 
         // volta imediatamente para o início
         goHome();
-        // mostra confirmação NÃO-BLOQUEANTE
-        setTimeout(()=>showSnackbar('Link da aula gravada atualizado!'), 50);
+        // mostra confirmação logo depois
+        setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
       }catch(e){
-        showSnackbar('Erro ao atualizar: ' + e.message);
+        alert('Erro ao atualizar: ' + e.message);
       }finally{
         setLoading(false);
       }
@@ -315,4 +248,3 @@
   </script>
 </body>
 </html>
-
