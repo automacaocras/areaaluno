@@ -113,30 +113,51 @@
     <section id="envio" class="hidden">
       <div class="card">
         <h2>Envio de exercício para feedback</h2>
-        <div class="hint">*No máximo 3 artes por semana.</div>
+        <div class="hint">*No máximo 5 artes por semana.</div>
+<div class="card">
 
-        <label>Módulo:</label>
-        <select id="selModulo" disabled><option>Carregando...</option></select>
+  <!-- Quando tokens acabarem -->
+  <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
+    <button class="btn-cta" type="button" disabled>
+      ❗ Você já enviou o máximo desta semana
+    </button>
+    <p style="margin-top:16px; font-size:16px; font-weight:600;">
+      Semana que vem você poderá enviar suas artes novamente para o feedback dos professores.
+    </p>
+    <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
+  </div>
 
-        <label>Aula:</label>
-        <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
+  <!-- FORMULÁRIO NORMAL -->
+  <div id="envioFields">
 
-        <label>Envie a arte:</label>
-        <div id="filesWrap" class="row">
-          <input type="file" class="fileItem" accept="image/*">
-          <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
-        </div>
+    <h2>Envio de exercício para feedback</h2>
+    <div class="hint">*No máximo 3 artes por semana.</div>
 
-        <div class="flex-row">
-          <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
-          <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
-        </div>
+    <label>Módulo:</label>
+    <select id="selModulo" disabled><option>Carregando...</option></select>
 
-        <label>Descrição</label>
-        <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
+    <label>Aula:</label>
+    <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
 
-        <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
-      </div>
+    <label>Envie a arte:</label>
+    <div id="filesWrap" class="row">
+      <input type="file" class="fileItem" accept="image/*">
+      <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
+    </div>
+
+    <div class="flex-row">
+      <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
+      <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
+    </div>
+
+    <label>Descrição</label>
+    <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
+
+    <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
+
+  </div>
+</div>
+
 
       <div class="envio-back" style="text-align:center;margin-top:10px;">
         <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
@@ -195,50 +216,51 @@
       updateAddBtnVisibility();
     });
 
-    async function carregarBootstrap(curso, email){
-      try{
-        const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-        bootstrap = await r.json();
-        if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
+   async function carregarBootstrap(curso, email){
+  try{
+    const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+    bootstrap = await r.json();
+    if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
 
-        // Topbar + logo
-        qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
-        const logo = qs("#cursoLogo");
-        if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+    // Topbar + logo
+    qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
+    const logo = qs("#cursoLogo");
+    if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-        // Dias restantes
-        const dr = +bootstrap.diasRestantes || 0;
-        qs("#diasRestantes").textContent = dr > 0
-          ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
-          : "Acesso expirado.";
+    // Dias restantes
+    const dr = +bootstrap.diasRestantes || 0;
+    qs("#diasRestantes").textContent = dr > 0
+      ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+      : "Acesso expirado.";
 
-        // Cupom (<= 30 dias)
-        if (dr <= 30 && bootstrap.desconto?.cupom){
-          qs("#cupomBox").style.display = "block";
-          qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-          qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
-          qs("#cupomLink").href = bootstrap.desconto.link;
-        }
-
-        // Próximo feedback / aula gravada
-        const fb = bootstrap.feedback || {};
-        if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
-        if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
-        qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
-        qs("#fbSenha").textContent = fb.senha || "—";
-        qs("#fbInfo").textContent  = fb.info  || "—";
-        if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
-        if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
-
-        // TOKENS
-        tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
-        updateUIForTokens();
-
-      }catch(e){
-        alert("Erro ao carregar.");
-        location.href = "index.html";
-      }
+    // Cupom (<= 30 dias)
+    if (dr <= 30 && bootstrap.desconto?.cupom){
+      qs("#cupomBox").style.display = "block";
+      qs("#cupomCod").textContent = bootstrap.desconto.cupom;
+      qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
+      qs("#cupomLink").href = bootstrap.desconto.link;
     }
+
+    // Próximo feedback / aula gravada
+    const fb = bootstrap.feedback || {};
+    if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
+    if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
+    qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
+    qs("#fbSenha").textContent = fb.senha || "—";
+    qs("#fbInfo").textContent  = fb.info  || "—";
+    if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
+    if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
+
+    // TOKENS → delega tudo para updateUIForTokens()
+    tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+    updateUIForTokens(); // esta função deve esconder/mostrar #envioFields e #limiteWrap
+
+  }catch(e){
+    alert("Erro ao carregar.");
+    location.href = "index.html";
+  }
+}
+
 
     async function abrirEnvio(){
       setLoading(true, "Carregando envio…");
@@ -453,3 +475,4 @@
   </div>
 </body>
 </html>
+
