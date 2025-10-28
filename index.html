@@ -217,6 +217,21 @@
     window.addEventListener('orientationchange', setRealVh);
   </script>
 
+  <script>
+  // Controle único do overlay + trava/destrava de botões marcados
+  function setLoading(state, msg = "Carregando…") {
+    const box = document.getElementById("global-loading");
+    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+    if (bubble) bubble.textContent = msg;
+
+    // (Opcional) desabilita/rehabilita todos elementos com [data-busy]
+    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+
+    if (box) box.style.display = state ? "grid" : "none";
+  }
+</script>
+
+
   <footer class="site-footer">
     <div class="footer-inner">
       <strong>Editora Crás • </strong>
@@ -234,6 +249,7 @@
 </body>
 
 </html>
+
 
 
 
