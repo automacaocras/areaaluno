@@ -40,9 +40,7 @@
     .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
     .hidden{display:none!important}
 
-    /* (removido: estilos antigos do #overlay) */
-
-    /* ===== Selects modernos ===== */
+    /* Selects */
     select {
       appearance: none;
       -webkit-appearance: none;
@@ -155,8 +153,6 @@
     </section>
   </main>
 
-  <!-- (removido o overlay antigo #overlay) -->
-
   <footer class="site-footer">
     <div class="footer-inner">
       <strong>Editora Crás • </strong>
@@ -192,99 +188,72 @@
       qs("#btnEnviar").onclick=enviarExercicio;
       qs("#btnVoltarMenu").onclick=()=>{hide(qs("#sucesso"));show(qs("#dashboard"));};
       qs("#btnSair").onclick=()=>{localStorage.removeItem("sessao_portal");location.href="index.html";};
+
+      // Atualiza UI quando escolher arquivos
+      qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
+
       updateAddBtnVisibility();
     });
 
-   async function carregarBootstrap(curso, email){
-  try{
-    const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-    bootstrap = await r.json();
-    if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
+    async function carregarBootstrap(curso, email){
+      try{
+        const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+        bootstrap = await r.json();
+        if(!bootstrap || bootstrap.allowed !== true){ location.href = "index.html"; return; }
 
-    // Topbar + logo
-    qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
-    const logo = qs("#cursoLogo");
-    if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+        // Topbar + logo
+        qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
+        const logo = qs("#cursoLogo");
+        if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-    // Dias restantes
-    const dr = +bootstrap.diasRestantes || 0;
-    if (dr > 0) {
-      const txt = dr === 1
-        ? `[${dr}] dia restante de acesso ao curso.`
-        : `[${dr}] dias restantes de acesso ao curso.`;
-      qs("#diasRestantes").textContent = txt;
-    } else {
-      qs("#diasRestantes").textContent = "Acesso expirado.";
-    }
+        // Dias restantes
+        const dr = +bootstrap.diasRestantes || 0;
+        qs("#diasRestantes").textContent = dr > 0
+          ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+          : "Acesso expirado.";
 
-    // Cupom (<= 30 dias)
-    if (dr <= 30 && bootstrap.desconto?.cupom){
-      qs("#cupomBox").style.display = "block";
-      qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-      qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
-      qs("#cupomLink").href = bootstrap.desconto.link;
-    }
+        // Cupom (<= 30 dias)
+        if (dr <= 30 && bootstrap.desconto?.cupom){
+          qs("#cupomBox").style.display = "block";
+          qs("#cupomCod").textContent = bootstrap.desconto.cupom;
+          qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
+          qs("#cupomLink").href = bootstrap.desconto.link;
+        }
 
-    // Próximo feedback / aula gravada
-    const fb = bootstrap.feedback || {};
-    if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
-    if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
-    qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
-    qs("#fbSenha").textContent = fb.senha || "—";
-    qs("#fbInfo").textContent  = fb.info  || "—";
-    if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
-    if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
+        // Próximo feedback / aula gravada
+        const fb = bootstrap.feedback || {};
+        if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
+        if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
+        qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
+        qs("#fbSenha").textContent = fb.senha || "—";
+        qs("#fbInfo").textContent  = fb.info  || "—";
+        if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
+        if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
 
-    // ====== TOKENS (novo) ======
-    // defina esta variável no topo do script: let tokensRestantes = 0;
-    // o Apps Script deve retornar "tokensRestantes" em portalBootstrap
-    tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+        // TOKENS
+        tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+        updateUIForTokens();
 
-    // Aplica estado dos botões conforme tokens
-    const btnEnviar = qs("#btnEnviar");
-    const btnAdd    = qs("#btnAddImagem");
-
-    if (typeof tokensRestantes === "number" && tokensRestantes <= 0){
-      if (btnEnviar){
-        btnEnviar.disabled = true;
-        btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-        btnEnviar.style.opacity = "0.7";
-      }
-      if (btnAdd){
-        btnAdd.disabled = true;
-        btnAdd.style.opacity = "0.7";
-      }
-    } else {
-      // Garante estado normal quando ainda há tokens
-      if (btnEnviar){
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = "Enviar";
-        btnEnviar.style.opacity = "";
-      }
-      if (btnAdd){
-        btnAdd.disabled = false;
-        btnAdd.style.opacity = "";
+      }catch(e){
+        alert("Erro ao carregar.");
+        location.href = "index.html";
       }
     }
-
-    // (Opcional) Se você criar um elemento para mostrar contagem, atualize aqui:
-    // const badge = qs("#tokensBadge");
-    // if (badge) badge.textContent = `${tokensRestantes} restante(s) esta semana`;
-
-  }catch(e){
-    alert("Erro ao carregar.");
-    location.href = "index.html";
-  }
-}
-
 
     async function abrirEnvio(){
       setLoading(true, "Carregando envio…");
       hide(qs("#dashboard"));
+
+      // Sempre limpar os campos ao entrar na tela (evita reabrir com arquivos antigos)
+      resetFiles();
+      qs("#descricao").value = "";
+
       await carregarModulos();
       show(qs("#envio"));
       window.scrollTo({top:0,behavior:"smooth"});
       setLoading(false);
+
+      updateUIForTokens();
     }
 
     async function carregarModulos(){
@@ -313,165 +282,174 @@
       }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
     }
 
-  function addFileInput(){
-  // Sem tokens → bloqueia tudo
-  if (typeof tokensRestantes === "number" && tokensRestantes <= 0){
-    alert("❗ Você já enviou o máximo de desenhos desta semana.\nUse esse tempo para estudar o direcionamento do professor.");
-    return;
-  }
+    /* ======== UX / TOKENS ======== */
+    function countSelectedFiles(){
+      return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+    }
 
-  const wrap = qs("#filesWrap");
-  const inputs = qsa("#filesWrap input[type='file']");
-  const visibleInputs = inputs.length;
+    function updateUIForTokens(){
+      const btnEnviar = qs("#btnEnviar");
+      const btnAdd    = qs("#btnAddImagem");
+      const btnReset  = qs("#btnResetar");
+      const selected  = countSelectedFiles();
+      const inputsQtd = qsa("#filesWrap input[type='file']").length;
 
-  // Quantos já foram realmente selecionados neste envio?
-  const selectedNow = inputs.map(i => i.files[0]).filter(Boolean).length;
+      if (tokensRestantes <= 0){
+        // Tarja desativada e sumir botões auxiliares
+        if (btnEnviar){
+          btnEnviar.disabled = false; // clicável para mensagem educativa
+          btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
+          btnEnviar.style.opacity = "0.9";
+        }
+        if (btnAdd)   btnAdd.style.display   = "none";
+        if (btnReset) btnReset.style.display = "none";
+        return;
+      }
 
-  // 1) Respeita o limite de inputs visíveis (ex.: 3)
-  if (visibleInputs >= MAX_FILES){
-    return alert(`Máximo de ${MAX_FILES} imagens.`);
-  }
+      // Estado normal
+      if (btnEnviar){
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = "Enviar";
+        btnEnviar.style.opacity = "";
+      }
 
-  // 2) Respeita o limite pelos TOKENS (conta só arquivos selecionados)
-  //    Você pode abrir inputs vazios, mas só poderá selecionar
-  //    até "tokensRestantes" arquivos no total.
-  if (selectedNow >= tokensRestantes){
-    return alert(`Você ainda pode enviar ${tokensRestantes - selectedNow} desenho(s) esta semana.`);
-  }
+      const deveMostrarAdd = (
+        tokensRestantes > 1 &&
+        selected < tokensRestantes &&
+        inputsQtd < MAX_FILES
+      );
 
-  // Cria novo campo
-  const inp = document.createElement("input");
-  inp.type = "file";
-  inp.accept = "image/*";
-  inp.className = "fileItem";
-  wrap.insertBefore(inp, wrap.lastElementChild);
-
-  updateAddBtnVisibility();
-}
-
-
+      if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
+      if (btnReset) btnReset.style.display = "inline-block";
+    }
 
     function resetFiles(){
-      qs("#filesWrap").innerHTML='<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
-      updateAddBtnVisibility();
+      qs("#filesWrap").innerHTML =
+        '<input type="file" class="fileItem" accept="image/*">' +
+        '<div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
+      updateUIForTokens();
+    }
+
+    function addFileInput(){
+      if (tokensRestantes <= 0){ return; }
+
+      const wrap         = qs("#filesWrap");
+      const inputs       = qsa("#filesWrap input[type='file']");
+      const inputsQtd    = inputs.length;
+      const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
+
+      if (inputsQtd >= MAX_FILES) return;
+      if (tokensRestantes <= 1)   return; // com 1 token, não abre novos
+      if (selectedNow >= tokensRestantes) return;
+
+      const inp = document.createElement("input");
+      inp.type = "file";
+      inp.accept = "image/*";
+      inp.className = "fileItem";
+      wrap.insertBefore(inp, wrap.lastElementChild);
+
+      updateUIForTokens();
     }
 
     function updateAddBtnVisibility(){
-  const countInputs = qsa("#filesWrap input[type='file']").length;
-  const btn = qs("#btnAddImagem");
-
-  // Some com o botão se não há tokens
-  if (typeof tokensRestantes === "number" && tokensRestantes <= 0){
-    btn.style.display = "none";
-    return;
-  }
-
-  btn.style.display = countInputs >= MAX_FILES ? "none" : "inline-block";
-}
-
-
-  async function enviarExercicio(){
-  const modulo = qs("#selModulo").value.trim(),
-        aula   = qs("#selAula").value.trim(),
-        desc   = qs("#descricao").value.trim();
-
-  if(!modulo) return alert("Selecione o módulo.");
-  if(!aula)   return alert("Selecione a aula.");
-
-  // só conta arquivos realmente selecionados
-  const chosen = qsa("#filesWrap input[type='file']")
-                    .map(i => i.files[0])
-                    .filter(Boolean);
-
-  if(!chosen.length) return alert("Envie pelo menos uma imagem.");
-  if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
-
-  // ✅ Valida tokens antes de enviar
-  if(chosen.length > tokensRestantes){
-    return alert(`Você só tem ${tokensRestantes} envio(s) restante(s) nesta semana.`);
-  }
-
-  setLoading(true, "Enviando seu desenho…");
-
-  try{
-    const files=[];
-    for(const f of chosen){
-      const base64 = await new Promise((res, rej)=>{
-        const fr = new FileReader();
-        fr.onload  = () => res(fr.result.split(",")[1]);
-        fr.onerror = () => rej();
-        fr.readAsDataURL(f);
-      });
-      files.push({name:f.name,type:f.type,content:base64});
+      updateUIForTokens();
     }
 
-    const body = {
-      action:"uploadExercise",
-      curso:sessao.curso,
-      email:sessao.email,
-      nome:bootstrap.nome,
-      modulo,
-      aula,
-      descricao:desc,
-      files
-    };
+    /* ======== Envio ======== */
+    async function enviarExercicio(){
+      const modulo = qs("#selModulo").value.trim(),
+            aula   = qs("#selAula").value.trim(),
+            desc   = qs("#descricao").value.trim();
 
-    const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
-    const d = await r.json();
+      if(!modulo) return alert("Selecione o módulo.");
+      if(!aula)   return alert("Selecione a aula.");
 
-    if(!d.ok){
-      if (d.message === "limit_exceeded"){
-        return alert(`Você atingiu o limite semanal. Tente novamente na próxima semana.`);
+      if (tokensRestantes <= 0){
+        alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+        return;
       }
-      throw new Error(d.message || "Falha");
-    }
 
-    // ✅ Servidor devolveu tokensRestantes atualizados → atualiza UI
-    if(typeof d.tokensRestantes === "number"){
-      tokensRestantes = d.tokensRestantes;
+      const chosen = qsa("#filesWrap input[type='file']")
+                      .map(i => i.files[0])
+                      .filter(Boolean);
 
-      // trava os botões se acabou
-      if(tokensRestantes <= 0){
-        const btnEnviar = qs("#btnEnviar");
-        const btnAdd = qs("#btnAddImagem");
-        btnEnviar.disabled = true;
-        btnAdd.disabled = true;
-        btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-        btnEnviar.style.opacity = "0.7";
+      if(!chosen.length) return alert("Envie pelo menos uma imagem.");
+      if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
+
+      if(chosen.length > tokensRestantes){
+        const resto = tokensRestantes;
+        alert(resto > 0
+          ? `Você só tem ${resto} envio(s) restante(s) nesta semana.`
+          : "Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+        return;
       }
-    }
 
-    hide(qs("#envio"));
-    show(qs("#sucesso"));
+      setLoading(true, "Enviando seu desenho…");
 
-  }catch(e){
-    alert("Erro: " + e.message);
-  }finally{
-    setLoading(false);
-  }
-}
+      try{
+        const files=[];
+        for(const f of chosen){
+          const base64 = await new Promise((res, rej)=>{
+            const fr = new FileReader();
+            fr.onload  = () => res(fr.result.split(",")[1]);
+            fr.onerror = () => rej();
+            fr.readAsDataURL(f);
+          });
+          files.push({name:f.name,type:f.type,content:base64});
+        }
 
-  </script>
+        const body = {
+          action:"uploadExercise",
+          curso:sessao.curso,
+          email:sessao.email,
+          nome:bootstrap.nome,
+          modulo,
+          aula,
+          descricao:desc,
+          files
+        };
 
-  <!-- Função global do overlay -->
-  <script>
-    // Controle único do overlay + trava/destrava de botões marcados
-    function setLoading(state, msg = "Carregando…") {
-      const box = document.getElementById("global-loading");
-      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
-      if (bubble) bubble.textContent = msg;
+        const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+        const d = await r.json();
 
-      // desabilita/rehabilita todos elementos com [data-busy]
-      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+        if(!d.ok){
+          if (d.message === "limit_exceeded"){
+            alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+            return;
+          }
+          throw new Error(d.message || "Falha");
+        }
 
-      if (box) box.style.display = state ? "grid" : "none";
+        if(typeof d.tokensRestantes === "number"){
+          tokensRestantes = d.tokensRestantes;
+        }
+
+        resetFiles();
+        hide(qs("#envio"));
+        show(qs("#sucesso"));
+        updateUIForTokens();
+
+      }catch(e){
+        alert("Erro: " + e.message);
+      }finally{
+        setLoading(false);
+      }
     }
   </script>
 
   <!-- Overlay global -->
+  <script>
+    function setLoading(state, msg = "Carregando…") {
+      const box = document.getElementById("global-loading");
+      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+      if (bubble) bubble.textContent = msg;
+      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+      if (box) box.style.display = state ? "grid" : "none";
+    }
+  </script>
+
   <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
     <div class="global-loading-bubble">Carregando…</div>
   </div>
 </body>
 </html>
-
