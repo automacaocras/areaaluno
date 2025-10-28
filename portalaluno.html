@@ -109,12 +109,56 @@
       <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button" data-busy>Sair</button></div>
     </section>
 
+    
     <!-- ENVIO -->
-    <section id="envio" class="hidden">
-      <div class="card">
-        <h2>Envio de exercício para feedback</h2>
-        <div class="hint">*No máximo 5 artes por semana.</div>
-<div class="card">
+ <section id="envio" class="hidden">
+  <div class="card">
+
+    <!-- AVISO quando acabou os tokens -->
+    <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
+      <button class="btn-cta" type="button" disabled>
+        ❗ Você já enviou o máximo desta semana
+      </button>
+      <p style="margin-top:16px; font-size:16px; font-weight:600;">
+        Semana que vem você poderá enviar suas artes novamente para o feedback dos professores.
+      </p>
+      <p style="color:#888;">Enquanto isso, aproveite para estudar!</p>
+    </div>
+
+    <!-- FORMULÁRIO NORMAL -->
+    <div id="envioFields">
+      <h2>Envio de exercício para feedback</h2>
+      <div class="hint">*No máximo 5 artes por semana.</div>
+
+      <label>Módulo:</label>
+      <select id="selModulo" disabled><option>Carregando...</option></select>
+
+      <label>Aula:</label>
+      <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
+
+      <label>Envie a arte:</label>
+      <div id="filesWrap" class="row">
+        <input type="file" class="fileItem" accept="image/*">
+        <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
+      </div>
+
+      <div class="flex-row">
+        <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
+        <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
+      </div>
+
+      <label>Descrição</label>
+      <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
+
+      <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
+    </div>
+  </div>
+
+  <div class="envio-back" style="text-align:center;margin-top:10px;">
+    <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
+  </div>
+</section>
+
 
   <!-- Quando tokens acabarem -->
   <div id="limiteWrap" class="hidden" style="text-align:center; margin-bottom:16px;">
@@ -309,41 +353,51 @@
       return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
     }
 
-    function updateUIForTokens(){
-      const btnEnviar = qs("#btnEnviar");
-      const btnAdd    = qs("#btnAddImagem");
-      const btnReset  = qs("#btnResetar");
-      const selected  = countSelectedFiles();
-      const inputsQtd = qsa("#filesWrap input[type='file']").length;
+   function updateUIForTokens(){
+  const btnEnviar  = qs("#btnEnviar");
+  const btnAdd     = qs("#btnAddImagem");
+  const btnReset   = qs("#btnResetar");
+  const wrapForm   = qs("#envioFields");
+  const wrapLimit  = qs("#limiteWrap");
 
-      if (tokensRestantes <= 0){
-        // Tarja desativada e sumir botões auxiliares
-        if (btnEnviar){
-          btnEnviar.disabled = false; // clicável para mensagem educativa
-          btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-          btnEnviar.style.opacity = "0.9";
-        }
-        if (btnAdd)   btnAdd.style.display   = "none";
-        if (btnReset) btnReset.style.display = "none";
-        return;
-      }
+  const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+  const inputsQtd  = qsa("#filesWrap input[type='file']").length;
 
-      // Estado normal
-      if (btnEnviar){
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = "Enviar";
-        btnEnviar.style.opacity = "";
-      }
+  if (tokensRestantes <= 0){
+    // mostra aviso e esconde o formulário
+    if (wrapForm)  wrapForm.style.display = "none";
+    if (wrapLimit) wrapLimit.classList.remove("hidden");
 
-      const deveMostrarAdd = (
-        tokensRestantes > 1 &&
-        selected < tokensRestantes &&
-        inputsQtd < MAX_FILES
-      );
-
-      if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
-      if (btnReset) btnReset.style.display = "inline-block";
+    // deixa o "enviar" como tarja informativa (clicável p/ mensagem)
+    if (btnEnviar){
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
+      btnEnviar.style.opacity = "0.9";
     }
+    if (btnAdd)   btnAdd.style.display   = "none";
+    if (btnReset) btnReset.style.display = "none";
+    return;
+  }
+
+  // há tokens → mostra formulário e esconde aviso
+  if (wrapForm)  wrapForm.style.display = "block";
+  if (wrapLimit) wrapLimit.classList.add("hidden");
+
+  if (btnEnviar){
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = "Enviar";
+    btnEnviar.style.opacity = "";
+  }
+
+  const deveMostrarAdd = (
+    tokensRestantes > 1 &&
+    selected < tokensRestantes &&
+    inputsQtd < MAX_FILES
+  );
+  if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
+  if (btnReset) btnReset.style.display = "inline-block";
+}
+
 
     function resetFiles(){
       qs("#filesWrap").innerHTML =
@@ -475,4 +529,5 @@
   </div>
 </body>
 </html>
+
 
