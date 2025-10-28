@@ -40,13 +40,7 @@
     .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
     .hidden{display:none!important}
 
-    #overlay{
-      display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(0,0,0,.35);
-      z-index:10000;place-items:center;
-    }
-    #overlay .loader{padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);}
-    #overlay .loader-text{font-weight:700;color:#000;}
-    #filesWrap input[type="file"]{display:block;margin:6px auto;}
+    /* (removido: estilos antigos do #overlay) */
 
     /* ===== Selects modernos ===== */
     select {
@@ -96,7 +90,7 @@
         <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
       </div>
 
-      <button id="btnAbrirEnvio" class="btn-cta" type="button">Envie os exercícios para feedback</button>
+      <button id="btnAbrirEnvio" class="btn-cta" type="button" data-busy>Envie os exercícios para feedback</button>
 
       <div class="card">
         <h3>Última aula gravada:</h3>
@@ -104,20 +98,17 @@
         <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
       </div>
 
-     <div class="links-uteis" style="text-align:center; margin-top:25px;">
-  <strong>Links úteis:</strong><br>
-  <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
-     target="_blank"
-     rel="noopener noreferrer"
-     style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
-    💬 Grupo dos alunos no WhatsApp
-  </a>
-</div>
+      <div class="links-uteis" style="text-align:center; margin-top:25px;">
+        <strong>Links úteis:</strong><br>
+        <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
+          💬 Grupo dos alunos no WhatsApp
+        </a>
+      </div>
 
-      
-
-      
-      <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button">Sair</button></div>
+      <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button" data-busy>Sair</button></div>
     </section>
 
     <!-- ENVIO -->
@@ -139,18 +130,18 @@
         </div>
 
         <div class="flex-row">
-          <button id="btnAddImagem" class="btn-sec" type="button">Adicionar imagem</button>
-          <button id="btnResetar" class="btn-sec" type="button">Cancelar imagens</button>
+          <button id="btnAddImagem" class="btn-sec" type="button" data-busy>Adicionar imagem</button>
+          <button id="btnResetar" class="btn-sec" type="button" data-busy>Cancelar imagens</button>
         </div>
 
         <label>Descrição</label>
         <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
 
-        <button id="btnEnviar" class="btn-cta" type="button">Enviar</button>
+        <button id="btnEnviar" class="btn-cta" type="button" data-busy>Enviar</button>
       </div>
 
       <div class="envio-back" style="text-align:center;margin-top:10px;">
-        <button id="btnVoltarEnvio" class="btn-back" type="button">Voltar</button>
+        <button id="btnVoltarEnvio" class="btn-back" type="button" data-busy>Voltar</button>
       </div>
     </section>
 
@@ -159,12 +150,12 @@
       <div class="card">
         <h2>✅ Enviado!</h2>
         <p>Seu desenho será avaliado em breve.</p>
-        <button id="btnVoltarMenu" class="btn-sec" type="button">Menu</button>
+        <button id="btnVoltarMenu" class="btn-sec" type="button" data-busy>Menu</button>
       </div>
     </section>
   </main>
 
-  <div id="overlay"><div class="loader"><div class="loader-text">Enviando…</div></div></div>
+  <!-- (removido o overlay antigo #overlay) -->
 
   <footer class="site-footer">
     <div class="footer-inner">
@@ -182,7 +173,6 @@
     const qsa = s => Array.from(document.querySelectorAll(s));
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
-    function setLoading(state){qs("#overlay").style.display=state?"grid":"none";const b=qs("#btnEnviar");if(b)b.disabled=state;}
 
     document.addEventListener("DOMContentLoaded", async () => {
       try{ sessao=JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
@@ -190,7 +180,10 @@
       if(!sessao) sessao={email:params.get("email"),curso:params.get("curso")};
       if(!sessao||!sessao.email||!sessao.curso){alert("Faça login novamente.");location.href="index.html";return;}
 
+      setLoading(true, "Carregando seu curso…");
       await carregarBootstrap(sessao.curso,sessao.email);
+      setLoading(false);
+
       qs("#btnAbrirEnvio").onclick=abrirEnvio;
       qs("#btnVoltarEnvio").onclick=()=>{hide(qs("#envio"));show(qs("#dashboard"));window.scrollTo({top:0,behavior:"smooth"});}
       qs("#btnAddImagem").onclick=addFileInput;
@@ -209,16 +202,21 @@
         const logo=qs("#cursoLogo"); if(bootstrap.logoUrl){logo.src=bootstrap.logoUrl;logo.style.display="block";}
 
         const dr = +bootstrap.diasRestantes || 0;
-if (dr > 0) {
-  const txt = dr === 1
-    ? `[${dr}] dia restante de acesso ao curso.`
-    : `[${dr}] dias restantes de acesso ao curso.`;
-  qs("#diasRestantes").textContent = txt;
-} else {
-  qs("#diasRestantes").textContent = "Acesso expirado.";
-}
-        
-        if(dr<=30&&bootstrap.desconto?.cupom){qs("#cupomBox").style.display="block";qs("#cupomCod").textContent=bootstrap.desconto.cupom;qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;qs("#cupomLink").href=bootstrap.desconto.link;}
+        if (dr > 0) {
+          const txt = dr === 1
+            ? `[${dr}] dia restante de acesso ao curso.`
+            : `[${dr}] dias restantes de acesso ao curso.`;
+          qs("#diasRestantes").textContent = txt;
+        } else {
+          qs("#diasRestantes").textContent = "Acesso expirado.";
+        }
+
+        if(dr<=30&&bootstrap.desconto?.cupom){
+          qs("#cupomBox").style.display="block";
+          qs("#cupomCod").textContent=bootstrap.desconto.cupom;
+          qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;
+          qs("#cupomLink").href=bootstrap.desconto.link;
+        }
 
         const fb=bootstrap.feedback||{};
         if(fb.dia){qs("#fbDiaTxt").textContent=fb.dia;qs("#fbDiaTxt").style.display="block";}
@@ -231,7 +229,15 @@ if (dr > 0) {
       }catch(e){alert("Erro ao carregar.");location.href="index.html";}
     }
 
-    async function abrirEnvio(){hide(qs("#dashboard"));await carregarModulos();show(qs("#envio"));window.scrollTo({top:0,behavior:"smooth"});}
+    async function abrirEnvio(){
+      setLoading(true, "Carregando envio…");
+      hide(qs("#dashboard"));
+      await carregarModulos();
+      show(qs("#envio"));
+      window.scrollTo({top:0,behavior:"smooth"});
+      setLoading(false);
+    }
+
     async function carregarModulos(){
       const sel=qs("#selModulo"),selA=qs("#selAula");
       sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
@@ -244,6 +250,7 @@ if (dr > 0) {
         sel.disabled=false; sel.onchange=carregarAulas;
       }catch{sel.innerHTML="<option>Erro ao carregar módulos</option>";}
     }
+
     async function carregarAulas(){
       const modulo=qs("#selModulo").value,sel=qs("#selAula");
       if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
@@ -277,47 +284,55 @@ if (dr > 0) {
 
     async function enviarExercicio(){
       const modulo=qs("#selModulo").value.trim(),aula=qs("#selAula").value.trim(),desc=qs("#descricao").value.trim();
-      if(!modulo)return alert("Selecione o módulo."); if(!aula)return alert("Selecione a aula.");
+      if(!modulo)return alert("Selecione o módulo.");
+      if(!aula)return alert("Selecione a aula.");
       const chosen=qsa("#filesWrap input[type='file']").map(i=>i.files[0]).filter(Boolean);
-      if(!chosen.length)return alert("Envie pelo menos uma imagem."); if(chosen.length>MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
-      setLoading(true);
+      if(!chosen.length)return alert("Envie pelo menos uma imagem.");
+      if(chosen.length>MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
+
+      setLoading(true, "Enviando seu desenho…");
       try{
         const files=[];
         for(const f of chosen){
-          const base64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=()=>rej();fr.readAsDataURL(f);});
+          const base64=await new Promise((res,rej)=>{
+            const fr=new FileReader();
+            fr.onload=()=>res(fr.result.split(",")[1]);
+            fr.onerror=()=>rej();
+            fr.readAsDataURL(f);
+          });
           files.push({name:f.name,type:f.type,content:base64});
         }
         const body={action:"uploadExercise",curso:sessao.curso,email:sessao.email,nome:bootstrap.nome,modulo,aula,descricao:desc,files};
-        const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});const d=await r.json();
+        const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+        const d=await r.json();
         if(!d.ok)throw new Error(d.message||"Falha");
         hide(qs("#envio"));show(qs("#sucesso"));
-      }catch(e){alert("Erro: "+e.message);}finally{setLoading(false);}
+      }catch(e){
+        alert("Erro: "+e.message);
+      }finally{
+        setLoading(false);
+      }
     }
   </script>
 
+  <!-- Função global do overlay -->
   <script>
-  // Controle único do overlay + trava/destrava de botões marcados
-  function setLoading(state, msg = "Carregando…") {
-    const box = document.getElementById("global-loading");
-    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
-    if (bubble) bubble.textContent = msg;
+    // Controle único do overlay + trava/destrava de botões marcados
+    function setLoading(state, msg = "Carregando…") {
+      const box = document.getElementById("global-loading");
+      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+      if (bubble) bubble.textContent = msg;
 
-    // (Opcional) desabilita/rehabilita todos elementos com [data-busy]
-    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+      // desabilita/rehabilita todos elementos com [data-busy]
+      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
 
-    if (box) box.style.display = state ? "grid" : "none";
-  }
-</script>
+      if (box) box.style.display = state ? "grid" : "none";
+    }
+  </script>
 
-  
   <!-- Overlay global -->
-<div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
-  <div class="global-loading-bubble">Carregando…</div>
-</div>
-
+  <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
+    <div class="global-loading-bubble">Carregando…</div>
+  </div>
 </body>
 </html>
-
-
-
-
