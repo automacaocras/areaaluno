@@ -73,10 +73,18 @@
 
         <section class="panel" id="linksPanel">
           <h3>Links úteis:</h3>
-          <div class="links-box">
-            <a id="lnkPlanilhaExercicios" href="#" target="_blank" rel="noopener">—</a>
-            <a id="lnkDriveExercicios"   href="#" target="_blank" rel="noopener">—</a>
-          </div>
+         <div class="links-box">
+  <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0"
+     target="_blank" rel="noopener">
+    Planilha de Exercícios
+  </a>
+
+  <a href="https://drive.google.com/drive/folders/1vzabDs8UKJogmI4G2yCIazSq-ZydaynE"
+     target="_blank" rel="noopener">
+    Pasta Central do Drive
+  </a>
+</div>
+
         </section>
 
         <button id="btnSair" class="btn-exit" data-busy>Sair</button>
@@ -157,11 +165,6 @@
 
       qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
 
-      // links úteis
-      const planUrl  = bootstrap?.profLinks?.exerciciosSheetUrl || '#';
-      const driveHub = bootstrap?.profLinks?.driveHubUrl || '#';
-      qs('#lnkPlanilhaExercicios').textContent = planUrl;  qs('#lnkPlanilhaExercicios').href = planUrl;
-      qs('#lnkDriveExercicios').textContent    = driveHub; qs('#lnkDriveExercicios').href    = driveHub;
 
       // navegação
       qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
@@ -261,3 +264,4 @@
   </div>
 </body>
 </html>
+
