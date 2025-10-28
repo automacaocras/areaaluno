@@ -56,6 +56,13 @@
     .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
     .next-live strong, .gravada-info strong{ font-weight:800; }
     .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
+
+    /* validação de campos */
+    .is-invalid{
+      border-color:#d64545 !important;
+      box-shadow:0 0 0 2px rgba(214,69,69,.12);
+      outline: none;
+    }
     /* (removidos estilos antigos do #overlay) */
   </style>
 </head>
@@ -162,6 +169,63 @@
     }
     function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+    /* === utilitários de validação === */
+    function isValidURL(url){
+      try{
+        const u = new URL(url);
+        return u.protocol === 'http:' || u.protocol === 'https:';
+      }catch{ return false; }
+    }
+    function isValidTime(hhmm){
+      return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
+    }
+    function markInvalid(el, state=true){
+      if (!el) return;
+      if (state) el.classList.add('is-invalid');
+      else el.classList.remove('is-invalid');
+    }
+    function clearInvalidOnInput(sel){
+      const el = qs(sel);
+      if (!el) return;
+      el.addEventListener('input', ()=> markInvalid(el,false));
+      el.addEventListener('blur',  ()=> markInvalid(el,false));
+    }
+    function validateLiveForm(){
+      const fLink = qs('#fLink');
+      const fHora = qs('#fHora');
+      const fDia  = qs('#fDia');
+
+      const link = fLink.value.trim();
+      const hora = fHora.value.trim();
+      const dia  = fDia.value.trim();
+
+      // limpa estados antigos
+      [fLink,fHora,fDia].forEach(el=>markInvalid(el,false));
+
+      const errors = [];
+      if (!link || !isValidURL(link)){
+        errors.push('• Informe um LINK válido (http/https).');
+        markInvalid(fLink,true);
+      }
+      if (!hora || !isValidTime(hora)){
+        errors.push('• Informe a HORA no formato 24h (ex.: 20:00).');
+        markInvalid(fHora,true);
+      }
+      if (!dia){
+        errors.push('• Informe o DIA (ex.: quinta-feira).');
+        markInvalid(fDia,true);
+      }
+
+      if (errors.length){
+        alert('Verifique os campos obrigatórios:\n\n' + errors.join('\n'));
+        // foca no primeiro inválido
+        const firstInvalid = [fLink,fHora,fDia].find(el => el.classList.contains('is-invalid'));
+        if (firstInvalid) firstInvalid.focus();
+        return false;
+      }
+      return { link, hora, dia };
+    }
+
     /* === NOVO: renderização das confirmações === */
     function renderNextLive(src){
       const box = qs('#nextLive');
@@ -257,11 +321,14 @@
       // ações
       qs('#btnEnviarLive').addEventListener('click', enviarLive);
       qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
+
+      // limpa marcação de erro ao digitar
+      ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
     }
 
     function clearForms(){
       ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
-        const el = qs(sel); if (el) el.value = '';
+        const el = qs(sel); if (el) { el.value = ''; markInvalid(el,false); }
       });
     }
 
@@ -277,6 +344,10 @@
     }
 
     async function enviarLive(){
+      // ✅ validação antes de enviar
+      const ok = validateLiveForm();
+      if (!ok) return; // não envia se inválido
+
       const body = {
         action: 'updateFeedbackLive',
         curso: sessao.curso,
@@ -358,6 +429,3 @@
   </div>
 </body>
 </html>
-
-
-
