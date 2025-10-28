@@ -295,6 +295,21 @@ if (dr > 0) {
     }
   </script>
 
+  <script>
+  // Controle único do overlay + trava/destrava de botões marcados
+  function setLoading(state, msg = "Carregando…") {
+    const box = document.getElementById("global-loading");
+    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+    if (bubble) bubble.textContent = msg;
+
+    // (Opcional) desabilita/rehabilita todos elementos com [data-busy]
+    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+
+    if (box) box.style.display = state ? "grid" : "none";
+  }
+</script>
+
+  
   <!-- Overlay global -->
 <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
   <div class="global-loading-bubble">Carregando…</div>
@@ -302,6 +317,7 @@ if (dr > 0) {
 
 </body>
 </html>
+
 
 
 
