@@ -201,7 +201,7 @@
         const fb=bootstrap.feedback||{};
         if(fb.dia){qs("#fbDiaTxt").textContent=fb.dia;qs("#fbDiaTxt").style.display="block";}
         if(fb.hora){qs("#fbHoraTxt").textContent=fb.hora;qs("#fbHoraTxt").style.display="block";}
-        qs("#fbProf").textContent=bootstrap.professorNome||"—";
+        qs("#fbProf").textContent=bootstrap.feedback?.professor || "—";
         qs("#fbSenha").textContent=fb.senha||"—";
         qs("#fbInfo").textContent=fb.info||"—";
         if(fb.link){qs("#fbLink").href=fb.link;qs("#fbLink").textContent=fb.link;}
@@ -274,3 +274,4 @@
   </script>
 </body>
 </html>
+
