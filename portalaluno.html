@@ -1,301 +1,342 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Portal do Aluno – Editora Crás</title>
-  <meta name="description" content="Acompanhe o próximo feedback, envie exercícios e acesse conteúdos gravados.">
-  <link rel="icon" type="image/png" href="assets/favicon.png" sizes="32x32">
-  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
-  <link rel="shortcut icon" href="assets/favicon.ico">
-  <meta name="theme-color" content="#0286ff">
-  <link rel="stylesheet" href="style.css?v=7">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Portal do Aluno – Editora Crás</title>
+  <meta name="description" content="Acompanhe o próximo feedback, envie exercícios e acesse conteúdos gravados.">
+  <link rel="icon" type="image/png" href="assets/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="assets/favicon.ico">
+  <meta name="theme-color" content="#0286ff">
+  <link rel="stylesheet" href="style.css?v=7">
 
-  <style>
-    .topbar{
-      width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
-      background:#e6b200;color:#000;font-weight:800;text-align:center;
-      padding:12px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+  <style>
+    .topbar{
+      width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
+      background:#e6b200;color:#000;font-weight:800;text-align:center;
+      padding:12px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+    }
+    .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
+    .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
+    .dias-danger{color:#d93025}
+
+    .card,.box-feedback{
+      max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;
+      border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center;
+    }
+
+    label{display:block;text-align:left;font-weight:700;margin-top:10px;margin-bottom:4px}
+    select,textarea,input[type="file"]{width:100%;max-width:100%;box-sizing:border-box}
+    textarea{min-height:120px;border-radius:10px;border:1px solid #ccc;padding:10px}
+
+    .btn-cta{
+      display:block;width:100%;max-width:900px;margin:16px auto 10px;padding:16px 18px;
+      border:none;border-radius:18px;background:#e6b200;color:#111;font-weight:800;cursor:pointer;
+    }
+    .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+    .btn-exit{display:inline-block;margin:8px auto 24px;padding:10px 18px;background:#e53935;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer}
+    .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
+    .hidden{display:none!important}
+
+    #overlay{
+      display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(0,0,0,.35);
+      z-index:10000;place-items:center;
+    }
+    #overlay .loader{padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);}
+    #overlay .loader-text{font-weight:700;color:#000;}
+    #filesWrap input[type="file"]{display:block;margin:6px auto;}
+
+    /* ===== Selects modernos ===== */
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: #fff url('data:image/svg+xml;utf8,<svg fill="%23000" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polygon points="5,8 10,13 15,8"/></svg>') no-repeat right 12px center;
+      background-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px 36px 10px 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #222;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    select:hover { border-color: #999; }
+    select:disabled { background-color: #f8f8f8; color: #888; }
+    
+    /* NOVO: CSS do Snackbar */
+    #snackbar {
+        visibility: hidden; 
+        min-width: 250px; 
+        margin-left: -125px;
+        background-color: #333; 
+        color: #fff; 
+        text-align: center; 
+        border-radius: 8px; 
+        padding: 16px; 
+        position: fixed; 
+        z-index: 10000; 
+        left: 50%; 
+        bottom: 30px; 
+        font-size: 17px; 
+        box-shadow: 0 6px 20px rgba(0,0,0,.2);
     }
-    .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
-    .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
-    .dias-danger{color:#d93025}
-
-    .card,.box-feedback{
-      max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;
-      border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center;
+    #snackbar.show {
+        visibility: visible; 
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
     }
-
-    label{display:block;text-align:left;font-weight:700;margin-top:10px;margin-bottom:4px}
-    select,textarea,input[type="file"]{width:100%;max-width:100%;box-sizing:border-box}
-    textarea{min-height:120px;border-radius:10px;border:1px solid #ccc;padding:10px}
-
-    .btn-cta{
-      display:block;width:100%;max-width:900px;margin:16px auto 10px;padding:16px 18px;
-      border:none;border-radius:18px;background:#e6b200;color:#111;font-weight:800;cursor:pointer;
-    }
-    .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-    .btn-exit{display:inline-block;margin:8px auto 24px;padding:10px 18px;background:#e53935;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer}
-    .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
-    .hidden{display:none!important}
-
-    #overlay{
-      display:none;position:fixed;inset:0;width:100svw;height:100svh;background:rgba(0,0,0,.35);
-      z-index:10000;place-items:center;
-    }
-    #overlay .loader{padding:12px 16px;background:#fff;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.15);}
-    #overlay .loader-text{font-weight:700;color:#000;}
-    #filesWrap input[type="file"]{display:block;margin:6px auto;}
-
-    /* ===== Selects modernos ===== */
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: #fff url('data:image/svg+xml;utf8,<svg fill="%23000" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polygon points="5,8 10,13 15,8"/></svg>') no-repeat right 12px center;
-      background-size: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px 36px 10px 12px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #222;
-      cursor: pointer;
-      transition: border-color .2s;
-    }
-    select:hover { border-color: #999; }
-    select:disabled { background-color: #f8f8f8; color: #888; }
-  </style>
+    @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @-webkit-keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+  </style>
 </head>
 <body>
-  <div class="topbar">[aluno]</div>
+  <div class="topbar">[aluno]</div>
 
-  <main class="page-center" style="--center-offset:-40px;">
-    <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
-    <div id="diasRestantes" class="dias-restantes">Carregando...</div>
+  <main class="page-center" style="--center-offset:-40px;">
+    <img id="cursoLogo" class="curso-logo" alt="Curso" style="display:none">
+    <div id="diasRestantes" class="dias-restantes">Carregando...</div>
 
-    <!-- Cupom -->
-    <div id="cupomBox" class="card" style="display:none">
-      <div>Poxa, seu acesso ao curso está acabando 😢</div>
-      <div style="margin-top:6px">
-        Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
-        e receba <strong id="cupomPerc">---</strong>% de desconto para adquirir novamente.
-        <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
-      </div>
-    </div>
+        <div id="cupomBox" class="card" style="display:none">
+      <div>Poxa, seu acesso ao curso está acabando 😢</div>
+      <div style="margin-top:6px">
+        Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
+        e receba <strong id="cupomPerc">---</strong>% de desconto para adquirir novamente.
+        <a id="cupomLink" href="#" target="_blank" rel="noopener">Clique aqui</a>.
+      </div>
+    </div>
 
-    <!-- DASHBOARD -->
-    <section id="dashboard">
-      <div class="box-feedback">
-        <h3>Próximo feedback:</h3>
-        <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
-        <p>Professor: <strong id="fbProf">—</strong></p>
-        <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
-        <p>Senha: <strong id="fbSenha">—</strong></p>
-        <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
-      </div>
+        <section id="dashboard">
+      <div class="box-feedback">
+        <h3>Próximo feedback:</h3>
+        <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
+        <p>Professor: <strong id="fbProf">—</strong></p>
+        <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
+        <p>Senha: <strong id="fbSenha">—</strong></p>
+        <p id="fbInfo" style="margin-top:10px;color:#333">—</p>
+      </div>
 
-      <button id="btnAbrirEnvio" class="btn-cta" type="button">Envie os exercícios para feedback</button>
+      <button id="btnAbrirEnvio" class="btn-cta" type="button">Envie os exercícios para feedback</button>
 
-      <div class="card">
-        <h3>Última aula gravada:</h3>
-        <p class="hint">Aproveite para baixar pois ela expira.</p>
-        <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
-      </div>
+      <div class="card">
+        <h3>Última aula gravada:</h3>
+        <p class="hint">Aproveite para baixar pois ela expira.</p>
+        <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
+      </div>
 
-     <div class="links-uteis" style="text-align:center; margin-top:25px;">
-  <strong>Links úteis:</strong><br>
-  <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
-     target="_blank"
-     rel="noopener noreferrer"
-     style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
-    💬 Grupo dos alunos no WhatsApp
-  </a>
+     <div class="links-uteis" style="text-align:center; margin-top:25px;">
+  <strong>Links úteis:</strong><br>
+  <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
+     target="_blank"
+     rel="noopener noreferrer"
+     style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
+    💬 Grupo dos alunos no WhatsApp
+  </a>
 </div>
 
-      
+      
 
-      
-      <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button">Sair</button></div>
-    </section>
+      
+      <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button">Sair</button></div>
+    </section>
 
-    <!-- ENVIO -->
-    <section id="envio" class="hidden">
-      <div class="card">
-        <h2>Envio de exercício para feedback</h2>
-        <div class="hint">*No máximo 3 artes por semana.</div>
+        <section id="envio" class="hidden">
+      <div class="card">
+        <h2>Envio de exercício para feedback</h2>
+        <div class="hint">*No máximo 3 artes por semana.</div>
 
-        <label>Módulo:</label>
-        <select id="selModulo" disabled><option>Carregando...</option></select>
+        <label>Módulo:</label>
+        <select id="selModulo" disabled><option>Carregando...</option></select>
 
-        <label>Aula:</label>
-        <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
+        <label>Aula:</label>
+        <select id="selAula" disabled><option>Selecione o módulo primeiro</option></select>
 
-        <label>Envie a arte:</label>
-        <div id="filesWrap" class="row">
-          <input type="file" class="fileItem" accept="image/*">
-          <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
-        </div>
+        <label>Envie a arte:</label>
+        <div id="filesWrap" class="row">
+          <input type="file" class="fileItem" accept="image/*">
+          <div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>
+        </div>
 
-        <div class="flex-row">
-          <button id="btnAddImagem" class="btn-sec" type="button">Adicionar imagem</button>
-          <button id="btnResetar" class="btn-sec" type="button">Cancelar imagens</button>
-        </div>
+        <div class="flex-row">
+          <button id="btnAddImagem" class="btn-sec" type="button">Adicionar imagem</button>
+          <button id="btnResetar" class="btn-sec" type="button">Cancelar imagens</button>
+        </div>
 
-        <label>Descrição</label>
-        <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
+        <label>Descrição</label>
+        <textarea id="descricao" rows="5" placeholder="Conte sobre suas dificuldades."></textarea>
 
-        <button id="btnEnviar" class="btn-cta" type="button">Enviar</button>
-      </div>
+        <button id="btnEnviar" class="btn-cta" type="button">Enviar</button>
+      </div>
 
-      <div class="envio-back" style="text-align:center;margin-top:10px;">
-        <button id="btnVoltarEnvio" class="btn-back" type="button">Voltar</button>
-      </div>
-    </section>
+      <div class="envio-back" style="text-align:center;margin-top:10px;">
+        <button id="btnVoltarEnvio" class="btn-back" type="button">Voltar</button>
+      </div>
+    </section>
 
-    <!-- SUCESSO -->
-    <section id="sucesso" class="hidden">
-      <div class="card">
-        <h2>✅ Enviado!</h2>
-        <p>Seu desenho será avaliado em breve.</p>
-        <button id="btnVoltarMenu" class="btn-sec" type="button">Menu</button>
-      </div>
-    </section>
-  </main>
+        <section id="sucesso" class="hidden">
+      <div class="card">
+        <h2>✅ Enviado!</h2>
+        <p>Seu desenho será avaliado em breve.</p>
+        <button id="btnVoltarMenu" class="btn-sec" type="button">Menu</button>
+      </div>
+    </section>
+  </main>
 
-  <div id="overlay"><div class="loader"><div class="loader-text">Enviando…</div></div></div>
+  <div id="overlay"><div class="loader"><div class="loader-text">Enviando…</div></div></div>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <strong>Editora Crás • </strong>
-      <a href="mailto:contato@editoracras.com">Suporte</a>
-      <small>© 2025. Todos os direitos reservados.</small>
-    </div>
-  </footer>
+    <div id="snackbar"></div>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-    const MAX_FILES = 3;
-    let sessao = null, bootstrap = null;
-    const qs = s => document.querySelector(s);
-    const qsa = s => Array.from(document.querySelectorAll(s));
-    const show = el => el.classList.remove('hidden');
-    const hide = el => el.classList.add('hidden');
-    function setLoading(state){qs("#overlay").style.display=state?"grid":"none";const b=qs("#btnEnviar");if(b)b.disabled=state;}
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <strong>Editora Crás • </strong>
+      <a href="mailto:contato@editoracras.com">Suporte</a>
+      <small>© 2025. Todos os direitos reservados.</small>
+    </div>
+  </footer>
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try{ sessao=JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
-      const params=new URLSearchParams(location.search);
-      if(!sessao) sessao={email:params.get("email"),curso:params.get("curso")};
-      if(!sessao||!sessao.email||!sessao.curso){alert("Faça login novamente.");location.href="index.html";return;}
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
+    const MAX_FILES = 3;
+    let sessao = null, bootstrap = null;
+    const qs = s => document.querySelector(s);
+    const qsa = s => Array.from(document.querySelectorAll(s));
+    const show = el => el.classList.remove('hidden');
+    const hide = el => el.classList.add('hidden');
+    function setLoading(state){qs("#overlay").style.display=state?"grid":"none";const b=qs("#btnEnviar");if(b)b.disabled=state;}
 
-      await carregarBootstrap(sessao.curso,sessao.email);
-      qs("#btnAbrirEnvio").onclick=abrirEnvio;
-      qs("#btnVoltarEnvio").onclick=()=>{hide(qs("#envio"));show(qs("#dashboard"));window.scrollTo({top:0,behavior:"smooth"});}
-      qs("#btnAddImagem").onclick=addFileInput;
-      qs("#btnResetar").onclick=resetFiles;
-      qs("#btnEnviar").onclick=enviarExercicio;
-      qs("#btnVoltarMenu").onclick=()=>{hide(qs("#sucesso"));show(qs("#dashboard"));};
-      qs("#btnSair").onclick=()=>{localStorage.removeItem("sessao_portal");location.href="index.html";};
-      updateAddBtnVisibility();
-    });
+    // NOVO: Função para mostrar a notificação (Snack/Toastbar)
+    function showSnackbar(message) {
+        const snack = qs("#snackbar");
+        snack.textContent = message;
+        snack.className = "show";
+        setTimeout(function(){ snack.className = snack.className.replace("show", ""); }, 3000);
+    }
+    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-    async function carregarBootstrap(curso,email){
-      try{
-        const r=await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-        bootstrap=await r.json(); if(!bootstrap||bootstrap.allowed!==true){location.href="index.html";return;}
-        qs(".topbar").textContent=`[${bootstrap.nome||"aluno"}]`;
-        const logo=qs("#cursoLogo"); if(bootstrap.logoUrl){logo.src=bootstrap.logoUrl;logo.style.display="block";}
+    document.addEventListener("DOMContentLoaded", async () => {
+      try{ sessao=JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
+      const params=new URLSearchParams(location.search);
+      if(!sessao) sessao={email:params.get("email"),curso:params.get("curso")};
+      // TROCA: alert por showSnackbar
+      if(!sessao||!validEmail(sessao.email)||!sessao.curso){showSnackbar("Faça login novamente.");location.href="index.html";return;}
 
-        const dr = +bootstrap.diasRestantes || 0;
+      await carregarBootstrap(sessao.curso,sessao.email);
+      qs("#btnAbrirEnvio").onclick=abrirEnvio;
+      qs("#btnVoltarEnvio").onclick=()=>{hide(qs("#envio"));show(qs("#dashboard"));window.scrollTo({top:0,behavior:"smooth"});}
+      qs("#btnAddImagem").onclick=addFileInput;
+      qs("#btnResetar").onclick=resetFiles;
+      qs("#btnEnviar").onclick=enviarExercicio;
+      qs("#btnVoltarMenu").onclick=()=>{hide(qs("#sucesso"));show(qs("#dashboard"));};
+      qs("#btnSair").onclick=()=>{localStorage.removeItem("sessao_portal");location.href="index.html";};
+      updateAddBtnVisibility();
+    });
+
+    async function carregarBootstrap(curso,email){
+      try{
+        const r=await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+        bootstrap=await r.json(); if(!bootstrap||bootstrap.allowed!==true){location.href="index.html";return;}
+        qs(".topbar").textContent=`[${bootstrap.nome||"aluno"}]`;
+        const logo=qs("#cursoLogo"); if(bootstrap.logoUrl){logo.src=bootstrap.logoUrl;logo.style.display="block";}
+
+        const dr = +bootstrap.diasRestantes || 0;
 if (dr > 0) {
-  const txt = dr === 1
-    ? `[${dr}] dia restante de acesso ao curso.`
-    : `[${dr}] dias restantes de acesso ao curso.`;
-  qs("#diasRestantes").textContent = txt;
+  const txt = dr === 1
+    ? `[${dr}] dia restante de acesso ao curso.`
+    : `[${dr}] dias restantes de acesso ao curso.`;
+  qs("#diasRestantes").textContent = txt;
 } else {
-  qs("#diasRestantes").textContent = "Acesso expirado.";
+  qs("#diasRestantes").textContent = "Acesso expirado.";
 }
-        
-        if(dr<=30&&bootstrap.desconto?.cupom){qs("#cupomBox").style.display="block";qs("#cupomCod").textContent=bootstrap.desconto.cupom;qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;qs("#cupomLink").href=bootstrap.desconto.link;}
+        
+        if(dr<=30&&bootstrap.desconto?.cupom){qs("#cupomBox").style.display="block";qs("#cupomCod").textContent=bootstrap.desconto.cupom;qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;qs("#cupomLink").href=bootstrap.desconto.link;}
 
-        const fb=bootstrap.feedback||{};
-        if(fb.dia){qs("#fbDiaTxt").textContent=fb.dia;qs("#fbDiaTxt").style.display="block";}
-        if(fb.hora){qs("#fbHoraTxt").textContent=fb.hora;qs("#fbHoraTxt").style.display="block";}
-        qs("#fbProf").textContent=bootstrap.feedback?.professor || "—";
-        qs("#fbSenha").textContent=fb.senha||"—";
-        qs("#fbInfo").textContent=fb.info||"—";
-        if(fb.link){qs("#fbLink").href=fb.link;qs("#fbLink").textContent=fb.link;}
-        if(fb.aulaGravada){qs("#ultimaGravada").href=fb.aulaGravada;qs("#ultimaGravada").textContent=fb.aulaGravada;}
-      }catch(e){alert("Erro ao carregar.");location.href="index.html";}
-    }
+        const fb=bootstrap.feedback||{};
+        if(fb.dia){qs("#fbDiaTxt").textContent=fb.dia;qs("#fbDiaTxt").style.display="block";}
+        if(fb.hora){qs("#fbHoraTxt").textContent=fb.hora;qs("#fbHoraTxt").style.display="block";}
+        qs("#fbProf").textContent=bootstrap.feedback?.professor || "—";
+        qs("#fbSenha").textContent=fb.senha||"—";
+        qs("#fbInfo").textContent=fb.info||"—";
+        if(fb.link){qs("#fbLink").href=fb.link;qs("#fbLink").textContent=fb.link;}
+        if(fb.aulaGravada){qs("#ultimaGravada").href=fb.aulaGravada;qs("#ultimaGravada").textContent=fb.aulaGravada;}
+      }catch(e){showSnackbar("Erro ao carregar. Faça login novamente.");location.href="index.html";} // TROCA
+    }
 
-    async function abrirEnvio(){hide(qs("#dashboard"));await carregarModulos();show(qs("#envio"));window.scrollTo({top:0,behavior:"smooth"});}
-    async function carregarModulos(){
-      const sel=qs("#selModulo"),selA=qs("#selAula");
-      sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
-      selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
-      try{
-        const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
-        const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
-        sel.innerHTML="<option value=''>Selecione o módulo</option>";
-        mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
-        sel.disabled=false; sel.onchange=carregarAulas;
-      }catch{sel.innerHTML="<option>Erro ao carregar módulos</option>";}
-    }
-    async function carregarAulas(){
-      const modulo=qs("#selModulo").value,sel=qs("#selAula");
-      if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
-      sel.innerHTML="<option>Carregando aulas...</option>";
-      try{
-        const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
-        const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
-        sel.innerHTML="<option value=''>Selecione a aula</option>";
-        aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
-        sel.disabled=false;
-      }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
-    }
+    async function abrirEnvio(){hide(qs("#dashboard"));await carregarModulos();show(qs("#envio"));window.scrollTo({top:0,behavior:"smooth"});}
+    async function carregarModulos(){
+      const sel=qs("#selModulo"),selA=qs("#selAula");
+      sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
+      selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
+      try{
+        const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
+        const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
+        sel.innerHTML="<option value=''>Selecione o módulo</option>";
+        mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
+        sel.disabled=false; sel.onchange=carregarAulas;
+      }catch{sel.innerHTML="<option>Erro ao carregar módulos</option>";showSnackbar("Falha ao carregar módulos.");} // TROCA
+    }
+    async function carregarAulas(){
+      const modulo=qs("#selModulo").value,sel=qs("#selAula");
+      if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
+      sel.innerHTML="<option>Carregando aulas...</option>";
+      try{
+        const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
+        const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
+        sel.innerHTML="<option value=''>Selecione a aula</option>";
+        aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
+        sel.disabled=false;
+      }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";showSnackbar("Falha ao carregar aulas.");} // TROCA
+    }
 
-    function addFileInput(){
-      const wrap=qs("#filesWrap"); const count=qsa("#filesWrap input[type='file']").length;
-      if(count>=MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
-      const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.className="fileItem";
-      wrap.insertBefore(inp,wrap.lastElementChild);
-      updateAddBtnVisibility();
-    }
+    function addFileInput(){
+      const wrap=qs("#filesWrap"); const count=qsa("#filesWrap input[type='file']").length;
+      // TROCA: alert por showSnackbar
+      if(count>=MAX_FILES)return showSnackbar(`Máximo de ${MAX_FILES} imagens.`);
+      const inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.className="fileItem";
+      wrap.insertBefore(inp,wrap.lastElementChild);
+      updateAddBtnVisibility();
+    }
 
-    function resetFiles(){
-      qs("#filesWrap").innerHTML='<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
-      updateAddBtnVisibility();
-    }
+    function resetFiles(){
+      qs("#filesWrap").innerHTML='<input type="file" class="fileItem" accept="image/*"><div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
+      updateAddBtnVisibility();
+    }
 
-    function updateAddBtnVisibility(){
-      const count=qsa("#filesWrap input[type='file']").length;
-      qs("#btnAddImagem").style.display=count>=MAX_FILES?"none":"inline-block";
-    }
+    function updateAddBtnVisibility(){
+      const count=qsa("#filesWrap input[type='file']").length;
+      qs("#btnAddImagem").style.display=count>=MAX_FILES?"none":"inline-block";
+    }
 
-    async function enviarExercicio(){
-      const modulo=qs("#selModulo").value.trim(),aula=qs("#selAula").value.trim(),desc=qs("#descricao").value.trim();
-      if(!modulo)return alert("Selecione o módulo."); if(!aula)return alert("Selecione a aula.");
-      const chosen=qsa("#filesWrap input[type='file']").map(i=>i.files[0]).filter(Boolean);
-      if(!chosen.length)return alert("Envie pelo menos uma imagem."); if(chosen.length>MAX_FILES)return alert(`Máximo de ${MAX_FILES} imagens.`);
-      setLoading(true);
-      try{
-        const files=[];
-        for(const f of chosen){
-          const base64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=()=>rej();fr.readAsDataURL(f);});
-          files.push({name:f.name,type:f.type,content:base64});
-        }
-        const body={action:"uploadExercise",curso:sessao.curso,email:sessao.email,nome:bootstrap.nome,modulo,aula,descricao:desc,files};
-        const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});const d=await r.json();
-        if(!d.ok)throw new Error(d.message||"Falha");
-        hide(qs("#envio"));show(qs("#sucesso"));
-      }catch(e){alert("Erro: "+e.message);}finally{setLoading(false);}
-    }
-  </script>
+    async function enviarExercicio(){
+      const modulo=qs("#selModulo").value.trim(),aula=qs("#selAula").value.trim(),desc=qs("#descricao").value.trim();
+      // TROCA: alert por showSnackbar
+      if(!modulo)return showSnackbar("Selecione o módulo.");
+      if(!aula)return showSnackbar("Selecione a aula.");
+      
+      const chosen=qsa("#filesWrap input[type='file']").map(i=>i.files[0]).filter(Boolean);
+      // TROCA: alert por showSnackbar
+      if(!chosen.length)return showSnackbar("Envie pelo menos uma imagem.");
+      if(chosen.length>MAX_FILES)return showSnackbar(`Máximo de ${MAX_FILES} imagens.`);
+      
+      setLoading(true);
+      
+      try{
+        const files=[];
+        for(const f of chosen){
+          const base64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(",")[1]);fr.onerror=()=>rej();fr.readAsDataURL(f);});
+          files.push({name:f.name,type:f.type,content:base64});
+        }
+        const body={action:"uploadExercise",curso:sessao.curso,email:sessao.email,nome:bootstrap.nome,modulo,aula,descricao:desc,files};
+        const r=await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});const d=await r.json();
+        if(!d.ok)throw new Error(d.message||"Falha");
+        hide(qs("#envio"));show(qs("#sucesso"));
+        setTimeout(()=>showSnackbar('Exercício enviado com sucesso! Aguarde o feedback do professor.'), 50); // NOVO: Snackbar de sucesso
+      }catch(e){showSnackbar("Erro: "+e.message);}finally{setLoading(false);} // TROCA
+    }
+  </script>
 </body>
 </html>
-
-
-
