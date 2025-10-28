@@ -195,7 +195,17 @@
         bootstrap=await r.json(); if(!bootstrap||bootstrap.allowed!==true){location.href="index.html";return;}
         qs(".topbar").textContent=`[${bootstrap.nome||"aluno"}]`;
         const logo=qs("#cursoLogo"); if(bootstrap.logoUrl){logo.src=bootstrap.logoUrl;logo.style.display="block";}
-        const dr=+bootstrap.diasRestantes||0; qs("#diasRestantes").textContent=dr>0?`[${dr}] dias restantes`:"Acesso expirado.";
+
+        const dr = +bootstrap.diasRestantes || 0;
+if (dr > 0) {
+  const txt = dr === 1
+    ? `[${dr}] dia restante de acesso ao curso.`
+    : `[${dr}] dias restantes de acesso ao curso.`;
+  qs("#diasRestantes").textContent = txt;
+} else {
+  qs("#diasRestantes").textContent = "Acesso expirado.";
+}
+        
         if(dr<=30&&bootstrap.desconto?.cupom){qs("#cupomBox").style.display="block";qs("#cupomCod").textContent=bootstrap.desconto.cupom;qs("#cupomPerc").textContent=bootstrap.desconto.porcentagem;qs("#cupomLink").href=bootstrap.desconto.link;}
 
         const fb=bootstrap.feedback||{};
@@ -274,4 +284,5 @@
   </script>
 </body>
 </html>
+
 
