@@ -1,234 +1,260 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Editora Crás – Acesso aos cursos</title>
-  <meta name="description" content="Acesse seu curso da Editora Crás com e-mail cadastrado.">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Editora Crás – Acesso aos cursos</title>
+  <meta name="description" content="Acesse seu curso da Editora Crás com e-mail cadastrado.">
 
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Editora Crás">
-  <meta property="og:title" content="Portal do Aluno – Editora Crás">
-  <meta property="og:description" content="Área de acesso aos cursos (1 ano de validade).">
-  <meta property="og:url" content="https://automacaocursoscras.github.io/areaaluno/">
-  <meta property="og:image" content="Assets/og-index.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Editora Crás">
+  <meta property="og:title" content="Portal do Aluno – Editora Crás">
+  <meta property="og:description" content="Área de acesso aos cursos (1 ano de validade).">
+  <meta property="og:url" content="https://automacaocursoscras.github.io/areaaluno/">
+  <meta property="og:image" content="Assets/og-index.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
 
-  <!-- Favicons -->
-  <link rel="icon" type="image/png" href="Assets/favicon.png" sizes="32x32">
-  <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" sizes="180x180">
-  <link rel="shortcut icon" href="Assets/favicon.ico">
-  <meta name="theme-color" content="#0286ff">
+    <link rel="icon" type="image/png" href="Assets/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="Assets/apple-touch-icon.png" sizes="180x180">
+  <link rel="shortcut icon" href="Assets/favicon.ico">
+  <meta name="theme-color" content="#0286ff">
 
-  <!-- CSS global -->
-  <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=3">
 
-  <!-- Ajustes mínimos -->
-  <style>
-    html, body { height: 100%; }
-    body { margin: 0; }
-    .input-like{
-      width:100%; max-width:420px; margin:10px auto; padding:12px; font-size:16px; display:block;
-      border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433; outline:none;
-      appearance:none;
-      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
-      background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
+    <style>
+    html, body { height: 100%; }
+    body { margin: 0; }
+    .input-like{
+      width:100%; max-width:420px; margin:10px auto; padding:12px; font-size:16px; display:block;
+      border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433; outline:none;
+      appearance:none;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
+    }
+    .help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
+
+    /* NOVO: CSS do Snackbar */
+    #snackbar {
+        visibility: hidden; 
+        min-width: 250px; 
+        margin-left: -125px;
+        background-color: #333; 
+        color: #fff; 
+        text-align: center; 
+        border-radius: 8px; 
+        padding: 16px; 
+        position: fixed; 
+        z-index: 10000; 
+        left: 50%; 
+        bottom: 30px; 
+        font-size: 17px; 
+        box-shadow: 0 6px 20px rgba(0,0,0,.2);
     }
-    .help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
-  </style>
+    #snackbar.show {
+        visibility: visible; 
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+    @-webkit-keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @-webkit-keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+  </style>
 </head>
 <body>
-  <!-- Wrapper central -->
-  <div class="page-center" style="--center-offset: -60px;">
-    <img src="./assets/logocras.png" alt="Editora Crás" class="header-logo">
+    <div class="page-center" style="--center-offset: -60px;">
+    <img src="./assets/logocras.png" alt="Editora Crás" class="header-logo">
 
-    <h2 id="tituloLogin">Plataforma do aluno</h2>
+    <h2 id="tituloLogin">Plataforma do aluno</h2>
 
-    <div id="login-area">
-      <select id="curso" class="input-like" disabled>
-        <option value="">Carregando cursos…</option>
-      </select>
+    <div id="login-area">
+      <select id="curso" class="input-like" disabled>
+        <option value="">Carregando cursos…</option>
+      </select>
 
-      <input
-        type="email"
-        id="email"
-        placeholder="Digite seu email cadastrado no curso"
-        inputmode="email"
-        autocomplete="email"
-      />
-      <button id="btnEntrar" onclick="login()">Entrar</button>
-      <p class="help-text">
-        Seu acesso a essa plataforma de feedbacks só é válido depois de um mês que você adquiriu o curso.
-        Aproveite esse início para assistir as aulas!
-      </p>
-    </div>
-  </div>
+      <input
+        type="email"
+        id="email"
+        placeholder="Digite seu email cadastrado no curso"
+        inputmode="email"
+        autocomplete="email"
+      />
+      <button id="btnEntrar" onclick="login()">Entrar</button>
+      <p class="help-text">
+        Seu acesso a essa plataforma de feedbacks só é válido depois de um mês que você adquiriu o curso.
+        Aproveite esse início para assistir as aulas!
+      </p>
+    </div>
+  </div>
 
-  <!-- Overlay de loading (usado só no login/validação) -->
-  <div id="loading">
-    <div class="loading-bubble">Verificando…</div>
-  </div>
+    <div id="loading">
+    <div class="loading-bubble">Verificando…</div>
+  </div>
 
-  <script>
-    // URL do seu Apps Script publicado como Web App
-    const API_URL = "https://script.google.com/macros/s/AKfycbxd2zvI-C_E0QNQDhRGAy7UpZvHU1oNmumeB6J6QyVTwSshkbDeMMxxm0LRLad6TLQMOQ/exec";
+    <div id="snackbar"></div>
 
-    let isLoading = false;
+  <script>
+    // URL do seu Apps Script publicado como Web App
+    const API_URL = "https://script.google.com/macros/s/AKfycbxd2zvI-C_E0QNQDhRGAy7UpZvHU1oNmumeB6J6QyVTwSshkbDeMMxxm0LRLad6TLQMOQ/exec";
 
-    function setLoading(state, msg = "Verificando…") {
-      isLoading = state;
-      const btn = document.getElementById("btnEntrar");
-      const loading = document.getElementById("loading");
-      const bubble = document.querySelector("#loading .loading-bubble");
-      if (btn) {
-        btn.disabled = state;
-        btn.textContent = state ? "Carregando..." : "Entrar";
-      }
-      if (bubble) bubble.textContent = msg;
-      loading.style.display = state ? "grid" : "none";
+    let isLoading = false;
+    
+    // NOVO: Função para mostrar a notificação (Snack/Toastbar)
+    function showSnackbar(message) {
+        const snack = document.getElementById("snackbar");
+        snack.textContent = message;
+        snack.className = "show";
+        setTimeout(function(){ snack.className = snack.className.replace("show", ""); }, 3000);
     }
 
-    // estado visual do select
-    function setSelectState(state) {
-      const select = document.getElementById("curso");
-      if (!select) return;
-      if (state === "loading") {
-        select.disabled = true;
-        select.innerHTML = `<option value="">Carregando cursos…</option>`;
-      } else if (state === "error") {
-        select.disabled = true;
-        select.innerHTML = `<option value="">Erro ao carregar cursos</option>`;
-      }
-    }
+    function setLoading(state, msg = "Verificando…") {
+      isLoading = state;
+      const btn = document.getElementById("btnEntrar");
+      const loading = document.getElementById("loading");
+      const bubble = document.querySelector("#loading .loading-bubble");
+      if (btn) {
+        btn.disabled = state;
+        btn.textContent = state ? "Carregando..." : "Entrar";
+      }
+      if (bubble) bubble.textContent = msg;
+      loading.style.display = state ? "grid" : "none";
+    }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("email").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") login();
-      });
-      carregarCursos(); // sem overlay na abertura
-    });
+    // estado visual do select
+    function setSelectState(state) {
+      const select = document.getElementById("curso");
+      if (!select) return;
+      if (state === "loading") {
+        select.disabled = true;
+        select.innerHTML = `<option value="">Carregando cursos…</option>`;
+      } else if (state === "error") {
+        select.disabled = true;
+        select.innerHTML = `<option value="">Erro ao carregar cursos</option>`;
+      }
+    }
 
-    function renderCursos(lista) {
-      const select = document.getElementById("curso");
-      const prev = select.value; // guarda seleção atual
-      select.innerHTML = `<option value="">Selecione seu curso</option>`;
-      lista.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        select.appendChild(opt);
-      });
-      if (lista.includes(prev)) select.value = prev; // re-aplica se existir
-      select.disabled = false;
-    }
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("email").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") login();
+      });
+      carregarCursos(); // sem overlay na abertura
+    });
 
-    const CURSOS_CACHE_KEY = "cras_cursos_cache_v1";
-    const CURSOS_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+    function renderCursos(lista) {
+      const select = document.getElementById("curso");
+      const prev = select.value; // guarda seleção atual
+      select.innerHTML = `<option value="">Selecione seu curso</option>`;
+      lista.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+      });
+      if (lista.includes(prev)) select.value = prev; // re-aplica se existir
+      select.disabled = false;
+    }
 
-    async function carregarCursos() {
-      const select = document.getElementById("curso");
-      setSelectState("loading");
+    const CURSOS_CACHE_KEY = "cras_cursos_cache_v1";
+    const CURSOS_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 
-      try {
-        const resp = await fetch(`${API_URL}?action=getCursos`, { cache: "no-store" });
-        const data = await resp.json();
-        const cursos = Array.isArray(data.cursos) ? data.cursos : [];
-        if (!cursos.length) throw new Error("Lista vazia");
+    async function carregarCursos() {
+      const select = document.getElementById("curso");
+      setSelectState("loading");
 
-        renderCursos(cursos);
-        localStorage.setItem(CURSOS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: cursos }));
-      } catch (e) {
-        console.error("Falha ao buscar cursos:", e);
-        try {
-          const cached = JSON.parse(localStorage.getItem(CURSOS_CACHE_KEY) || "null");
-          if (cached && Array.isArray(cached.data) && cached.data.length &&
-              (Date.now() - cached.ts) < CURSOS_TTL_MS) {
-            renderCursos(cached.data);
-          } else {
-            setSelectState("error");
-          }
-        } catch {
-          setSelectState("error");
-        }
-      }
-    }
+      try {
+        const resp = await fetch(`${API_URL}?action=getCursos`, { cache: "no-store" });
+        const data = await resp.json();
+        const cursos = Array.isArray(data.cursos) ? data.cursos : [];
+        if (!cursos.length) throw new Error("Lista vazia");
 
-    function emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+        renderCursos(cursos);
+        localStorage.setItem(CURSOS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: cursos }));
+      } catch (e) {
+        console.error("Falha ao buscar cursos:", e);
+        try {
+          const cached = JSON.parse(localStorage.getItem(CURSOS_CACHE_KEY) || "null");
+          if (cached && Array.isArray(cached.data) && cached.data.length &&
+              (Date.now() - cached.ts) < CURSOS_TTL_MS) {
+            renderCursos(cached.data);
+          } else {
+            setSelectState("error");
+          }
+        } catch {
+          setSelectState("error");
+        }
+      }
+    }
 
-    async function login() {
-      if (isLoading) return;
-      const curso = document.getElementById("curso").value.trim();
-      const email = document.getElementById("email").value.trim();
+    function emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-      if (!curso) return alert("Selecione o curso.");
-      if (!email || !emailValido(email)) return alert("Digite um e-mail válido.");
+    async function login() {
+      if (isLoading) return;
+      const curso = document.getElementById("curso").value.trim();
+      const email = document.getElementById("email").value.trim();
 
-      setLoading(true);
+      if (!curso) return showSnackbar("Selecione o curso."); // TROCA
+      if (!email || !emailValido(email)) return showSnackbar("Digite um e-mail válido."); // TROCA
 
-      try {
-        const url = `${API_URL}?action=checkAuth&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
-        const resp = await fetch(url);
-        const data = await resp.json();
+      setLoading(true);
 
-        if (data && data.allowed === true) {
-          // detecta perfil com fallback
-          const perfil = (data.perfil) ? String(data.perfil).toLowerCase()
-                        : (data.status === "professor" ? "professor" : "aluno");
+      try {
+        const url = `${API_URL}?action=checkAuth&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
 
-          // guarda sessão genérica (serve para aluno e professor)
-          localStorage.setItem("sessao_portal", JSON.stringify({
-            email, curso, nome: data.nome || "", perfil
-          }));
+        if (data && data.allowed === true) {
+          // detecta perfil com fallback
+          const perfil = (data.perfil) ? String(data.perfil).toLowerCase()
+                        : (data.status === "professor" ? "professor" : "aluno");
 
-          // redireciona conforme perfil
-          const destino = perfil === "professor" ? "portalprofessor.html" : "portalaluno.html";
-          window.location.href = `${destino}?curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
-        } else {
-          if (data && data.status === "inativo") {
-            const infoInicio = data.data_inicio ? ` O acesso tem duração de um ano e você adquiriu em ${data.data_inicio}.` : "";
-            alert("Poxa artista, seu acesso expirou. Adquira o curso novamente para ter acesso às aulas e aos feedbacks." + infoInicio);
-          } else if (data && data.status === "nao_cadastrado") {
-            alert("Hmm... Seu email não consta em nosso cadastro de alunos. Caso tenha adquirido o curso agora, espere até o próximo mês para conseguir logar. Aproveite esse tempo para estudar as aulas!");
-          } else if (data && data.status === "curso_invalido") {
-            alert("Curso inválido. Tente selecionar novamente.");
-          } else {
-            alert("Artista, não foi possível validar seu acesso. Tente novamente!");
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        alert("Erro ao validar seu acesso. Tente novamente.");
-      } finally {
-        setLoading(false);
-      }
-    }
-  </script>
+          // guarda sessão genérica (serve para aluno e professor)
+          localStorage.setItem("sessao_portal", JSON.stringify({
+            email, curso, nome: data.nome || "", perfil
+          }));
 
-  <script>
-    // mede a altura real útil da janela e salva em --vh
-    function setRealVh() {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    }
-    setRealVh();
-    window.addEventListener('resize', setRealVh);
-    window.addEventListener('orientationchange', setRealVh);
-  </script>
+          // redireciona conforme perfil
+          const destino = perfil === "professor" ? "portalprofessor.html" : "portalaluno.html";
+          window.location.href = `${destino}?curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
+        } else {
+          // TROCA: Substituir alerts por showSnackbar
+          let msg = "Artista, não foi possível validar seu acesso. Tente novamente!";
+          if (data && data.status === "inativo") {
+            const infoInicio = data.data_inicio ? ` Você adquiriu em ${data.data_inicio}.` : "";
+            msg = "Poxa, seu acesso expirou. Adquira o curso novamente para ter acesso às aulas e aos feedbacks." + infoInicio;
+          } else if (data && data.status === "nao_cadastrado") {
+            msg = "Seu email não consta em nosso cadastro. Caso tenha adquirido agora, espere até o próximo mês para logar. Aproveite para estudar as aulas!";
+          } else if (data && data.status === "curso_invalido") {
+            msg = "Curso inválido. Tente selecionar novamente.";
+          }
+          showSnackbar(msg);
+        }
+      } catch (e) {
+        console.error(e);
+        showSnackbar("Erro ao validar seu acesso. Tente novamente."); // TROCA
+      } finally {
+        setLoading(false);
+      }
+    }
+  </script>
 
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <strong>Editora Crás • </strong>
-      <a href="mailto:contato@editoracras.com">Suporte</a>
-      <small>© 2025. Todos os direitos reservados.</small>
-    </div>
-  </footer>
+  <script>
+    // mede a altura real útil da janela e salva em --vh
+    function setRealVh() {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setRealVh();
+    window.addEventListener('resize', setRealVh);
+    window.addEventListener('orientationchange', setRealVh);
+  </script>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <strong>Editora Crás • </strong>
+      <a href="mailto:contato@editoracras.com">Suporte</a>
+      <small>© 2025. Todos os direitos reservados.</small>
+    </div>
+  </footer>
 </body>
-
 </html>
-
-
-
-
-
