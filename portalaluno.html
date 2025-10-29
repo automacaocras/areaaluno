@@ -200,7 +200,7 @@
   <!-- Modal Telefone -->
   <div id="phoneModal" class="modal" aria-hidden="true">
     <div class="modal-card">
-      <h3>📞 Informe seu telefone</h3>
+      <h3 data-nome>Oi {NOME}! Informe seu telefone📞</h3>
       <p style="text-align:center;margin:0 0 8px">Usamos para contato do curso e suporte.</p>
       <input id="phoneInput" class="input-tel" placeholder="(11) 9 9999-9999" inputmode="numeric" autocomplete="tel">
       <div class="small-hint">Apenas números (10 ou 11 dígitos).</div>
@@ -220,6 +220,14 @@
   </footer>
 
   <script>
+
+   function renderNomeAluno(nome){
+  document.querySelectorAll("[data-nome]").forEach(el => {
+    if (!el.dataset.template) el.dataset.template = el.innerHTML;
+    el.innerHTML = el.dataset.template.replaceAll("{NOME}", nome);
+  });
+}
+
     let tokensRestantes = 0;        // do bootstrap
     let artesTotal = 0;             // total vitalício
     let telefone = "";              // telefone atual (só dígitos)
@@ -329,6 +337,9 @@
 
         // Topbar + logo
         qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
+renderNomeAluno(bootstrap.nome || "aluno");
+
+        
         const logo = qs("#cursoLogo");
         if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
@@ -600,3 +611,4 @@
   </div>
 </body>
 </html>
+
