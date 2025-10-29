@@ -93,7 +93,7 @@
 
     <!-- Cupom -->
     <div id="cupomBox" class="card" style="display:none">
-      <div>Seu acesso ao curso está acabando 😢</div>
+      <div data-nome>{NOME}, seu acesso ao curso está acabando 😢</div>
       <div style="margin-top:6px">
         Use o cupom <span id="cupomCod" style="background:#111;color:#ffd400;padding:3px 8px;border-radius:6px;font-weight:800">---</span>
         e receba <strong id="cupomPerc">---</strong>% de desconto para continuar.
@@ -132,7 +132,7 @@
       <br>
       <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button" data-busy>Sair</button></div>
       <p style="font-size:11px; text-align:center; color:#666; margin-top:0px;">
-        <em>Nunca compartilhe seu acesso com outras pessoas, sua conta pode ser suspensa.</em>
+        <em data-nome>{NOME},nunca compartilhe seu acesso com outras pessoas. Sua conta pode ser suspensa.</em>
       </p>
     </section>
 
@@ -201,7 +201,7 @@
   <div id="phoneModal" class="modal" aria-hidden="true">
     <div class="modal-card">
       <h3 data-nome>Oi {NOME}! Informe seu telefone📞</h3>
-      <p style="text-align:center;margin:0 0 8px">Usamos para contato do curso e suporte.</p>
+      <p style="text-align:center;margin:0 0 8px">Usaremos apenas para contato do curso e suporte se necessário.</p>
       <input id="phoneInput" class="input-tel" placeholder="(11) 9 9999-9999" inputmode="numeric" autocomplete="tel">
       <div class="small-hint">Apenas números (10 ou 11 dígitos).</div>
       <div class="modal-actions">
@@ -306,7 +306,7 @@
       if(!sessao) sessao = { email: params.get("email"), curso: params.get("curso") };
       if(!sessao || !sessao.email || !sessao.curso){ alert("Faça login novamente."); location.href="index.html"; return; }
 
-      setLoading(true, "Carregando seu curso…");
+      setLoading(true, "Carregando as informações...");
       await carregarBootstrap(sessao.curso, sessao.email);
       setLoading(false);
 
@@ -611,4 +611,5 @@ renderNomeAluno(bootstrap.nome || "aluno");
   </div>
 </body>
 </html>
+
 
