@@ -68,6 +68,20 @@
       font-size:14.5px;
       color:#222;
     }
+
+    /* ===== Modal Telefone ===== */
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.45);z-index:9999}
+    .modal.show{display:grid}
+    .modal-card{width:min(480px,92vw);background:#fff;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+    .modal-card h3{margin:0 0 10px;text-align:center}
+    .input-tel{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;font-size:16px}
+    .modal-actions{display:flex;gap:10px;justify-content:center;margin-top:12px}
+    .modal-actions button{padding:10px 16px;border:none;border-radius:10px;font-weight:800;cursor:pointer}
+    .btn-primary{background:#e6b200;color:#111}
+    .btn-neutral{background:#ddd;color:#111}
+    .small-hint{font-size:12px;color:#666;text-align:center;margin-top:6px}
+    .topbar-phone{font-weight:600;font-size:14px;margin-left:6px}
+    .topbar-phone a{color:#000;text-decoration:underline;cursor:pointer}
   </style>
 </head>
 <body>
@@ -124,7 +138,7 @@
 
     <!-- ENVIO -->
     <section id="envio" class="hidden">
-      <!-- NOVO: linha com total de artes -->
+      <!-- Linha com total de artes -->
       <p id="artsInfo" class="envio-arts-info hidden">
         Você já enviou <strong id="artsCount">0</strong> artes durante o curso!
       </p>
@@ -183,6 +197,20 @@
     </section>
   </main>
 
+  <!-- Modal Telefone -->
+  <div id="phoneModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>📞 Informe seu telefone</h3>
+      <p style="text-align:center;margin:0 0 8px">Usamos para contato do curso e suporte.</p>
+      <input id="phoneInput" class="input-tel" placeholder="(11) 9 9999-9999" inputmode="numeric" autocomplete="tel">
+      <div class="small-hint">Apenas números (10 ou 11 dígitos).</div>
+      <div class="modal-actions">
+        <button id="btnSalvarPhone" class="btn-primary" type="button">Salvar</button>
+        <button id="btnCancelarPhone" class="btn-neutral" type="button">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer">
     <div class="footer-inner">
       <strong>Editora Crás • </strong>
@@ -192,33 +220,100 @@
   </footer>
 
   <script>
-    let tokensRestantes = 0; // recebe do bootstrap
-    let artesTotal = 0;      // ✅ novo: total vitalício
+    let tokensRestantes = 0;        // do bootstrap
+    let artesTotal = 0;             // total vitalício
+    let telefone = "";              // telefone atual (só dígitos)
+    let primeiroLogin = false;      // flag da planilha
     const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
     const MAX_FILES = 3;
     let sessao = null, bootstrap = null;
+
     const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
     const show = el => el.classList.remove('hidden');
     const hide = el => el.classList.add('hidden');
 
+    /* Helpers telefone */
+    function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
+    function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
+    function formatBRPhone(d){
+      const x = onlyDigits(d);
+      if (x.length === 11) return `(${x.slice(0,2)}) ${x.slice(2,7)}-${x.slice(7)}`;
+      if (x.length === 10) return `(${x.slice(0,2)}) ${x.slice(2,6)}-${x.slice(6)}`;
+      return x;
+    }
+
+    /* Modal telefone */
+    function showPhoneModal(){
+      const m = qs("#phoneModal");
+      const inp = qs("#phoneInput");
+      inp.value = formatBRPhone(telefone||"");
+      m.classList.add("show");
+      m.setAttribute("aria-hidden","false");
+      setTimeout(()=>inp.focus(), 50);
+    }
+    function hidePhoneModal(){
+      const m = qs("#phoneModal");
+      m.classList.remove("show");
+      m.setAttribute("aria-hidden","true");
+    }
+    async function savePhone(){
+      const raw = onlyDigits(qs("#phoneInput").value);
+      if (!isValidBRPhone(raw)){
+        alert("Digite um telefone válido (10 ou 11 dígitos).");
+        return;
+      }
+      try{
+        setLoading(true, "Salvando telefone…");
+        const body = { action:"updatePhone", curso:sessao.curso, email:sessao.email, telefone: raw };
+        const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.message || "Falha ao salvar telefone.");
+        telefone = d.telefone;
+        primeiroLogin = true;
+        renderTopbarPhone();
+        hidePhoneModal();
+        alert("Telefone atualizado!");
+      }catch(e){
+        alert("Erro: " + e.message);
+      }finally{
+        setLoading(false);
+      }
+    }
+    function renderTopbarPhone(){
+      const tb = qs(".topbar");
+      const old = tb.querySelector(".topbar-phone");
+      if (old) old.remove();
+      const span = document.createElement("span");
+      span.className = "topbar-phone";
+      const telText = telefone ? formatBRPhone(telefone) : "adicionar telefone";
+      span.innerHTML = ` • 📞 ${telText} <a id="linkEditarTel">(alterar)</a>`;
+      tb.appendChild(span);
+      qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
+    }
+
     document.addEventListener("DOMContentLoaded", async () => {
-      try{ sessao=JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
-      const params=new URLSearchParams(location.search);
-      if(!sessao) sessao={email:params.get("email"),curso:params.get("curso")};
-      if(!sessao||!sessao.email||!sessao.curso){alert("Faça login novamente.");location.href="index.html";return;}
+      try{ sessao = JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
+      const params = new URLSearchParams(location.search);
+      if(!sessao) sessao = { email: params.get("email"), curso: params.get("curso") };
+      if(!sessao || !sessao.email || !sessao.curso){ alert("Faça login novamente."); location.href="index.html"; return; }
 
       setLoading(true, "Carregando seu curso…");
-      await carregarBootstrap(sessao.curso,sessao.email);
+      await carregarBootstrap(sessao.curso, sessao.email);
       setLoading(false);
 
-      qs("#btnAbrirEnvio").onclick=abrirEnvio;
-      qs("#btnVoltarEnvio").onclick=()=>{hide(qs("#envio"));show(qs("#dashboard"));window.scrollTo({top:0,behavior:"smooth"});}
-      qs("#btnAddImagem").onclick=addFileInput;
-      qs("#btnResetar").onclick=resetFiles;
-      qs("#btnEnviar").onclick=enviarExercicio;
-      qs("#btnVoltarMenu").onclick=()=>{hide(qs("#sucesso"));show(qs("#dashboard"));};
-      qs("#btnSair").onclick=()=>{localStorage.removeItem("sessao_portal");location.href="index.html";};
+      qs("#btnAbrirEnvio").onclick = abrirEnvio;
+      qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
+      qs("#btnAddImagem").onclick  = addFileInput;
+      qs("#btnResetar").onclick    = resetFiles;
+      qs("#btnEnviar").onclick     = enviarExercicio;
+      qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
+      qs("#btnSair").onclick       = () => { localStorage.removeItem("sessao_portal"); location.href="index.html"; };
+
+      // modal telefone
+      qs("#btnSalvarPhone").onclick   = savePhone;
+      qs("#btnCancelarPhone").onclick = hidePhoneModal;
+      qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
 
       // Atualiza UI quando escolher arquivos
       qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
@@ -236,6 +331,11 @@
         qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
         const logo = qs("#cursoLogo");
         if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+
+        // Telefone e flag de primeiro login
+        telefone = String(bootstrap.telefone || "");
+        primeiroLogin = !!bootstrap.primeiroLogin;
+        renderTopbarPhone();
 
         // Dias restantes
         const dr = +bootstrap.diasRestantes || 0;
@@ -261,11 +361,14 @@
         if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
         if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
 
-        // TOKENS
+        // TOKENS e artes
         tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
-
-        // ✅ novo: total vitalício de artes
         artesTotal = Number(bootstrap.artesTotal || 0);
+
+        // Se primeiro login/sem telefone, pedir agora
+        if (!primeiroLogin || !telefone){
+          setTimeout(showPhoneModal, 300);
+        }
 
         updateUIForTokens();
       }catch(e){
@@ -278,19 +381,15 @@
       setLoading(true, "Carregando envio…");
       hide(qs("#dashboard"));
 
-      // Sempre limpar os campos ao entrar na tela
+      // limpar campos
       resetFiles();
       qs("#descricao").value = "";
 
-      // ✅ mostrar a linha de artes só aqui
+      // mostrar linha de artes
       const info = qs("#artsInfo");
       const count = qs("#artsCount");
-      if (artesTotal > 0){
-        count.textContent = artesTotal;
-        show(info);
-      } else {
-        hide(info);
-      }
+      if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
+      else { hide(info); }
 
       await carregarModulos();
       show(qs("#envio"));
