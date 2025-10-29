@@ -139,7 +139,8 @@
 
       <button id="btnAbrirEnvio" class="btn-cta" type="button" data-busy>Envie os exercícios para feedback</button>
 
-      <div class="card">
+      <!-- ⬇️ Agora com id e escondido por padrão -->
+      <div id="gravadaCard" class="card" style="display:none">
         <h3>Última aula gravada:</h3>
         <p class="hint">Aproveite para baixar pois ela expira.</p>
         <p><a id="ultimaGravada" href="#" target="_blank" rel="noopener">[link]</a></p>
@@ -395,7 +396,20 @@ renderNomeAluno(bootstrap.nome || "aluno");
         qs("#fbSenha").textContent = fb.senha || "—";
         qs("#fbInfo").textContent  = fb.info  || "—";
         if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
-        if (fb.aulaGravada){ qs("#ultimaGravada").href = fb.aulaGravada; qs("#ultimaGravada").textContent = fb.aulaGravada; }
+
+        // ⬇️ Mostrar/ocultar o card da gravada conforme houver URL
+        const gravCard = qs("#gravadaCard");
+        const gravURL  = String(fb.aulaGravada || "").trim();
+        if (gravURL){
+          qs("#ultimaGravada").href = gravURL;
+          qs("#ultimaGravada").textContent = gravURL;
+          if (gravCard) gravCard.style.display = "block";
+        } else {
+          // limpa qualquer resquício e mantém oculto
+          qs("#ultimaGravada").removeAttribute("href");
+          qs("#ultimaGravada").textContent = "";
+          if (gravCard) gravCard.style.display = "none";
+        }
 
         // TOKENS e artes
         tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
@@ -636,8 +650,3 @@ renderNomeAluno(bootstrap.nome || "aluno");
   </div>
 </body>
 </html>
-
-
-
-
-
