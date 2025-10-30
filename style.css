@@ -136,7 +136,7 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 
 .field-label {
   display: block;             /* ⬅ isso resolve o alinhamento */
-  text-align: left;
+  text-align: center;   
   width: 100%;
   max-width: 420px;
   margin: 14px auto 6px auto;
@@ -144,6 +144,7 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   font-weight: 600;
   color: #1d2433;
 }
+
 
 
 
