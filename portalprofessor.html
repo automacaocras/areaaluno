@@ -64,17 +64,19 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
-  /* evita vazamento lateral da página */
+  /* ===== correções de layout/overflow ===== */
   * { box-sizing: border-box; }
   html, body { overflow-x: hidden; }
 
+  /* topbar sem usar 100vw para evitar “bleed” lateral em alguns devices */
   .topbar{
-    width:100vw;
-    margin-left:calc(50% - 50vw);
-    margin-right:calc(50% - 50vw);
+    width:auto;
+    margin-left: calc(-1 * var(--gutter, 0px));
+    margin-right: calc(-1 * var(--gutter, 0px));
     background:#f4c200;color:#000;font-weight:800;text-align:center;
     padding:14px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
   }
+
   .wrap{max-width:900px;margin:20px auto;}
   .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
   .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
@@ -107,13 +109,20 @@
 
   /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
-    overflow:auto;
-    -webkit-overflow-scrolling:touch; /* momentum no iOS */
+    overflow-x:auto;               /* scroll horizontal só aqui */
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
     max-width:100%;
     border:1px solid #eee;
     border-radius:12px;
   }
-  #exTable{ border-collapse:collapse; width:max-content; min-width:100%; }
+  /* IMPORTANTE: nada de width:max-content aqui! */
+  #exTable{
+    border-collapse:collapse;
+    table-layout:fixed;            /* limita expansão de colunas */
+    width:100%;                    /* respeita a largura do container */
+    min-width:760px;               /* força scroll na .table-wrap quando não couber */
+  }
   #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
   #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
   #exTable a { word-break:break-all }
@@ -121,7 +130,7 @@
   /* células com ellipsis (usadas em Descrição/Links) */
   .cell-clip{
     display:block;
-    max-width: 280px;          /* ajuste de exibição; a tabela continua rolando na horizontal */
+    max-width: 280px;          /* ajuste padrão; verá override no mobile */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -158,6 +167,42 @@
     background:#ddd; color:#111; font-weight:800; cursor:pointer; width:min(320px, 90%);
   }
   .small-muted{color:#555;font-size:14px}
+
+  /* ===== Overlay global ===== */
+  #global-loading {
+    position: fixed;
+    inset: 0;
+    display: none;
+    place-items: center;
+    z-index: 2147483647;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    will-change: backdrop-filter;
+  }
+  .global-loading-bubble {
+    background: #fff;
+    padding: 16px 22px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 18px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.20);
+  }
+
+  /* aproxima o texto "Aula gravada" do botão laranja apenas nesse caso */
+  .band + .gravada-info { margin-top: 6px; }
+
+  /* ====== Overrides específicos do Portal do Professor ====== */
+  #prof-exercicios { margin-left:auto; margin-right:auto; }
+  #prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }
+
+  /* ===== Mobile tuning: “tudo um pouco menor” ===== */
+  @media (max-width:480px){
+    .wrap{ margin:16px auto; }
+    .panel{ padding:14px; }
+    .btn-band{ padding:14px 12px; font-size:15px; }
+    .cell-clip{ max-width:180px; } /* corta mais cedo pra caber melhor */
+  }
 </style>
 </head>
 <body>
