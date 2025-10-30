@@ -64,11 +64,11 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
-  /* ===== correções de layout/overflow ===== */
+  /* ===== correções de layout/overflow ===== */
   * { box-sizing: border-box; }
   html, body { overflow-x: hidden; }
 
-  /* topbar sem usar 100vw para evitar “bleed” lateral em alguns devices */
+  /* topbar sem usar 100vw para evitar “bleed” lateral */
   .topbar{
     width:auto;
     margin-left: calc(-1 * var(--gutter, 0px));
@@ -110,13 +110,12 @@
   /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
     overflow-x:auto;               /* scroll horizontal só aqui */
-    overflow-y:hidden;
+    overflow-y:visible;            /* deixa a página rolar verticalmente */
     -webkit-overflow-scrolling:touch;
     max-width:100%;
     border:1px solid #eee;
     border-radius:12px;
   }
-  /* IMPORTANTE: nada de width:max-content aqui! */
   #exTable{
     border-collapse:collapse;
     table-layout:fixed;            /* limita expansão de colunas */
@@ -130,7 +129,7 @@
   /* células com ellipsis (usadas em Descrição/Links) */
   .cell-clip{
     display:block;
-    max-width: 280px;          /* ajuste padrão; verá override no mobile */
+    max-width: 280px;          /* ajuste padrão; veja override no mobile se quiser */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -201,7 +200,7 @@
     .wrap{ margin:16px auto; }
     .panel{ padding:14px; }
     .btn-band{ padding:14px 12px; font-size:15px; }
-    .cell-clip{ max-width:180px; } /* corta mais cedo pra caber melhor */
+    .cell-clip{ max-width:180px; }
   }
 </style>
 </head>
@@ -236,7 +235,7 @@
 
       <!-- ====== Exercícios enviados (somente leitura) ====== -->
       <section id="prof-exercicios" class="panel" style="max-width:1100px">
-        <h3 style="margin-top:0">Exercícios Enviados:</h3>
+        <h3 style="margin-top:0">Exercícios enviados:</h3>
 
         <div class="table-wrap">
           <table id="exTable">
@@ -371,6 +370,38 @@
     const fullTxt = stripTags(innerHTML);
     return `<div class="cell-clip" data-full="${escapeHtml(fullTxt)}">${innerHTML}</div>`;
   }
+
+  /* ========= Apenas a coluna "Descrição" fica menor (colgroup dinâmico) ========= */
+  function setDescricaoWidth(headers, desktopWidth = "320px", mobileWidth = "200px"){
+    const table = document.getElementById("exTable");
+    if (!table || !headers || !headers.length) return;
+
+    // encontra a coluna "Descrição" (qualquer variação)
+    const descIndex = headers.findIndex(h => /descr/i.test(String(h)));
+    if (descIndex === -1) return;
+
+    // remove colgroup anterior
+    const old = table.querySelector("colgroup");
+    if (old) old.remove();
+
+    // escolhe a largura conforme viewport
+    const isMobile = window.matchMedia("(max-width: 480px)").matches;
+    const width = isMobile ? mobileWidth : desktopWidth;
+
+    // cria colgroup e aplica a largura apenas na coluna de descrição
+    const cg = document.createElement("colgroup");
+    headers.forEach((_, i) => {
+      const col = document.createElement("col");
+      if (i === descIndex){
+        col.style.width = width;
+        col.style.minWidth = width; // garante recorte/scroll consistente
+      }
+      cg.appendChild(col);
+    });
+
+    table.insertBefore(cg, table.firstChild);
+  }
+
   function attachOverflowPreview(){
     const root = document.querySelector('#exTable');
     let pop = null;
@@ -447,6 +478,13 @@
         trh.appendChild(th);
       });
       thead.appendChild(trh);
+
+      // salva headers em cache para reapply no resize
+      if (!bootstrap) bootstrap = {};
+      bootstrap.headersCache = d.headers || [];
+
+      // 👉 ajusta só a coluna "Descrição"
+      setDescricaoWidth(bootstrap.headersCache);
 
       // corpo
       const tbody = document.querySelector("#exTable tbody");
@@ -531,6 +569,9 @@
 
     // primeira carga da tabela
     fetchExercisesPreview();
+
+    // reaplica a largura da Descrição em resize/orientação (usando headers em cache)
+    window.addEventListener("resize", () => setDescricaoWidth( (bootstrap?.headersCache || []) ));
 
     ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
   }
@@ -625,4 +666,3 @@
 </div>
 </body>
 </html>
-
