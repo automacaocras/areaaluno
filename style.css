@@ -134,6 +134,16 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   will-change: backdrop-filter; /* suaviza transições e melhora performance */
 }
 
+.field-label {
+  text-align: left;
+  width: 100%;
+  max-width: 420px;
+  margin: 14px auto 6px auto; /* pequeno espaçamento acima/abaixo */
+  font-size: 18px; /* maior que antes */
+  font-weight: 600; /* mais firme */
+  color: #1d2433;
+}
+
 
 
 
