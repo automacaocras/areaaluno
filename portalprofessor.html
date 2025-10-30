@@ -3,43 +3,60 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
 <title>Portal do Professor – Editora Crás</title>
 <meta name="description" content="Acompanhe feedbacks, aulas gravadas e envios de exercícios.">
 
+<!-- Favicons -->
 <link rel="icon" type="image/png" href="assets/favicon.png" sizes="32x32">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" sizes="180x180">
 <link rel="shortcut icon" href="assets/favicon.ico">
 <meta name="theme-color" content="#0286ff">
 
+<!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Editora Crás">
 <meta property="og:locale" content="pt_BR">
 <meta property="og:title" content="Portal do Professor – Editora Crás">
 <meta property="og:description" content="Acompanhe feedbacks, aulas gravadas e envios de exercícios.">
+
+<!-- ✅ Ajuste o URL abaixo conforme a página -->
 <link rel="canonical" href="https://automacaocras.github.io/areaaluno/portalprofessor.html">
 <meta property="og:url" content="https://automacaocras.github.io/areaaluno/portalprofessor.html">
+
+<!-- ✅ Imagem correta no GitHub Pages -->
 <meta property="og:image" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
 <meta property="og:image:secure_url" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-<!-- Guard: exige sessão e perfil professor -->
+<!-- Guard: exige sessão e perfil professor (executa o quanto antes) -->
 <script>
   (function enforceProfessorRole() {
     try {
       const raw = localStorage.getItem("sessao_portal");
       const sess = raw ? JSON.parse(raw) : null;
-      if (!sess || !sess.email || !sess.curso) { alert("Faça login para acessar."); location.replace("index.html"); return; }
+
+      if (!sess || !sess.email || !sess.curso) {
+        alert("Faça login para acessar.");
+        location.replace("index.html");
+        return;
+      }
+
       if (String(sess.perfil || "").toLowerCase() !== "professor") {
         localStorage.removeItem("sessao_portal");
-        alert("Acesso de professor não validado. Faça login novamente."); location.replace("index.html"); return;
+        alert("Acesso de professor não validado. Faça login novamente.");
+        location.replace("index.html");
+        return;
       }
+
       if (location.search) history.replaceState({}, "", location.pathname);
     } catch (e) {
       console.error(e);
       alert("Sessão inválida. Faça login novamente.");
-      localStorage.removeItem("sessao_portal"); location.replace("index.html");
+      localStorage.removeItem("sessao_portal");
+      location.replace("index.html");
     }
   })();
 </script>
@@ -47,45 +64,99 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
-  :root{
-    /* ajuste fino: largura alvo para Descrição e para cada coluna de link */
-    --desc-col-width: 32%;
-    --link-col-width: 120px; /* cada uma das “Envio X” */
+  /* evita vazamento lateral da página */
+  * { box-sizing: border-box; }
+  html, body { overflow-x: hidden; }
+
+  .topbar{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    margin-right:calc(50% - 50vw);
+    background:#f4c200;color:#000;font-weight:800;text-align:center;
+    padding:14px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+  }
+  .wrap{max-width:900px;margin:20px auto;}
+  .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
+  .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
+    font-weight:800;cursor:pointer;text-align:center;color:#fff}
+  .btn-live{background:#ff6b6b}
+  .btn-grav{background:#ff9f45}
+  .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;
+    box-shadow:0 8px 24px rgba(0,0,0,.06)}
+  .panel h3{margin:0 0 10px;text-align:center}
+  .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;
+    background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center}
+  .field{margin:10px auto;max-width:720px}
+  .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
+  .field textarea{min-height:110px}
+  .btn-primary{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;
+    border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer}
+  .btn-neutral{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;
+    border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer}
+  .btn-exit{display:block;width:140px;margin:18px auto 0;padding:12px 18px;border:none;
+    border-radius:12px;background:#d64545;color:#fff;font-weight:800;cursor:pointer}
+  .hidden{display:none !important}
+  .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
+  .next-live strong, .gravada-info strong{ font-weight:800; }
+  .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
+  .is-invalid{
+    border-color:#d64545 !important;
+    box-shadow:0 0 0 2px rgba(214,69,69,.12);
+    outline: none;
   }
 
-  /* ===== TABELA local (não conflita com seu CSS global) ===== */
-  #prof-exercicios .table-wrap{
-    overflow-x:auto; overflow-y:hidden;
-    -webkit-overflow-scrolling:touch;
+  /* ====== TABELA (somente leitura) ====== */
+  .table-wrap{
+    overflow:auto;
+    -webkit-overflow-scrolling:touch; /* momentum no iOS */
     max-width:100%;
-    border:1px solid #eee; border-radius:12px;
-    background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
   }
-  #exTable{
-    border-collapse:collapse;
-    width:100%;                 /* ocupa a largura do box */
-    min-width:760px;            /* garante rolagem horizontal no mobile, sem “varar” a página */
-    table-layout:fixed;         /* necessário para clip com ellipsis */
-  }
-  #exTable th, #exTable td{
-    border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top;
-  }
-  #exTable th{ position:sticky; top:0; background:#fff; z-index:1; }
+  #exTable{ border-collapse:collapse; width:max-content; min-width:100%; }
+  #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
+  #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
+  #exTable a { word-break:break-all }
 
-  /* só estas colunas “cortam” visualmente */
-  .cell-clip{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-  /* tooltip */
-  .tt{
-    position:fixed; z-index:9999; max-width:min(80vw,560px);
-    background:#fff; color:#111; border:1px solid #e5e5e5; border-radius:10px;
-    box-shadow:0 8px 24px rgba(0,0,0,.12); padding:10px 12px; font-size:14px; line-height:1.35;
+  /* células com ellipsis (usadas em Descrição/Links) */
+  .cell-clip{
+    display:block;
+    max-width: 280px;          /* ajuste de exibição; a tabela continua rolando na horizontal */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (min-width: 900px){
+    .cell-clip{ max-width: 420px; }
+  }
+  td .cell-clip a{
+    display:inline-block; max-width:100%;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
 
-  /* controles */
-  .controls-bottom{ display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:14px; }
-  .btn-refresh{ display:inline-block; padding:14px 22px; border:none; border-radius:12px;
-    background:#ddd; color:#111; font-weight:800; cursor:pointer; width:min(320px, 90%); }
+  /* popover com o texto completo */
+  .preview-pop{
+    position: fixed;
+    z-index: 9999;
+    max-width: min(80vw, 640px);
+    background: #f7f9ff;
+    border: 1px solid #cfd6e4;
+    padding: 10px 12px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    font-size: 14px;
+    line-height: 1.35;
+    color:#111;
+  }
+
+  .controls-bottom{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    margin-top:14px;
+  }
+  .btn-refresh{
+    display:inline-block; padding:14px 22px; border:none; border-radius:12px;
+    background:#ddd; color:#111; font-weight:800; cursor:pointer; width:min(320px, 90%);
+  }
   .small-muted{color:#555;font-size:14px}
 </style>
 </head>
@@ -96,9 +167,12 @@
 <main class="page-center" style="--center-offset:-40px;">
   <div class="wrap">
 
+    <!-- HOME -->
     <section id="home">
+
       <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
+      <!-- CONFIRMAÇÕES -->
       <p id="nextLive" class="next-live hidden">
         <strong>Próximo evento ao vivo:</strong><br>
         <span id="nextLiveText">—</span><br>
@@ -115,13 +189,12 @@
         <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
       </p>
 
-      <!-- TABELA -->
+      <!-- ====== Exercícios enviados (somente leitura) ====== -->
       <section id="prof-exercicios" class="panel" style="max-width:1100px">
-        <h3 style="margin-top:0">Exercícios Enviados:</h3>
+        <h3 style="margin-top:0">Exercícios enviados</h3>
 
         <div class="table-wrap">
           <table id="exTable">
-            <colgroup id="exColGroup"></colgroup>
             <thead></thead>
             <tbody></tbody>
           </table>
@@ -136,16 +209,19 @@
       <section class="panel" id="linksPanel">
         <h3>Links Úteis:</h3>
         <div class="links-box">
-          <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0" target="_blank" rel="noopener">Planilha de Exercícios</a>
-          <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV" target="_blank" rel="noopener">Pasta Central do Drive</a>
-          <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt" target="_blank" rel="noopener">Grupo dos alunos no WhatsApp</a>
+          <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0"
+             target="_blank" rel="noopener">Planilha de Exercícios</a>
+          <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
+             target="_blank" rel="noopener">Pasta Central do Drive</a>
+          <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
+             target="_blank" rel="noopener">Grupo dos alunos no WhatsApp</a>
         </div>
       </section>
 
       <button id="btnSair" class="btn-exit" data-busy>Sair</button>
     </section>
 
-    <!-- FORM: Live -->
+    <!-- FORM: Próxima aula ao vivo -->
     <section id="formLive" class="panel hidden">
       <h3>Próxima aula ao vivo</h3>
       <div class="field"><input   id="fLink"  placeholder="Link"></div>
@@ -153,14 +229,16 @@
       <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
       <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
       <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
+
       <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
       <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
     </section>
 
-    <!-- FORM: Gravada -->
+    <!-- FORM: Aula gravada -->
     <section id="formGrav" class="panel hidden">
       <h3>Atualizar link da aula gravada</h3>
       <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
+
       <button id="btnEnviarGrav" class="btn-primary" data-busy>Atualizar</button>
       <button id="btnVoltar2" class="btn-neutral" type="button" data-busy>Voltar</button>
     </section>
@@ -186,205 +264,303 @@
   let sessao = null, bootstrap = null;
 
   function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-  function isValidURL(url){ try{ const u = new URL(url); return u.protocol==='http:'||u.protocol==='https:'; }catch{ return false; } }
+
+  function isValidURL(url){
+    try{ const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
+    catch{ return false; }
+  }
   function isValidTime(hhmm){ return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm); }
-  function markInvalid(el, s=true){ if (!el) return; el.classList.toggle('is-invalid', !!s); }
-  function clearInvalidOnInput(sel){ const el=qs(sel); if (!el) return; el.addEventListener('input',()=>markInvalid(el,false)); el.addEventListener('blur',()=>markInvalid(el,false)); }
+  function markInvalid(el, state=true){ if (!el) return; el.classList.toggle('is-invalid', !!state); }
+  function clearInvalidOnInput(sel){
+    const el = qs(sel); if (!el) return;
+    el.addEventListener('input', ()=> markInvalid(el,false));
+    el.addEventListener('blur',  ()=> markInvalid(el,false));
+  }
   function validateLiveForm(){
-    const fLink=qs('#fLink'), fHora=qs('#fHora'), fDia=qs('#fDia');
-    const link=fLink.value.trim(), hora=fHora.value.trim(), dia=fDia.value.trim();
+    const fLink = qs('#fLink'), fHora = qs('#fHora'), fDia  = qs('#fDia');
+    const link = fLink.value.trim(), hora = fHora.value.trim(), dia  = fDia.value.trim();
     [fLink,fHora,fDia].forEach(el=>markInvalid(el,false));
-    const errors=[];
-    if(!link||!isValidURL(link)){ errors.push('• Informe um LINK válido (http/https).'); markInvalid(fLink,true); }
-    if(!hora||!isValidTime(hora)){ errors.push('• Informe a HORA no formato 24h (ex.: 20:00).'); markInvalid(fHora,true); }
-    if(!dia){ errors.push('• Informe o DIA (ex.: quinta-feira).'); markInvalid(fDia,true); }
-    if(errors.length){ alert('Verifique os campos obrigatórios:\n\n'+errors.join('\n')); const first=[fLink,fHora,fDia].find(el=>el.classList.contains('is-invalid')); if(first) first.focus(); return false; }
+    const errors = [];
+    if (!link || !isValidURL(link)){ errors.push('• Informe um LINK válido (http/https).'); markInvalid(fLink,true); }
+    if (!hora || !isValidTime(hora)){ errors.push('• Informe a HORA no formato 24h (ex.: 20:00).'); markInvalid(fHora,true); }
+    if (!dia){ errors.push('• Informe o DIA (ex.: quinta-feira).'); markInvalid(fDia,true); }
+    if (errors.length){
+      alert('Verifique os campos obrigatórios:\n\n' + errors.join('\n'));
+      const firstInvalid = [fLink,fHora,fDia].find(el => el.classList.contains('is-invalid'));
+      if (firstInvalid) firstInvalid.focus();
+      return false;
+    }
     return { link, hora, dia };
   }
 
   function renderNextLive(src){
-    const box=qs('#nextLive'), txt=qs('#nextLiveText'), a=qs('#nextLiveHref');
-    const dia=String(src?.dia||'').trim(), hora=String(src?.hora||'').trim();
-    const prof=String(src?.professor||bootstrap?.nome||'').trim();
-    const link=String(src?.link||'').trim();
-    const parts=[]; if(dia) parts.push(dia); if(hora) parts.push(hora);
-    let texto=parts.join(', '); if(prof) texto+=(texto?' com ':'Com ')+prof;
-    const hasText=!!texto, hasLink=!!link;
+    const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
+    const dia  = String(src?.dia || '').trim();
+    const hora = String(src?.hora || '').trim();
+    const prof = String(src?.professor || bootstrap?.nome || '').trim();
+    const link = String(src?.link || '').trim();
+    const parts = []; if (dia) parts.push(dia); if (hora) parts.push(hora);
+    let texto = parts.join(', '); if (prof) texto += (texto ? ' com ' : 'Com ') + prof;
+    const hasText = !!texto, hasLink = !!link;
     txt.textContent = hasText ? texto : '—';
-    if (hasLink){ a.textContent=link; a.href=link; a.classList.remove('hidden'); } else { a.textContent=''; a.removeAttribute('href'); a.classList.add('hidden'); }
-    box.classList.toggle('hidden', !(hasText||hasLink));
+    if (hasLink){ a.textContent = link; a.href = link; a.classList.remove('hidden'); }
+    else { a.textContent = ''; a.removeAttribute('href'); a.classList.add('hidden'); }
+    box.classList.toggle('hidden', !(hasText || hasLink));
   }
   function renderGravada(src){
-    const p=qs('#gravadaInfo'), a=qs('#gravadaHref'), url=String(src?.aulaGravada||'').trim();
-    if(url){ a.textContent=url; a.href=url; p.classList.remove('hidden'); } else { a.textContent=''; a.removeAttribute('href'); p.classList.add('hidden'); }
+    const p = qs('#gravadaInfo'), a = qs('#gravadaHref'), url = String(src?.aulaGravada || '').trim();
+    if (url){ a.textContent = url; a.href = url; p.classList.remove('hidden'); }
+    else { a.textContent = ''; a.removeAttribute('href'); p.classList.add('hidden'); }
   }
 
-  /* ========= Tooltip (hover no desktop + click/toque no mobile) ========= */
-  let ttEl=null, ttTarget=null, ttHideTimer=null;
-  function hideTT(){ if(ttEl){ ttEl.remove(); ttEl=null; ttTarget=null; } if (ttHideTimer) { clearTimeout(ttHideTimer); ttHideTimer=null; } }
-  function placeTT(target, text){
-    if(!text) return;
-    if(!ttEl){ ttEl=document.createElement('div'); ttEl.className='tt'; document.body.appendChild(ttEl); }
-    ttEl.textContent=text;
-    const r=target.getBoundingClientRect(), pad=8;
-    let x=r.left+Math.min(16, r.width/2), y=r.bottom+8;
-    const vw=innerWidth, vh=innerHeight, tw=ttEl.offsetWidth, th=ttEl.offsetHeight;
-    if (x+tw+pad>vw) x=vw-tw-pad;
-    if (y+th+pad>vh) y=r.top-th-8;
-    ttEl.style.left=Math.max(pad,x)+'px'; ttEl.style.top=Math.max(pad,y)+'px';
+  /* ===== helpers para clip + popover ===== */
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   }
-  // hover
-  document.addEventListener('mouseover', (e)=>{
-    const t=e.target.closest('[data-full]'); if(!t) return;
-    ttTarget=t; placeTT(t, t.getAttribute('data-full') || '');
-  });
-  document.addEventListener('mouseout', (e)=>{
-    if (!ttEl) return;
-    const to = e.relatedTarget;
-    if (to && (to===ttEl || to.closest('.tt'))) return;
-    ttHideTimer=setTimeout(hideTT, 60);
-  });
-  // click/toque
-  document.addEventListener('click', (e)=>{
-    const t=e.target.closest('[data-full]');
-    if(t){ e.stopPropagation(); ttTarget=t; placeTT(t, t.getAttribute('data-full') || ''); }
-    else { hideTT(); }
-  });
-  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') hideTT(); });
+  function stripTags(html){
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+  function wrapClipHTML(innerHTML){
+    const fullTxt = stripTags(innerHTML);
+    return `<div class="cell-clip" data-full="${escapeHtml(fullTxt)}">${innerHTML}</div>`;
+  }
+  function attachOverflowPreview(){
+    const root = document.querySelector('#exTable');
+    let pop = null;
 
-  /* ========= Exercícios – sem paginação ========= */
-  const PAGE_SIZE = 100000;
+    function show(e){
+      const clip = e.currentTarget;
+      // só abre se estiver realmente cortado
+      if (clip.scrollWidth <= clip.clientWidth) return;
+      if (pop) pop.remove();
+      pop = document.createElement('div');
+      pop.className = 'preview-pop';
+      pop.textContent = clip.dataset.full || clip.textContent || '';
+      document.body.appendChild(pop);
+      position(e);
+    }
+    function position(e){
+      if (!pop) return;
+      const pad = 8;
+      let x = (e.clientX || 20) + 14;
+      let y = (e.clientY || 20) + 14;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const r = pop.getBoundingClientRect();
+      if (x + r.width  + pad > vw) x = vw - r.width  - pad;
+      if (y + r.height + pad > vh) y = vh - r.height - pad;
+      pop.style.left = x + 'px';
+      pop.style.top  = y + 'px';
+    }
+    function hide(){ if (pop){ pop.remove(); pop = null; } }
 
-  function buildColgroup(headers){
-    const cg=document.getElementById('exColGroup'); cg.innerHTML='';
-    const descIdx=headers.findIndex(h=>h.trim().toLowerCase()==='descrição');
-    const linkIdxs=headers.map((h,i)=>({i,h: h.trim().toLowerCase()}))
-      .filter(o=>o.h==='link img 1'||o.h==='link img 2'||o.h==='link img 3')
-      .map(o=>o.i);
-
-    headers.forEach((h,i)=>{
-      const col=document.createElement('col');
-      if (i===descIdx) col.style.width='var(--desc-col-width)';
-      if (linkIdxs.includes(i)) col.style.width='var(--link-col-width)';
-      cg.appendChild(col);
+    root.querySelectorAll('.cell-clip').forEach(el=>{
+      el.addEventListener('mouseenter', show);
+      el.addEventListener('mousemove', position);
+      el.addEventListener('mouseleave', hide);
+      el.addEventListener('click', show); // mobile
     });
-    return { descIdx, linkIdxs };
+    document.addEventListener('touchstart', () => { if (pop) { pop.remove(); pop=null; } }, {passive:true});
   }
 
-  function createLinkCell(url, label){
-    const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener'; a.textContent=label; return a;
+  // ====== Exercícios – carregar tudo (sem paginação) ======
+  const PAGE_SIZE = 100000; // “ilimitado” para trazer tudo
+
+  function linkify(v) {
+    const s = String(v||"").trim();
+    if (!s) return "";
+    if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+    return s;
+  }
+  function needsClip(h){
+    const k = String(h||"").toLowerCase();
+    return k.includes("descr") || k.includes("link"); // Descrição e colunas de link
   }
 
-  async function fetchExercisesPreview(){
+  async function fetchExercisesPreview() {
     try{
       setLoading(true, "Carregando exercícios…");
-      const params=new URLSearchParams({ action:"listExercisesPreview", curso:sessao.curso, email:sessao.email, limit:PAGE_SIZE, offset:0 });
-      const r=await fetch(`${API_URL}?${params.toString()}`, {cache:'no-store'});
-      const d=await r.json();
-      if(!d.ok) throw new Error(d.message || "Falha ao listar exercícios.");
+      const params = new URLSearchParams({
+        action: "listExercisesPreview",
+        curso:  sessao.curso,
+        email:  sessao.email,
+        limit:  PAGE_SIZE,
+        offset: 0
+      });
+      const r = await fetch(`${API_URL}?${params.toString()}`, {cache:'no-store'});
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.message || "Falha ao listar exercícios.");
 
-      const thead=qs("#exTable thead"), tbody=qs("#exTable tbody");
-      thead.innerHTML=""; tbody.innerHTML="";
-
-      // Cabeçalho
-      const trh=document.createElement("tr");
-      (d.headers||[]).forEach(h=>{ const th=document.createElement("th"); th.textContent=h; trh.appendChild(th); });
+      // cabeçalho
+      const thead = document.querySelector("#exTable thead");
+      thead.innerHTML = "";
+      const trh = document.createElement("tr");
+      (d.headers || []).forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        trh.appendChild(th);
+      });
       thead.appendChild(trh);
 
-      const { descIdx, linkIdxs } = buildColgroup(d.headers||[]);
-
-      // Corpo
-      (d.rows||[]).forEach(row=>{
-        const tr=document.createElement("tr");
-        (d.headers||[]).forEach((h, idx)=>{
-          const td=document.createElement("td"); const val=row[h];
-          if (idx===descIdx){
-            const full=String(val||""); td.className='cell-clip'; td.textContent=full; td.title=full; td.setAttribute('data-full', full);
-          } else if (linkIdxs.includes(idx)){
-            const url=String(val||"").trim(); const num=(h.match(/\d+/)||[1])[0]; const label=`Envio ${num}`;
-            td.className='cell-clip';
-            if(url){ td.appendChild(createLinkCell(url, label)); td.title=url; td.setAttribute('data-full', url); }
-          } else {
-            if (typeof val==='string' && /^https?:\/\//i.test(val)){
-              const a=document.createElement('a'); a.href=val; a.target='_blank'; a.rel='noopener'; a.textContent=val; td.appendChild(a);
-            } else { td.textContent=(val==null)?'':val; }
-          }
+      // corpo
+      const tbody = document.querySelector("#exTable tbody");
+      tbody.innerHTML = "";
+      (d.rows || []).forEach(row => {
+        const tr = document.createElement("tr");
+        (d.headers || []).forEach(h => {
+          const td = document.createElement("td");
+          const html = linkify(row[h]);
+          td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
 
-      const total=d.totalRows||0;
-      qs("#exTotalText").textContent=`Total ${total} ${total===1?'exercício':'exercícios'}`;
+      // ativa popover nas células clipadas
+      attachOverflowPreview();
 
-      if ((d.rows||[]).length===0){
-        const tr=document.createElement("tr"); const td=document.createElement("td");
-        td.colSpan=(d.headers||[]).length||1; td.style.textAlign="center"; td.style.color="#666"; td.textContent="Nenhum envio encontrado.";
-        tr.appendChild(td); tbody.appendChild(tr);
+      // total (texto embaixo)
+      const total = d.totalRows || 0;
+      const label = total === 1 ? "exercício" : "exercícios";
+      document.getElementById("exTotalText").textContent = `Total ${total} ${label}`;
+
+      // vazio
+      if ((d.rows || []).length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = (d.headers || []).length || 1;
+        td.style.textAlign = "center";
+        td.style.color = "#666";
+        td.textContent = "Nenhum envio encontrado.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
       }
-    }catch(e){ alert("Erro: " + e.message); }
-    finally{ setLoading(false); }
+
+    } catch(e){
+      alert("Erro: " + e.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   document.addEventListener('DOMContentLoaded', boot);
 
   async function boot(){
-    try { sessao=JSON.parse(localStorage.getItem('sessao_portal')||'null'); } catch {}
-    if(!sessao || !validEmail(sessao.email) || !sessao.curso){ alert('Faça login para acessar.'); location.replace('index.html'); return; }
-
-    setLoading(true, "Carregando painel…");
-    const resp=await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
-    bootstrap=await resp.json(); setLoading(false);
-
-    if(!bootstrap || bootstrap.allowed!==true || String(bootstrap.perfil).toLowerCase()!=='professor'){
-      alert('Acesso de professor não validado. Faça login novamente.'); location.replace('index.html'); return;
+    try { sessao = JSON.parse(localStorage.getItem('sessao_portal') || 'null'); } catch {}
+    if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
+      alert('Faça login para acessar.');
+      location.replace('index.html');
+      return;
     }
 
-    qs('#topbar').textContent=`[${bootstrap.nome || 'professor'}]`;
-    if (bootstrap?.feedback){ renderNextLive(bootstrap.feedback); renderGravada(bootstrap.feedback); }
+    setLoading(true, "Carregando painel…");
+    const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
+    bootstrap = await resp.json();
+    setLoading(false);
 
-    // navegação
-    qs('#btnAbrirLive').addEventListener('click', ()=>{ hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
-    qs('#btnAbrirGrav').addEventListener('click', ()=>{ hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
+    if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
+      alert('Acesso de professor não validado. Faça login novamente.');
+      location.replace('index.html');
+      return;
+    }
+
+    qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
+
+    if (bootstrap?.feedback){
+      renderNextLive(bootstrap.feedback);
+      renderGravada(bootstrap.feedback);
+    }
+
+    // botões
+    qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
+    qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnVoltar1').addEventListener('click', goHome);
     qs('#btnVoltar2').addEventListener('click', goHome);
-    qs('#btnSair').addEventListener('click', ()=>{ localStorage.removeItem('sessao_portal'); location.replace('index.html'); });
+    qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.replace('index.html'); });
 
     qs('#btnEnviarLive').addEventListener('click', enviarLive);
     qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
-    qs("#exAtualizar").addEventListener("click", fetchExercisesPreview);
 
+    document.getElementById("exAtualizar").addEventListener("click", fetchExercisesPreview);
+
+    // primeira carga da tabela
     fetchExercisesPreview();
+
     ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
   }
 
-  function clearForms(){ ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{ const el=qs(sel); if(el){ el.value=''; markInvalid(el,false);} }); }
-  function goHome(){ hide(qs('#formLive')); hide(qs('#formGrav')); show(qs('#home')); clearForms(); history.replaceState({}, "", location.pathname); window.scrollTo({top:0,behavior:'smooth'}); }
+  function clearForms(){
+    ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
+      const el = qs(sel); if (el) { el.value = ''; markInvalid(el,false); }
+    });
+  }
+
+  function goHome(){
+    hide(qs('#formLive')); hide(qs('#formGrav'));
+    show(qs('#home'));
+    clearForms();
+    history.replaceState({}, "", location.pathname);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
 
   async function enviarLive(){
-    const ok=validateLiveForm(); if(!ok) return;
-    const body={ action:'updateFeedbackLive', curso:sessao.curso, email:sessao.email,
-      link:qs('#fLink').value.trim(), senha:qs('#fSenha').value.trim(), hora:qs('#fHora').value.trim(), dia:qs('#fDia').value.trim(), info:qs('#fInfo').value.trim() };
+    const ok = validateLiveForm();
+    if (!ok) return;
+
+    const body = {
+      action: 'updateFeedbackLive',
+      curso: sessao.curso,
+      email: sessao.email,
+      link:  qs('#fLink').value.trim(),
+      senha: qs('#fSenha').value.trim(),
+      hora:  qs('#fHora').value.trim(),
+      dia:   qs('#fDia').value.trim(),
+      info:  qs('#fInfo').value.trim()
+    };
     setLoading(true, "Atualizando informações…");
     try{
-      const r=await fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
-      const data=await r.json(); if(!data || data.ok!==true) throw new Error((data && (data.message||data.error)) || 'Falha ao atualizar');
-      renderNextLive({ dia:qs('#fDia').value.trim(), hora:qs('#fHora').value.trim(), professor: bootstrap?.nome || '', link: qs('#fLink').value.trim() });
-      goHome(); setTimeout(()=>alert('Próxima aula ao vivo atualizada!'),50);
-    }catch(e){ alert('Erro ao atualizar: ' + e.message); }
-    finally{ setLoading(false); }
+      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
+      renderNextLive({
+        dia:  qs('#fDia').value.trim(),
+        hora: qs('#fHora').value.trim(),
+        professor: bootstrap?.nome || '',
+        link: qs('#fLink').value.trim()
+      });
+
+      goHome();
+      setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
+    }catch(e){
+      alert('Erro ao atualizar: ' + e.message);
+    }finally{
+      setLoading(false);
+    }
   }
 
   async function enviarGrav(){
-    const body={ action:'updateGravada', curso:sessao.curso, email:sessao.email, aulaGravada: qs('#fGravada').value.trim() };
+    const body = {
+      action: 'updateGravada',
+      curso: sessao.curso,
+      email: sessao.email,
+      aulaGravada: qs('#fGravada').value.trim()
+    };
     setLoading(true, "Atualizando aula gravada…");
     try{
-      const r=await fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
-      const data=await r.json(); if(!data || data.ok!==true) throw new Error((data && (data.message||data.error)) || 'Falha ao atualizar');
+      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
       renderGravada({ aulaGravada: qs('#fGravada').value.trim() });
-      goHome(); setTimeout(()=>alert('Link da aula gravada atualizado!'),50);
-    }catch(e){ alert('Erro ao atualizar: ' + e.message); }
-    finally{ setLoading(false); }
+      goHome();
+      setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
+    }catch(e){
+      alert('Erro ao atualizar: ' + e.message);
+    }finally{
+      setLoading(false);
+    }
   }
 </script>
 
@@ -398,6 +574,7 @@
   }
 </script>
 
+<!-- Overlay global -->
 <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
   <div class="global-loading-bubble">Carregando…</div>
 </div>
