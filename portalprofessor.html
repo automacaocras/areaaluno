@@ -445,16 +445,29 @@
   // ====== Exercícios – carregar tudo (sem paginação) ======
   const PAGE_SIZE = 100000; // “ilimitado” para trazer tudo
 
-  function linkify(v) {
-    const s = String(v||"").trim();
-    if (!s) return "";
-    if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
-    return s;
+  function isLinkCol(h){
+  return /\blink/i.test(String(h || "")); // "Link", "Link img 1", etc.
+}
+function linkLabelFromHeader(h){
+  const m = String(h || "").match(/\d+/);
+  return m ? `Envio ${m[0]}` : "Envio";
+}
+// Mantém a URL como <a>, mas mostra "Envio N" nas colunas de link
+function renderCellHTML(header, value){
+  const s = String(value || "").trim();
+  if (!s) return "";
+  if (isLinkCol(header) && /^https?:\/\//i.test(s)){
+    const label = linkLabelFromHeader(header);
+    return `<a href="${s}" target="_blank" rel="noopener">${label}</a>`;
   }
-  function needsClip(h){
-    const k = String(h||"").toLowerCase();
-    return k.includes("descr") || k.includes("link"); // Descrição e colunas de link
-  }
+  if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+  return s;
+}
+// Só a coluna "Descrição" recebe ellipsis
+function needsClip(h){
+  return /descr/i.test(String(h || ""));
+}
+
 
   async function fetchExercisesPreview() {
     try{
@@ -495,8 +508,9 @@
         const tr = document.createElement("tr");
         (d.headers || []).forEach(h => {
           const td = document.createElement("td");
-          const html = linkify(row[h]);
-          td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
+          const html = renderCellHTML(h, row[h]);
+td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
+
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
@@ -668,3 +682,4 @@
 </div>
 </body>
 </html>
+
