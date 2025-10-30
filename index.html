@@ -69,11 +69,11 @@
         autocomplete="email"
       />
 
-      <!-- NOVO: campo de senha -->
+      <!-- Campo de senha -->
       <input
         type="password"
         id="senha"
-        placeholder="Digite sua senha (ddmmaaaa)"
+        placeholder="Digite sua senha"
         autocomplete="current-password"
       />
 
@@ -83,7 +83,7 @@
         Portal do aluno disponível após 30 dias da compra do curso.
       </p>
 
-      <!-- NOVO: Esqueci a senha -->
+      <!-- Esqueci a senha -->
       <p class="help-text">
         <a href="#" onclick="esqueciSenha();return false;">Esqueci a senha</a>
       </p>
@@ -120,7 +120,7 @@
           if (e.key === "Enter") login();
         });
       }
-      carregarCursos(); // sem overlay na abertura (opcional ativar com setLoading se quiser)
+      carregarCursos(); // sem overlay na abertura
     });
 
     function renderCursos(lista) {
@@ -170,7 +170,7 @@
 
     function emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-    // NOVO: popup “Esqueci a senha”
+    // Popup “Esqueci a senha”
     function esqueciSenha(){
       alert('A sua senha é a data em que você adquiriu o seu curso, no formato dd/mm/aaaa. Exemplo: "01/01/2023" → digite 01012023');
     }
