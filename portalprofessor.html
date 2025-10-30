@@ -116,11 +116,12 @@
     border:1px solid #eee;
     border-radius:12px;
   }
+  /* IMPORTANTE: layout auto para não encolher tudo */
   #exTable{
     border-collapse:collapse;
-    table-layout:fixed;            /* limita expansão de colunas */
-    width:100%;                    /* respeita a largura do container */
-    min-width:760px;               /* força scroll na .table-wrap quando não couber */
+    table-layout:auto;             /* ⬅ deixa cada coluna decidir a largura pelo conteúdo */
+    width:max-content;             /* ⬅ tabela pode ser maior que o card (scroll fica no wrap) */
+    min-width:760px;               /* opcional: largura mínima confortável */
   }
   #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
   #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
@@ -129,7 +130,7 @@
   /* células com ellipsis (usadas em Descrição/Links) */
   .cell-clip{
     display:block;
-    max-width: 280px;          /* ajuste padrão; veja override no mobile se quiser */
+    max-width: 280px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -395,6 +396,7 @@
       if (i === descIndex){
         col.style.width = width;
         col.style.minWidth = width; // garante recorte/scroll consistente
+        col.style.maxWidth = width;
       }
       cg.appendChild(col);
     });
