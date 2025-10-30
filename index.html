@@ -172,7 +172,7 @@
 
     // Popup “Esqueci a senha”
     function esqueciSenha(){
-      alert('A sua senha é a data em que você adquiriu o seu curso, no formato dd/mm/aaaa. Exemplo: "01/01/2023" → digite 01012023');
+      alert('Acesse a plataforma do seu curso e busque pela data que o adquiriu. Caso tenha sido em 22/12/2024" a senha será: 22122024');
     }
 
     async function login() {
@@ -220,7 +220,7 @@
           window.location.href = destino;
         } else {
           if (data && data.status === "senha_errada") {
-            alert("Senha incorreta. Dica: sua senha é a data de início no formato ddmmaaaa (ex.: 01012023).");
+            alert("Senha incorreta.");
           } else if (data && data.status === "senha_indefinida") {
             alert('Não encontramos a sua senha. Escreva para contato@editoracras.com.');
           } else if (data && data.status === "inativo") {
@@ -284,3 +284,4 @@
   </div>
 </body>
 </html>
+
