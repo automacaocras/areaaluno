@@ -226,7 +226,7 @@
 
       <div class="band">
         <button class="btn-band btn-live" id="btnAbrirLive" data-busy>Atualizar próxima aula ao vivo</button>
-        <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
+        <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link do feedback gravado</button>
       </div>
       
       <p id="gravadaInfo" class="gravada-info hidden">
@@ -250,12 +250,11 @@
           <div class="small-muted" id="exTotalText">Total 0 exercícios</div>
         </div>
       </section>
-
+<br>
       <section class="panel" id="linksPanel">
         <h3>Links Úteis:</h3>
         <div class="links-box">
-          <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0"
-             target="_blank" rel="noopener">Planilha de Exercícios</a>
+      
           <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
              target="_blank" rel="noopener">Pasta Central do Drive</a>
           <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
@@ -281,8 +280,8 @@
 
     <!-- FORM: Aula gravada -->
     <section id="formGrav" class="panel hidden">
-      <h3>Atualizar link da aula gravada</h3>
-      <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
+      <h3>Atualizar link do feedback gravado</h3>
+      <div class="field"><input id="fGravada" placeholder="Link do feedback gravado"></div>
 
       <button id="btnEnviarGrav" class="btn-primary" data-busy>Atualizar</button>
       <button id="btnVoltar2" class="btn-neutral" type="button" data-busy>Voltar</button>
@@ -682,4 +681,5 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
 </div>
 </body>
 </html>
+
 
