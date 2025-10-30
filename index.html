@@ -25,7 +25,6 @@
 <link rel="canonical" href="https://automacaocras.github.io/areaaluno/index.html">
 <meta property="og:url" content="https://automacaocras.github.io/areaaluno/index.html">
 
-
 <!-- ✅ Imagem correta no GitHub Pages -->
 <meta property="og:image" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
 <meta property="og:image:secure_url" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
@@ -33,23 +32,22 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-  
-  <!-- CSS global -->
-  <link rel="stylesheet" href="style.css?v=3">
+<!-- CSS global -->
+<link rel="stylesheet" href="style.css?v=3">
 
-  <!-- Ajustes mínimos -->
-  <style>
-    html, body { height: 100%; }
-    body { margin: 0; }
-    .input-like{
-      width:100%; max-width:420px; margin:10px auto; padding:12px; font-size:16px; display:block;
-      border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433; outline:none;
-      appearance:none;
-      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
-      background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
-    }
-    .help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
-  </style>
+<!-- Ajustes mínimos -->
+<style>
+  html, body { height: 100%; }
+  body { margin: 0; }
+  .input-like{
+    width:100%; max-width:420px; margin:10px auto; padding:12px; font-size:16px; display:block;
+    border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433; outline:none;
+    appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
+  }
+  .help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
+</style>
 </head>
 <body>
   <!-- Wrapper central -->
@@ -70,9 +68,24 @@
         inputmode="email"
         autocomplete="email"
       />
+
+      <!-- NOVO: campo de senha -->
+      <input
+        type="password"
+        id="senha"
+        placeholder="Digite sua senha (ddmmaaaa)"
+        autocomplete="current-password"
+      />
+
       <button id="btnEntrar" data-busy onclick="login()">Entrar</button>
+
       <p class="help-text">
         Portal do aluno disponível após 30 dias da compra do curso.
+      </p>
+
+      <!-- NOVO: Esqueci a senha -->
+      <p class="help-text">
+        <a href="#" onclick="esqueciSenha();return false;">Esqueci a senha</a>
       </p>
     </div>
   </div>
@@ -100,6 +113,13 @@
       document.getElementById("email").addEventListener("keydown", (e) => {
         if (e.key === "Enter") login();
       });
+      // Enter no campo senha
+      const senhaInput = document.getElementById("senha");
+      if (senhaInput) {
+        senhaInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") login();
+        });
+      }
       carregarCursos(); // sem overlay na abertura (opcional ativar com setLoading se quiser)
     });
 
@@ -150,21 +170,39 @@
 
     function emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
+    // NOVO: popup “Esqueci a senha”
+    function esqueciSenha(){
+      alert('A sua senha é a data em que você adquiriu o seu curso, no formato dd/mm/aaaa. Exemplo: "01/01/2023" → digite 01012023');
+    }
+
     async function login() {
       if (isLoading) return;
       const curso = document.getElementById("curso").value.trim();
       const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value;
 
       if (!curso) return alert("Selecione o curso.");
       if (!email || !emailValido(email)) return alert("Digite um e-mail válido.");
+      if (!senha) return alert("Digite sua senha.");
 
       // overlay global padronizado
       isLoading = true;
       setLoading(true, "Verificando…");
 
       try {
-        const url = `${API_URL}?action=checkAuth&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
-        const resp = await fetch(url);
+        // POST (sem credenciais na URL/histórico)
+        const body = new URLSearchParams({
+          action: "checkAuth",
+          curso,
+          email,
+          senha
+        });
+
+        const resp = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body
+        });
         const data = await resp.json();
 
         if (data && data.allowed === true) {
@@ -177,11 +215,15 @@
             email, curso, nome: data.nome || "", perfil
           }));
 
-          // redireciona conforme perfil
+          // redireciona conforme perfil, sem expor dados na URL
           const destino = perfil === "professor" ? "portalprofessor.html" : "portalaluno.html";
-          window.location.href = `${destino}?curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`;
+          window.location.href = destino;
         } else {
-          if (data && data.status === "inativo") {
+          if (data && data.status === "senha_errada") {
+            alert("Senha incorreta. Dica: sua senha é a data de início no formato ddmmaaaa (ex.: 01012023).");
+          } else if (data && data.status === "senha_indefinida") {
+            alert('Não encontramos a sua senha. Escreva para contato@editoracras.com.');
+          } else if (data && data.status === "inativo") {
             const infoInicio = data.data_inicio ? ` O acesso tem duração de um ano e você adquiriu em ${data.data_inicio}.` : "";
             alert("Poxa artista, seu acesso expirou. Adquira o curso novamente para ter acesso às aulas e aos feedbacks." + infoInicio);
           } else if (data && data.status === "nao_cadastrado") {
@@ -242,5 +284,3 @@
   </div>
 </body>
 </html>
-
-
