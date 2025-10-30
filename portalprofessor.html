@@ -20,16 +20,18 @@
 <meta property="og:title" content="Portal do Professor – Editora Crás">
 <meta property="og:description" content="Acompanhe feedbacks, aulas gravadas e envios de exercícios.">
 
+<!-- ✅ Ajuste o URL abaixo conforme a página -->
 <link rel="canonical" href="https://automacaocras.github.io/areaaluno/portalprofessor.html">
 <meta property="og:url" content="https://automacaocras.github.io/areaaluno/portalprofessor.html">
 
+<!-- ✅ Imagem correta no GitHub Pages -->
 <meta property="og:image" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
 <meta property="og:image:secure_url" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-<!-- Guarda de sessão -->
+<!-- Guard: exige sessão e perfil professor (executa o quanto antes) -->
 <script>
   (function enforceProfessorRole() {
     try {
@@ -41,12 +43,14 @@
         location.replace("index.html");
         return;
       }
+
       if (String(sess.perfil || "").toLowerCase() !== "professor") {
         localStorage.removeItem("sessao_portal");
         alert("Acesso de professor não validado. Faça login novamente.");
         location.replace("index.html");
         return;
       }
+
       if (location.search) history.replaceState({}, "", location.pathname);
     } catch (e) {
       console.error(e);
@@ -60,7 +64,8 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
-  /* Nunca vazar horizontalmente */
+  /* evita vazamento lateral da página */
+  * { box-sizing: border-box; }
   html, body { overflow-x: hidden; }
 
   .topbar{
@@ -70,82 +75,78 @@
     background:#f4c200;color:#000;font-weight:800;text-align:center;
     padding:14px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
   }
-
-  .wrap{max-width:900px;margin:20px auto;padding:0 12px;} /* padding evita “encostar” nas bordas no mobile */
-
+  .wrap{max-width:900px;margin:20px auto;}
   .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
   .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
     font-weight:800;cursor:pointer;text-align:center;color:#fff}
   .btn-live{background:#ff6b6b}
   .btn-grav{background:#ff9f45}
-
   .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;
     box-shadow:0 8px 24px rgba(0,0,0,.06)}
   .panel h3{margin:0 0 10px;text-align:center}
-
-  .links-box a{
-    display:block;word-break:break-word;overflow-wrap:anywhere; /* links longos nunca vazam */
-    margin:8px 0;padding:10px 12px;background:#f7f7ff;border-radius:10px;
-    text-decoration:underline;color:#1d2433;text-align:center
-  }
-
+  .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;
+    background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center}
   .field{margin:10px auto;max-width:720px}
   .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
   .field textarea{min-height:110px}
-
   .btn-primary{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;
     border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer}
   .btn-neutral{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;
     border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer}
   .btn-exit{display:block;width:140px;margin:18px auto 0;padding:12px 18px;border:none;
     border-radius:12px;background:#d64545;color:#fff;font-weight:800;cursor:pointer}
-
   .hidden{display:none !important}
   .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
   .next-live strong, .gravada-info strong{ font-weight:800; }
   .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
-
   .is-invalid{
     border-color:#d64545 !important;
     box-shadow:0 0 0 2px rgba(214,69,69,.12);
     outline: none;
   }
 
-  /* ====== Tabela (somente leitura) ====== */
+  /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
-    width:100%;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch; /* momentum no iOS */
     max-width:100%;
-    overflow:auto;                         /* scroll lateral só dentro do box */
-    -webkit-overflow-scrolling:touch;      /* momentum no iOS */
-    border:1px solid #eee;border-radius:12px;
-    background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
   }
   #exTable{ border-collapse:collapse; width:max-content; min-width:100%; }
-  #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; background:#fff; }
-  #exTable th { position:sticky; top:0; z-index:1; }
+  #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
+  #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
+  #exTable a { word-break:break-all }
 
-  /* Links não quebram layout */
-  #exTable a { word-break:break-all; text-decoration:underline; }
-
-  /* Clipping: reduz ~1/3 do que caberia na tela e mostra “…” */
-  .clip{
-    max-width: clamp(120px, 34vw, 320px);  /* ~1/3 a menos do que antes */
+  /* células com ellipsis (usadas em Descrição/Links) */
+  .cell-clip{
+    display:block;
+    max-width: 280px;          /* ajuste de exibição; a tabela continua rolando na horizontal */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    cursor: help;
   }
-  /* feedback visual em desktop */
-  @media (hover:hover){
-    .clip:hover{ text-decoration: underline dotted; }
+  @media (min-width: 900px){
+    .cell-clip{ max-width: 420px; }
+  }
+  td .cell-clip a{
+    display:inline-block; max-width:100%;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
 
-  /* Popover do texto completo */
-  .clip-pop{
-    position: fixed; z-index: 9999; max-width: min(92vw, 460px);
-    background:#fff; border:1px solid #cfd6e4; border-radius:10px; padding:12px;
-    line-height:1.35; box-shadow:0 10px 26px rgba(0,0,0,.18);
-    font-size:14px; color:#1d2433;
+  /* popover com o texto completo */
+  .preview-pop{
+    position: fixed;
+    z-index: 9999;
+    max-width: min(80vw, 640px);
+    background: #f7f9ff;
+    border: 1px solid #cfd6e4;
+    padding: 10px 12px;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    font-size: 14px;
+    line-height: 1.35;
+    color:#111;
   }
 
   .controls-bottom{
@@ -190,7 +191,7 @@
 
       <!-- ====== Exercícios enviados (somente leitura) ====== -->
       <section id="prof-exercicios" class="panel" style="max-width:1100px">
-        <h3 style="margin-top:0">Exercícios enviados:</h3>
+        <h3 style="margin-top:0">Exercícios enviados</h3>
 
         <div class="table-wrap">
           <table id="exTable">
@@ -312,65 +313,69 @@
     else { a.textContent = ''; a.removeAttribute('href'); p.classList.add('hidden'); }
   }
 
-  /* ====== Tabela – helpers ====== */
-  const PAGE_SIZE = 100000; // traz tudo
+  /* ===== helpers para clip + popover ===== */
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function stripTags(html){
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  }
+  function wrapClipHTML(innerHTML){
+    const fullTxt = stripTags(innerHTML);
+    return `<div class="cell-clip" data-full="${escapeHtml(fullTxt)}">${innerHTML}</div>`;
+  }
+  function attachOverflowPreview(){
+    const root = document.querySelector('#exTable');
+    let pop = null;
+
+    function show(e){
+      const clip = e.currentTarget;
+      // só abre se estiver realmente cortado
+      if (clip.scrollWidth <= clip.clientWidth) return;
+      if (pop) pop.remove();
+      pop = document.createElement('div');
+      pop.className = 'preview-pop';
+      pop.textContent = clip.dataset.full || clip.textContent || '';
+      document.body.appendChild(pop);
+      position(e);
+    }
+    function position(e){
+      if (!pop) return;
+      const pad = 8;
+      let x = (e.clientX || 20) + 14;
+      let y = (e.clientY || 20) + 14;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const r = pop.getBoundingClientRect();
+      if (x + r.width  + pad > vw) x = vw - r.width  - pad;
+      if (y + r.height + pad > vh) y = vh - r.height - pad;
+      pop.style.left = x + 'px';
+      pop.style.top  = y + 'px';
+    }
+    function hide(){ if (pop){ pop.remove(); pop = null; } }
+
+    root.querySelectorAll('.cell-clip').forEach(el=>{
+      el.addEventListener('mouseenter', show);
+      el.addEventListener('mousemove', position);
+      el.addEventListener('mouseleave', hide);
+      el.addEventListener('click', show); // mobile
+    });
+    document.addEventListener('touchstart', () => { if (pop) { pop.remove(); pop=null; } }, {passive:true});
+  }
+
+  // ====== Exercícios – carregar tudo (sem paginação) ======
+  const PAGE_SIZE = 100000; // “ilimitado” para trazer tudo
 
   function linkify(v) {
     const s = String(v||"").trim();
     if (!s) return "";
     if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
-    return s.replaceAll("<","&lt;").replaceAll(">","&gt;");
+    return s;
   }
-
-  function makeClipHTML(text){
-    const safe = String(text || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-    return `<span class="clip" data-full="${safe}">${safe}</span>`;
-  }
-
-  function attachClipPopovers(root){
-    const els = (root || document).querySelectorAll('.clip');
-    let pop = null;
-
-    function showPop(el, x, y){
-      const content = el.getAttribute('data-full') || el.textContent || '';
-      if (!content) return;
-      if (!pop){
-        pop = document.createElement('div');
-        pop.className = 'clip-pop';
-        document.body.appendChild(pop);
-      }
-      pop.innerHTML = content.replaceAll("\n","<br>");
-      const rect = el.getBoundingClientRect();
-      const top = (y ?? rect.bottom + 8);
-      const left = Math.min(
-        window.innerWidth - 16 - Math.min(pop.offsetWidth, 460),
-        (x ?? rect.left)
-      );
-      pop.style.top = Math.max(8, top) + 'px';
-      pop.style.left = Math.max(8, left) + 'px';
-      pop.style.display = 'block';
-    }
-    function hidePop(){ if (pop) pop.style.display = 'none'; }
-
-    els.forEach(el=>{
-      // Só mostra popover quando realmente está cortando
-      const isOverflowing = el.scrollWidth > el.clientWidth + 2;
-
-      if (!isOverflowing) return;
-
-      el.addEventListener('mouseenter', e => showPop(el));
-      el.addEventListener('mouseleave', hidePop);
-
-      // mobile: toca para alternar
-      el.addEventListener('click', e => {
-        e.stopPropagation();
-        if (pop && pop.style.display === 'block') hidePop();
-        else showPop(el, e.clientX || (el.getBoundingClientRect().left + 8), e.clientY || (el.getBoundingClientRect().bottom + 8));
-      });
-    });
-
-    // clicar fora fecha no mobile
-    document.addEventListener('click', () => { if (pop) pop.style.display = 'none'; });
+  function needsClip(h){
+    const k = String(h||"").toLowerCase();
+    return k.includes("descr") || k.includes("link"); // Descrição e colunas de link
   }
 
   async function fetchExercisesPreview() {
@@ -405,25 +410,15 @@
         const tr = document.createElement("tr");
         (d.headers || []).forEach(h => {
           const td = document.createElement("td");
-          const val = row[h];
-
-          // colunas “pesadas” (Nome, Email, Módulo, Aula, Descrição) com clip
-          const header = (h || '').toLowerCase();
-          const clipCols = ['nome','email','módulo','modulo','aula','descrição','descricao'];
-
-          if (clipCols.includes(header)) {
-            td.innerHTML = makeClipHTML(val);
-          } else {
-            td.innerHTML = linkify(val);
-          }
-
+          const html = linkify(row[h]);
+          td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
 
-      // ativa popovers
-      attachClipPopovers(tbody);
+      // ativa popover nas células clipadas
+      attachOverflowPreview();
 
       // total (texto embaixo)
       const total = d.totalRows || 0;
@@ -585,4 +580,3 @@
 </div>
 </body>
 </html>
-
