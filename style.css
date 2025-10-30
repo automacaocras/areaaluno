@@ -135,12 +135,13 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 }
 
 .field-label {
+  display: block;             /* ⬅ isso resolve o alinhamento */
   text-align: left;
   width: 100%;
   max-width: 420px;
-  margin: 14px auto 6px auto; /* pequeno espaçamento acima/abaixo */
-  font-size: 18px; /* maior que antes */
-  font-weight: 600; /* mais firme */
+  margin: 14px auto 6px auto;
+  font-size: 18px;
+  font-weight: 600;
   color: #1d2433;
 }
 
