@@ -150,18 +150,31 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
 /* ======== Professores – Tabela ======== */
 
 #prof-exercicios { margin-left:auto; margin-right:auto; }
-#prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }
 
-/* ⚠️ Ajuste Principal — tabela não estica a página */
-#prof-exercicios table {
-  table-layout: fixed;
-  width: 100%;
-  min-width: 760px; /* scroll só dentro da .table-wrap */
+/* O scroll horizontal fica só aqui; a página continua rolando verticalmente */
+#prof-exercicios .table-wrap {
+  margin: 0 auto;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #eee;
+  border-radius: 12px;
 }
+
+/* ⚠️ Ajuste Principal — layout auto para não encolher todas colunas */
+#exTable{
+  border-collapse: collapse;
+  table-layout: auto;     /* deixa a largura vir do conteúdo (exceto Descrição via JS) */
+  width: max-content;     /* tabela pode ser maior que o painel; scroll fica na .table-wrap */
+  min-width: 760px;       /* conforto no desktop */
+}
+
+/* (Se quiser, pode manter estilos adicionais do <style> inline para th/td/ellipsis) */
 
 /* ===== Mobile “mais compacto” ===== */
 @media (max-width:480px){
-  #prof-exercicios table { min-width: 600px; } /* traz scroll mais cedo */
+  #exTable { min-width: 600px; } /* traz o scroll mais cedo no mobile */
   .cell-clip { max-width: 180px; }
   .btn-band { padding: 14px 12px; font-size: 15px; }
   .panel { padding: 14px; }
