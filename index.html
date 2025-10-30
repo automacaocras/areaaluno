@@ -224,10 +224,10 @@
           } else if (data && data.status === "senha_indefinida") {
             alert('Não encontramos a sua senha. Escreva para contato@editoracras.com.');
           } else if (data && data.status === "inativo") {
-            const infoInicio = data.data_inicio ? ` O acesso tem duração de um ano e você adquiriu em ${data.data_inicio}.` : "";
+            const infoInicio = data.data_inicio ? ` O acesso tem duração de um ano e o seu já expirou.` : "";
             alert("Poxa artista, seu acesso expirou. Adquira o curso novamente para ter acesso às aulas e aos feedbacks." + infoInicio);
           } else if (data && data.status === "nao_cadastrado") {
-            alert("Seu email não consta em nosso cadastro de alunos. Caso tenha adquirido o curso agora, espere até o próximo mês para conseguir logar. Aproveite esse tempo para estudar as aulas!");
+            alert("Seu email não consta em nosso cadastro de alunos. Caso tenha adquirido o curso agora, espere até o próximo mês para logar. Aproveite esse tempo para estudar as aulas!");
           } else if (data && data.status === "curso_invalido") {
             alert("Curso inválido. Tente selecionar novamente.");
           } else {
@@ -284,4 +284,5 @@
   </div>
 </body>
 </html>
+
 
