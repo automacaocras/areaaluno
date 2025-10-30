@@ -5,12 +5,11 @@
   --gutter: clamp(12px, 4vw, 20px);
 }
 
-/* reforço: sem vazamento lateral e com scroll vertical global */
+/* sem vazamento lateral e com scroll vertical global */
 html, body { overflow-x: hidden; overflow-y: auto; }
 
 html {
   height: 100%;
-  overflow-x: hidden; /* impede vazamento lateral */
 }
 
 body {
@@ -166,8 +165,8 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   border: 1px solid #eee;
   border-radius: 12px;
 
-  /* permite que o navegador decida a direção do gesto */
-  touch-action: pan-x pan-y;
+  /* permite que o navegador escolha a direção do gesto */
+  touch-action: auto;
   overscroll-behavior: auto;
   cursor: grab;
 }
