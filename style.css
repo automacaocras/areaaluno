@@ -1,8 +1,16 @@
 /* ===== Base / layout ===== */
 *, *::before, *::after { box-sizing: border-box; }
-:root{ --gutter: clamp(12px, 4vw, 20px); }
-html { height: 100%; overflow-x: hidden; }
-body{
+
+:root{
+  --gutter: clamp(12px, 4vw, 20px);
+}
+
+html {
+  height: 100%;
+  overflow-x: hidden; /* impede vazamento lateral */
+}
+
+body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding-inline: var(--gutter);
@@ -12,65 +20,73 @@ body{
   background: linear-gradient(180deg, #f1cf00 0%, #fefbd3 100%);
   background-attachment: fixed;
 }
+
 h1, h2, h3 { text-align: center; margin: 0 0 14px 0; }
 
 /* ===== Estrutura de página ===== */
-.page-center{
+.page-center {
   flex:1; display:flex; flex-direction:column; justify-content:center;
   align-items:center; gap:12px; padding:24px 0;
 }
-.header-logo{
+
+.header-logo {
   display:block; width:clamp(160px, 50vw, 280px); height:auto; margin:0 auto 8px;
 }
-#login-area{ width:100%; max-width:420px; }
+
+#login-area { width:100%; max-width:420px; }
 
 /* ===== Inputs / botões ===== */
-input, button, select.input-like{
+input, button, select.input-like {
   width:100%; margin:10px auto; padding:12px; font-size:16px; display:block;
   border:1px solid #cfd6e4; border-radius:10px; background:#fff; color:#1d2433;
 }
-select.input-like{
+
+select.input-like {
   appearance:none;
   background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="%23909ab0" d="M7 10l5 5 5-5z"/></svg>');
   background-repeat:no-repeat; background-position:right 12px center; background-size:20px;
 }
-button{
+
+button {
   background:#e9bc00; color:#fff; border:none; font-weight:700; cursor:pointer;
 }
 button:disabled{ background:#fffaaa; cursor:not-allowed; }
-.help-text{ margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
+
+.help-text { margin:8px 0 0; color:#233; font-size:12px; text-align:center; }
 
 /* ===== Overlay de loading ===== */
-#loading{
+#loading {
   position:fixed; inset:0; width:100svw; height:100svh;
   display:none; place-items:center; background:rgba(0,0,0,.35); z-index:10000;
 }
-#loading .loading-bubble{
+
+#loading .loading-bubble {
   padding:12px 16px; background:#fff; border-radius:10px; font-weight:700;
   box-shadow:0 6px 18px rgba(0,0,0,.15); color:#000;
 }
 
 /* ===== Rodapé ===== */
-.site-footer{
-  margin:24px calc(var(--gutter) * -1) 0; background:#e9bc00; color:#fff;
+.site-footer {
+  margin:24px calc(var(--gutter) * -1) 0;
+  background:#e9bc00; color:#fff;
 }
-.site-footer .footer-inner{
+.site-footer .footer-inner {
   max-width:1200px; margin:0 auto; padding:14px var(--gutter);
   text-align:center; line-height:1.5;
 }
-.site-footer a{ color:#fff; text-decoration:underline; }
-.site-footer a:hover{ opacity:.9; }
-@supports (padding: env(safe-area-inset-bottom)) {
-  .site-footer .footer-inner{ padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.site-footer a { color:#fff; text-decoration:underline; }
+.site-footer a:hover { opacity:.9; }
 
+@supports (padding: env(safe-area-inset-bottom)) {
+  .site-footer .footer-inner { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 }
 
+/* ===== Topbar corrigida (não usa 100vw para evitar overflow) ===== */
 .topbar{
-  width: 100vw;                      /* ocupa toda a largura da viewport */
-  margin-left: calc(50% - 50vw);     /* puxa para a borda esquerda real */
-  margin-right: calc(50% - 50vw);    /* puxa para a borda direita real */
-
-  background:#e6b200;                /* sua cor atual */
+  width:auto;
+  margin-left: calc(-1 * var(--gutter));
+  margin-right: calc(-1 * var(--gutter));
+  background:#e6b200;
   color:#000;
   font-weight:800;
   text-align:center;
@@ -78,21 +94,16 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   box-shadow: inset 0 -2px 0 rgba(0,0,0,.08);
 }
 
+/* ===== Overlay Global Reforçado ===== */
 #global-loading {
   position: fixed;
   inset: 0;
-  display: none;            /* controlado via setLoading() */
+  display: none;     /* controlado via setLoading() */
   place-items: center;
   z-index: 2147483647;
-
-  /* Precisa ser semitransparente para o blur aparecer */
   background: rgba(0,0,0,0.45);
-
-  /* Aqui está o desfoque – igual ao do professor */
   backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari/iOS */
-
-  /* opcional: pequena suavização de animações do blur */
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
   will-change: backdrop-filter;
 }
 
@@ -105,57 +116,54 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   box-shadow: 0 8px 24px rgba(0,0,0,0.20);
 }
 
-/* aproxima o texto "Aula gravada" do botão laranja apenas nesse caso */
-.band + .gravada-info { 
-  margin-top: 6px;   /* antes era ~1em do <p> padrão */
-}
-
-
+/* ===== Cupom / Destaques ===== */
 #cupomBox {
-  background: #d64545 !important;   /* vermelho */
-  color: #fff !important;            /* texto branco */
+  background: #d64545 !important;
+  color: #fff !important;
   border-radius: 18px;
   padding: 14px 18px;
   text-align: center;
   box-shadow: 0 8px 24px rgba(0,0,0,.08);
 }
-#cupomBox a {
-  color: #fff;                       /* link branco */
-  text-decoration: underline;
-}
-#cupomBox a:hover {
-  opacity: .8;
-}
+#cupomBox a { color:#fff; text-decoration:underline; }
+#cupomBox a:hover { opacity:.8; }
 
-/* Ativa o desfoque no fundo quando o modal está visível */
+/* ===== Modal Blur ===== */
 .modal.show{
   backdrop-filter: blur(8px) saturate(120%);
-  -webkit-backdrop-filter: blur(8px) saturate(120%); /* Safari/iOS */
-  will-change: backdrop-filter; /* suaviza transições e melhora performance */
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  will-change: backdrop-filter;
 }
 
+/* ===== Labels ===== */
 .field-label {
-  display: block;             /* ⬅ isso resolve o alinhamento */
-  text-align: center;   
-  width: 100%;
-  max-width: 420px;
-  margin: 14px auto 6px auto;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1d2433;
+  display:block;
+  text-align:center;
+  width:100%;
+  max-width:420px;
+  margin:14px auto 6px;
+  font-size:18px;
+  font-weight:600;
+  color:#1d2433;
 }
 
-/* ====== Overrides específicos do Portal do Professor ====== */
-#prof-exercicios { margin-left:auto; margin-right:auto; }           /* painel centralizado */
-#prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }   /* box não "vara" */
-#prof-exercicios table { width: 100%; min-width: 760px; }           /* cria scroll só no box */
+/* ======== Professores – Tabela ======== */
 
-/* evita qualquer vazamento lateral da página, reforço */
-html, body { overflow-x: hidden; }
+#prof-exercicios { margin-left:auto; margin-right:auto; }
+#prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }
 
+/* ⚠️ Ajuste Principal — tabela não estica a página */
+#prof-exercicios table {
+  table-layout: fixed;
+  width: 100%;
+  min-width: 760px; /* scroll só dentro da .table-wrap */
+}
 
-
-
-
-
-
+/* ===== Mobile “mais compacto” ===== */
+@media (max-width:480px){
+  #prof-exercicios table { min-width: 600px; } /* traz scroll mais cedo */
+  .cell-clip { max-width: 180px; }
+  .btn-band { padding: 14px 12px; font-size: 15px; }
+  .panel { padding: 14px; }
+  .wrap { margin: 16px auto; }
+}
