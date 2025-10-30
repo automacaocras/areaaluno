@@ -110,6 +110,40 @@
   </style>
 </head>
 <body>
+
+  <script>
+  (function enforceAlunoRole() {
+    try {
+      const raw = localStorage.getItem("sessao_portal");
+      const sess = raw ? JSON.parse(raw) : null;
+
+      // Sem sessão → volta pro login
+      if (!sess || !sess.email || !sess.curso) {
+        alert("Faça login para acessar.");
+        location.replace("index.html");
+        return;
+      }
+
+      // Sessão não é de aluno → bloqueia
+      if (String(sess.perfil || "").toLowerCase() !== "aluno") {
+        // limpa para evitar reaproveitar a sessão errada
+        localStorage.removeItem("sessao_portal");
+        alert("Acesso de aluno não validado. Faça login novamente.");
+        location.replace("index.html");
+        return;
+      }
+
+      // (Opcional) sanitize: evita que querystrings burlem algo visual
+      if (location.search) history.replaceState({}, "", location.pathname);
+    } catch (e) {
+      console.error(e);
+      alert("Sessão inválida. Faça login novamente.");
+      localStorage.removeItem("sessao_portal");
+      location.replace("index.html");
+    }
+  })();
+</script>
+
   <div class="topbar">[aluno]</div>
 
   <main class="page-center" style="--center-offset:-40px;">
@@ -650,3 +684,4 @@ renderNomeAluno(bootstrap.nome || "aluno");
   </div>
 </body>
 </html>
+
