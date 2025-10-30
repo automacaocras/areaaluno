@@ -51,7 +51,6 @@
         return;
       }
 
-      // Remove querystring se houver (hardening)
       if (location.search) history.replaceState({}, "", location.pathname);
     } catch (e) {
       console.error(e);
@@ -65,9 +64,7 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
-  /* Evita vazamento lateral da página; a tabela tem scroll próprio */
   html, body { overflow-x: hidden; }
-  /* topbar full-bleed */
   .topbar{
     width:100vw;
     margin-left:calc(50% - 50vw);
@@ -107,8 +104,8 @@
 
   /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
-    overflow:auto;                 /* scroll próprio */
-    -webkit-overflow-scrolling:touch; /* momentum no iOS */
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
     max-width:100%;
     border:1px solid #eee;
     border-radius:12px;
@@ -117,8 +114,15 @@
   #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
   #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
   #exTable a { word-break:break-all }
-  /* Melhor toque em celulares */
-  .controls-row{display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+
+  .controls-bottom{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    margin-top:14px;
+  }
+  .btn-refresh{
+    display:inline-block; padding:14px 22px; border:none; border-radius:12px;
+    background:#ddd; color:#111; font-weight:800; cursor:pointer; width:min(320px, 90%);
+  }
   .small-muted{color:#555;font-size:14px}
 </style>
 </head>
@@ -129,12 +133,12 @@
 <main class="page-center" style="--center-offset:-40px;">
   <div class="wrap">
 
-    <!-- HOME (botões + links úteis + sair) -->
+    <!-- HOME -->
     <section id="home">
 
       <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
 
-      <!-- CONFIRMAÇÃO VISUAL: Próximo evento ao vivo -->
+      <!-- CONFIRMAÇÕES -->
       <p id="nextLive" class="next-live hidden">
         <strong>Próximo evento ao vivo:</strong><br>
         <span id="nextLiveText">—</span><br>
@@ -146,24 +150,14 @@
         <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
       </div>
       
-      <!-- CONFIRMAÇÃO VISUAL: Aula gravada -->
       <p id="gravadaInfo" class="gravada-info hidden">
         <strong>Aula gravada:</strong>
         <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
       </p>
 
-      <!-- ====== NOVO: Exercícios enviados (preview somente leitura) ====== -->
+      <!-- ====== Exercícios enviados (somente leitura) ====== -->
       <section id="prof-exercicios" class="panel" style="max-width:1100px">
         <h3 style="margin-top:0">Exercícios enviados</h3>
-
-        <div class="controls-row" style="margin-bottom:10px">
-          <div class="small-muted"><strong>Total:</strong> <span id="exTotal">0</span></div>
-          <div class="controls-row" style="gap:6px">
-            <button id="exAtualizar" class="btn-neutral" type="button" data-busy>Atualizar</button>
-            <button id="exAnterior"  class="btn-neutral" type="button" data-busy>&laquo; Anterior</button>
-            <button id="exProximo"   class="btn-neutral" type="button" data-busy>Próximo &raquo;</button>
-          </div>
-        </div>
 
         <div class="table-wrap">
           <table id="exTable">
@@ -172,8 +166,9 @@
           </table>
         </div>
 
-        <div style="margin-top:8px; text-align:right;" class="small-muted">
-          Página <span id="exPage">1</span>
+        <div class="controls-bottom">
+          <button id="exAtualizar" class="btn-refresh" type="button" data-busy>Atualizar</button>
+          <div class="small-muted" id="exTotalText">Total 0 exercícios</div>
         </div>
       </section>
 
@@ -226,7 +221,6 @@
 </footer>
 
 <script>
-  // mesmo endpoint do aluno
   const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 
   const qs  = s => document.querySelector(s);
@@ -237,12 +231,9 @@
 
   function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 
-  /* === utilitários de validação === */
   function isValidURL(url){
-    try{
-      const u = new URL(url);
-      return u.protocol === 'http:' || u.protocol === 'https:';
-    }catch{ return false; }
+    try{ const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
+    catch{ return false; }
   }
   function isValidTime(hhmm){ return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm); }
   function markInvalid(el, state=true){ if (!el) return; el.classList.toggle('is-invalid', !!state); }
@@ -268,7 +259,6 @@
     return { link, hora, dia };
   }
 
-  /* === NOVO: renderização das confirmações === */
   function renderNextLive(src){
     const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
     const dia  = String(src?.dia || '').trim();
@@ -289,16 +279,15 @@
     else { a.textContent = ''; a.removeAttribute('href'); p.classList.add('hidden'); }
   }
 
-  /* ======= Exercícios – Preview (somente leitura) ======= */
-  const PAGE_SIZE = 50;
-  let exPage = 0; // 0-based
+  // ====== Exercícios – carregar tudo (sem paginação) ======
+  const PAGE_SIZE = 100000; // “ilimitado”
 
   function linkify(v) {
     const s = String(v||"").trim();
     if (!s) return "";
     if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
     return s;
-    }
+  }
 
   async function fetchExercisesPreview() {
     try{
@@ -308,7 +297,7 @@
         curso:  sessao.curso,
         email:  sessao.email,
         limit:  PAGE_SIZE,
-        offset: exPage * PAGE_SIZE
+        offset: 0
       });
       const r = await fetch(`${API_URL}?${params.toString()}`, {cache:'no-store'});
       const d = await r.json();
@@ -338,14 +327,22 @@
         tbody.appendChild(tr);
       });
 
-      // totais e paginação
-      document.getElementById("exTotal").textContent = d.totalRows || 0;
-      document.getElementById("exPage").textContent  = (exPage + 1);
+      // total (texto embaixo)
+      const total = d.totalRows || 0;
+      const label = total === 1 ? "exercício" : "exercícios";
+      document.getElementById("exTotalText").textContent = `Total ${total} ${label}`;
 
-      // botões
-      document.getElementById("exAnterior").disabled = (exPage <= 0);
-      const maxPage = Math.max(0, Math.ceil((d.totalRows||0) / PAGE_SIZE) - 1);
-      document.getElementById("exProximo").disabled  = (exPage >= maxPage);
+      // vazio
+      if ((d.rows || []).length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = (d.headers || []).length || 1;
+        td.style.textAlign = "center";
+        td.style.color = "#666";
+        td.textContent = "Nenhum envio encontrado.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
 
     } catch(e){
       alert("Erro: " + e.message);
@@ -382,26 +379,21 @@
       renderGravada(bootstrap.feedback);
     }
 
-    // navegação
+    // botões
     qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnVoltar1').addEventListener('click', goHome);
     qs('#btnVoltar2').addEventListener('click', goHome);
     qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.replace('index.html'); });
 
-    // ações
     qs('#btnEnviarLive').addEventListener('click', enviarLive);
     qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
 
-    // Exercícios: wiring
     document.getElementById("exAtualizar").addEventListener("click", fetchExercisesPreview);
-    document.getElementById("exAnterior").addEventListener("click", () => { if (exPage>0){ exPage--; fetchExercisesPreview(); }});
-    document.getElementById("exProximo").addEventListener("click",  () => { exPage++; fetchExercisesPreview(); });
 
-    // Primeira carga da tabela
+    // primeira carga da tabela
     fetchExercisesPreview();
 
-    // limpa marcação de erro ao digitar
     ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
   }
 
@@ -480,7 +472,6 @@
 </script>
 
 <script>
-  // Controle único do overlay + trava/destrava de botões marcados
   function setLoading(state, msg = "Carregando…") {
     const box = document.getElementById("global-loading");
     const bubble = box ? box.querySelector(".global-loading-bubble") : null;
