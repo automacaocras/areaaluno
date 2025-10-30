@@ -65,6 +65,8 @@
 <link rel="stylesheet" href="style.css?v=3">
 
 <style>
+  /* Evita vazamento lateral da página; a tabela tem scroll próprio */
+  html, body { overflow-x: hidden; }
   /* topbar full-bleed */
   .topbar{
     width:100vw;
@@ -102,6 +104,22 @@
     box-shadow:0 0 0 2px rgba(214,69,69,.12);
     outline: none;
   }
+
+  /* ====== TABELA (somente leitura) ====== */
+  .table-wrap{
+    overflow:auto;                 /* scroll próprio */
+    -webkit-overflow-scrolling:touch; /* momentum no iOS */
+    max-width:100%;
+    border:1px solid #eee;
+    border-radius:12px;
+  }
+  #exTable{ border-collapse:collapse; width:max-content; min-width:100%; }
+  #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
+  #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
+  #exTable a { word-break:break-all }
+  /* Melhor toque em celulares */
+  .controls-row{display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+  .small-muted{color:#555;font-size:14px}
 </style>
 </head>
 <body>
@@ -133,6 +151,31 @@
         <strong>Aula gravada:</strong>
         <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
       </p>
+
+      <!-- ====== NOVO: Exercícios enviados (preview somente leitura) ====== -->
+      <section id="prof-exercicios" class="panel" style="max-width:1100px">
+        <h3 style="margin-top:0">Exercícios enviados</h3>
+
+        <div class="controls-row" style="margin-bottom:10px">
+          <div class="small-muted"><strong>Total:</strong> <span id="exTotal">0</span></div>
+          <div class="controls-row" style="gap:6px">
+            <button id="exAtualizar" class="btn-neutral" type="button" data-busy>Atualizar</button>
+            <button id="exAnterior"  class="btn-neutral" type="button" data-busy>&laquo; Anterior</button>
+            <button id="exProximo"   class="btn-neutral" type="button" data-busy>Próximo &raquo;</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="exTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:8px; text-align:right;" class="small-muted">
+          Página <span id="exPage">1</span>
+        </div>
+      </section>
 
       <section class="panel" id="linksPanel">
         <h3>Links Úteis:</h3>
@@ -246,6 +289,71 @@
     else { a.textContent = ''; a.removeAttribute('href'); p.classList.add('hidden'); }
   }
 
+  /* ======= Exercícios – Preview (somente leitura) ======= */
+  const PAGE_SIZE = 50;
+  let exPage = 0; // 0-based
+
+  function linkify(v) {
+    const s = String(v||"").trim();
+    if (!s) return "";
+    if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+    return s;
+    }
+
+  async function fetchExercisesPreview() {
+    try{
+      setLoading(true, "Carregando exercícios…");
+      const params = new URLSearchParams({
+        action: "listExercisesPreview",
+        curso:  sessao.curso,
+        email:  sessao.email,
+        limit:  PAGE_SIZE,
+        offset: exPage * PAGE_SIZE
+      });
+      const r = await fetch(`${API_URL}?${params.toString()}`, {cache:'no-store'});
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.message || "Falha ao listar exercícios.");
+
+      // cabeçalho
+      const thead = document.querySelector("#exTable thead");
+      thead.innerHTML = "";
+      const trh = document.createElement("tr");
+      (d.headers || []).forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        trh.appendChild(th);
+      });
+      thead.appendChild(trh);
+
+      // corpo
+      const tbody = document.querySelector("#exTable tbody");
+      tbody.innerHTML = "";
+      (d.rows || []).forEach(row => {
+        const tr = document.createElement("tr");
+        (d.headers || []).forEach(h => {
+          const td = document.createElement("td");
+          td.innerHTML = linkify(row[h]);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+
+      // totais e paginação
+      document.getElementById("exTotal").textContent = d.totalRows || 0;
+      document.getElementById("exPage").textContent  = (exPage + 1);
+
+      // botões
+      document.getElementById("exAnterior").disabled = (exPage <= 0);
+      const maxPage = Math.max(0, Math.ceil((d.totalRows||0) / PAGE_SIZE) - 1);
+      document.getElementById("exProximo").disabled  = (exPage >= maxPage);
+
+    } catch(e){
+      alert("Erro: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', boot);
 
   async function boot(){
@@ -284,6 +392,14 @@
     // ações
     qs('#btnEnviarLive').addEventListener('click', enviarLive);
     qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
+
+    // Exercícios: wiring
+    document.getElementById("exAtualizar").addEventListener("click", fetchExercisesPreview);
+    document.getElementById("exAnterior").addEventListener("click", () => { if (exPage>0){ exPage--; fetchExercisesPreview(); }});
+    document.getElementById("exProximo").addEventListener("click",  () => { exPage++; fetchExercisesPreview(); });
+
+    // Primeira carga da tabela
+    fetchExercisesPreview();
 
     // limpa marcação de erro ao digitar
     ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
@@ -380,4 +496,3 @@
 </div>
 </body>
 </html>
-
