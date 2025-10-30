@@ -17,14 +17,12 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Editora Crás">
 <meta property="og:locale" content="pt_BR">
-
-<meta property="og:title" content="Portal do Aluno – Editora Crás">
+<meta property="og:title" content="Portal do Professor – Editora Crás">
 <meta property="og:description" content="Acompanhe feedbacks, aulas gravadas e envios de exercícios.">
 
 <!-- ✅ Ajuste o URL abaixo conforme a página -->
 <link rel="canonical" href="https://automacaocras.github.io/areaaluno/portalprofessor.html">
 <meta property="og:url" content="https://automacaocras.github.io/areaaluno/portalprofessor.html">
-
 
 <!-- ✅ Imagem correta no GitHub Pages -->
 <meta property="og:image" content="https://automacaocras.github.io/areaaluno/assets/wppcompartilhar.png">
@@ -33,67 +31,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 
-  
-  <link rel="stylesheet" href="style.css?v=3">
-
-  <style>
-    /* topbar full-bleed */
-    .topbar{
-      width:100vw;
-      margin-left:calc(50% - 50vw);
-      margin-right:calc(50% - 50vw);
-      background:#f4c200;color:#000;font-weight:800;text-align:center;
-      padding:14px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
-    }
-
-    .wrap{max-width:900px;margin:20px auto;}
-
-    /* faixa para deixar os botões com a MESMA largura do box branco */
-    .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
-    .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
-      font-weight:800;cursor:pointer;text-align:center;color:#fff}
-    .btn-live{background:#ff6b6b}
-    .btn-grav{background:#ff9f45}
-
-    .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;
-      box-shadow:0 8px 24px rgba(0,0,0,.06)}
-    .panel h3{margin:0 0 10px;text-align:center}
-
-    .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;
-      background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center}
-
-    /* forms mais largos */
-    .field{margin:10px auto;max-width:720px}
-    .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
-    .field textarea{min-height:110px}
-
-    .btn-primary{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;
-      border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer}
-    .btn-neutral{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;
-      border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer}
-
-    .btn-exit{display:block;width:140px;margin:18px auto 0;padding:12px 18px;border:none;
-      border-radius:12px;background:#d64545;color:#fff;font-weight:800;cursor:pointer}
-
-    .hidden{display:none !important}
-
-    /* confirmação visual do próximo evento + link da gravada */
-    .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
-    .next-live strong, .gravada-info strong{ font-weight:800; }
-    .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
-
-    /* validação de campos */
-    .is-invalid{
-      border-color:#d64545 !important;
-      box-shadow:0 0 0 2px rgba(214,69,69,.12);
-      outline: none;
-    }
-    /* (removidos estilos antigos do #overlay) */
-  </style>
-</head>
-<body>
-
-  <script>
+<!-- Guard: exige sessão e perfil professor (executa o quanto antes) -->
+<script>
   (function enforceProfessorRole() {
     try {
       const raw = localStorage.getItem("sessao_portal");
@@ -112,6 +51,7 @@
         return;
       }
 
+      // Remove querystring se houver (hardening)
       if (location.search) history.replaceState({}, "", location.pathname);
     } catch (e) {
       console.error(e);
@@ -122,368 +62,321 @@
   })();
 </script>
 
-  
-  <div class="topbar" id="topbar">[professor]</div>
+<link rel="stylesheet" href="style.css?v=3">
 
-  <main class="page-center" style="--center-offset:-40px;">
-    <div class="wrap">
+<style>
+  /* topbar full-bleed */
+  .topbar{
+    width:100vw;
+    margin-left:calc(50% - 50vw);
+    margin-right:calc(50% - 50vw);
+    background:#f4c200;color:#000;font-weight:800;text-align:center;
+    padding:14px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+  }
+  .wrap{max-width:900px;margin:20px auto;}
+  .band{max-width:900px;margin:12px auto;display:flex;flex-direction:column;gap:12px}
+  .btn-band{display:block;width:100%;padding:16px 18px;border:none;border-radius:12px;
+    font-weight:800;cursor:pointer;text-align:center;color:#fff}
+  .btn-live{background:#ff6b6b}
+  .btn-grav{background:#ff9f45}
+  .panel{background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;
+    box-shadow:0 8px 24px rgba(0,0,0,.06)}
+  .panel h3{margin:0 0 10px;text-align:center}
+  .links-box a{display:block;word-break:break-all;margin:8px 0;padding:10px 12px;
+    background:#f7f7ff;border-radius:10px;text-decoration:underline;color:#1d2433;text-align:center}
+  .field{margin:10px auto;max-width:720px}
+  .field input,.field textarea{width:100%;padding:12px;border:1px solid #cfd6e4;border-radius:10px;background:#fff;font-size:16px}
+  .field textarea{min-height:110px}
+  .btn-primary{display:block;width:100%;max-width:420px;margin:18px auto 6px;padding:14px 18px;
+    border:none;border-radius:12px;background:#f4c200;color:#111;font-weight:800;cursor:pointer}
+  .btn-neutral{display:block;width:100%;max-width:320px;margin:10px auto;padding:12px 18px;
+    border:none;border-radius:12px;background:#ddd;color:#111;font-weight:800;cursor:pointer}
+  .btn-exit{display:block;width:140px;margin:18px auto 0;padding:12px 18px;border:none;
+    border-radius:12px;background:#d64545;color:#fff;font-weight:800;cursor:pointer}
+  .hidden{display:none !important}
+  .next-live, .gravada-info{ text-align:center; margin:8px 0 14px; }
+  .next-live strong, .gravada-info strong{ font-weight:800; }
+  .live-link{ display:inline-block; margin-top:4px; text-decoration:underline; }
+  .is-invalid{
+    border-color:#d64545 !important;
+    box-shadow:0 0 0 2px rgba(214,69,69,.12);
+    outline: none;
+  }
+</style>
+</head>
+<body>
 
-      <!-- HOME (botões + links úteis + sair) -->
-      <section id="home">
+<div class="topbar" id="topbar">[professor]</div>
 
-        <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
+<main class="page-center" style="--center-offset:-40px;">
+  <div class="wrap">
 
-        <!-- CONFIRMAÇÃO VISUAL: Próximo evento ao vivo -->
-        <p id="nextLive" class="next-live hidden">
-          <strong>Próximo evento ao vivo:</strong><br>
-          <span id="nextLiveText">—</span><br>
-          <a id="nextLiveHref" href="#" target="_blank" rel="noopener" class="live-link hidden"></a>
-        </p>
+    <!-- HOME (botões + links úteis + sair) -->
+    <section id="home">
 
-        <div class="band">
-          <button class="btn-band btn-live" id="btnAbrirLive" data-busy>Atualizar próxima aula ao vivo</button>
-          <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
+      <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
+
+      <!-- CONFIRMAÇÃO VISUAL: Próximo evento ao vivo -->
+      <p id="nextLive" class="next-live hidden">
+        <strong>Próximo evento ao vivo:</strong><br>
+        <span id="nextLiveText">—</span><br>
+        <a id="nextLiveHref" href="#" target="_blank" rel="noopener" class="live-link hidden"></a>
+      </p>
+
+      <div class="band">
+        <button class="btn-band btn-live" id="btnAbrirLive" data-busy>Atualizar próxima aula ao vivo</button>
+        <button class="btn-band btn-grav" id="btnAbrirGrav" data-busy>Atualizar link da aula gravada</button>
+      </div>
+      
+      <!-- CONFIRMAÇÃO VISUAL: Aula gravada -->
+      <p id="gravadaInfo" class="gravada-info hidden">
+        <strong>Aula gravada:</strong>
+        <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
+      </p>
+
+      <section class="panel" id="linksPanel">
+        <h3>Links úteis:</h3>
+        <div class="links-box">
+          <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0"
+             target="_blank" rel="noopener">Planilha de Exercícios</a>
+          <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
+             target="_blank" rel="noopener">Pasta Central do Drive</a>
+          <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
+             target="_blank" rel="noopener">Grupo dos alunos no WhatsApp</a>
         </div>
-        
-        <!-- CONFIRMAÇÃO VISUAL: Aula gravada -->
-        <p id="gravadaInfo" class="gravada-info hidden">
-          <strong>Aula gravada:</strong>
-          <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
-        </p>
-<br>
-        <section class="panel" id="linksPanel">
-          <h3>Links úteis:</h3>
-         <div class="links-box">
-  <a href="https://docs.google.com/spreadsheets/d/13gvoB12b_8PS6aEUoaPeZ0bUN2YpNYsno78wDjvdnwU/edit?gid=0#gid=0"
-     target="_blank" rel="noopener">
-    Planilha de Exercícios
-  </a>
-
-  <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
-     target="_blank" rel="noopener">
-    Pasta Central do Drive
-  </a>
-           <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
-     target="_blank" rel="noopener">
-    Grupo dos alunos no WhatsApp
-  </a>
-</div>
-
-        </section>
-
-        <button id="btnSair" class="btn-exit" data-busy>Sair</button>
       </section>
 
-      <!-- FORM: Próxima aula ao vivo -->
-      <section id="formLive" class="panel hidden">
-        <h3>Próxima aula ao vivo</h3>
-        <div class="field"><input   id="fLink"  placeholder="Link"></div>
-        <div class="field"><input   id="fSenha" placeholder="Senha"></div>
-        <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
-        <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
-        <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
+      <button id="btnSair" class="btn-exit" data-busy>Sair</button>
+    </section>
 
-        <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
-        <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
-      </section>
+    <!-- FORM: Próxima aula ao vivo -->
+    <section id="formLive" class="panel hidden">
+      <h3>Próxima aula ao vivo</h3>
+      <div class="field"><input   id="fLink"  placeholder="Link"></div>
+      <div class="field"><input   id="fSenha" placeholder="Senha"></div>
+      <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
+      <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
+      <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
 
-      <!-- FORM: Aula gravada -->
-      <section id="formGrav" class="panel hidden">
-        <h3>Atualizar link da aula gravada</h3>
-        <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
+      <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
+      <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
+    </section>
 
-        <button id="btnEnviarGrav" class="btn-primary" data-busy>Atualizar</button>
-        <button id="btnVoltar2" class="btn-neutral" type="button" data-busy>Voltar</button>
-      </section>
+    <!-- FORM: Aula gravada -->
+    <section id="formGrav" class="panel hidden">
+      <h3>Atualizar link da aula gravada</h3>
+      <div class="field"><input id="fGravada" placeholder="Link da aula gravada"></div>
 
-    </div>
-  </main>
+      <button id="btnEnviarGrav" class="btn-primary" data-busy>Atualizar</button>
+      <button id="btnVoltar2" class="btn-neutral" type="button" data-busy>Voltar</button>
+    </section>
 
-  <!-- (removido o overlay antigo #overlay) -->
-
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <strong>Editora Crás • </strong>
-      <a href="mailto:contato@editoracras.com">Suporte</a>
-      <small>© 2025. Todos os direitos reservados.</small>
-    </div>
-  </footer>
-
-  <script>
-    // mesmo endpoint do aluno
-    const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-
-    const qs  = s => document.querySelector(s);
-    const show = el => el.classList.remove('hidden');
-    const hide = el => el.classList.add('hidden');
-
-    let sessao = null, bootstrap = null;
-
-    function getParams(){
-      const p = new URLSearchParams(location.search);
-      return { curso: p.get('curso') || '', email: p.get('email') || '' };
-    }
-    function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
-    /* === utilitários de validação === */
-    function isValidURL(url){
-      try{
-        const u = new URL(url);
-        return u.protocol === 'http:' || u.protocol === 'https:';
-      }catch{ return false; }
-    }
-    function isValidTime(hhmm){
-      return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm);
-    }
-    function markInvalid(el, state=true){
-      if (!el) return;
-      if (state) el.classList.add('is-invalid');
-      else el.classList.remove('is-invalid');
-    }
-    function clearInvalidOnInput(sel){
-      const el = qs(sel);
-      if (!el) return;
-      el.addEventListener('input', ()=> markInvalid(el,false));
-      el.addEventListener('blur',  ()=> markInvalid(el,false));
-    }
-    function validateLiveForm(){
-      const fLink = qs('#fLink');
-      const fHora = qs('#fHora');
-      const fDia  = qs('#fDia');
-
-      const link = fLink.value.trim();
-      const hora = fHora.value.trim();
-      const dia  = fDia.value.trim();
-
-      // limpa estados antigos
-      [fLink,fHora,fDia].forEach(el=>markInvalid(el,false));
-
-      const errors = [];
-      if (!link || !isValidURL(link)){
-        errors.push('• Informe um LINK válido (http/https).');
-        markInvalid(fLink,true);
-      }
-      if (!hora || !isValidTime(hora)){
-        errors.push('• Informe a HORA no formato 24h (ex.: 20:00).');
-        markInvalid(fHora,true);
-      }
-      if (!dia){
-        errors.push('• Informe o DIA (ex.: quinta-feira).');
-        markInvalid(fDia,true);
-      }
-
-      if (errors.length){
-        alert('Verifique os campos obrigatórios:\n\n' + errors.join('\n'));
-        // foca no primeiro inválido
-        const firstInvalid = [fLink,fHora,fDia].find(el => el.classList.contains('is-invalid'));
-        if (firstInvalid) firstInvalid.focus();
-        return false;
-      }
-      return { link, hora, dia };
-    }
-
-    /* === NOVO: renderização das confirmações === */
-    function renderNextLive(src){
-      const box = qs('#nextLive');
-      const txt = qs('#nextLiveText');
-      const a   = qs('#nextLiveHref');
-
-      const dia  = String(src?.dia || '').trim();
-      const hora = String(src?.hora || '').trim();
-      const prof = String(src?.professor || bootstrap?.nome || '').trim();
-      const link = String(src?.link || '').trim();
-
-      const parts = [];
-      if (dia)  parts.push(dia);
-      if (hora) parts.push(hora);
-
-      let texto = parts.join(', ');
-      if (prof) texto += (texto ? ' com ' : 'Com ') + prof;
-
-      const hasText = !!texto;
-      const hasLink = !!link;
-
-      txt.textContent = hasText ? texto : '—';
-
-      if (hasLink){
-        a.textContent = link;
-        a.href = link;
-        a.classList.remove('hidden');
-      } else {
-        a.textContent = '';
-        a.removeAttribute('href');
-        a.classList.add('hidden');
-      }
-
-      if (hasText || hasLink) box.classList.remove('hidden');
-      else box.classList.add('hidden');
-    }
-
-    function renderGravada(src){
-      const p = qs('#gravadaInfo');
-      const a = qs('#gravadaHref');
-      const url = String(src?.aulaGravada || '').trim();
-
-      if (url){
-        a.textContent = url;
-        a.href = url;
-        p.classList.remove('hidden');
-      } else {
-        a.textContent = '';
-        a.removeAttribute('href');
-        p.classList.add('hidden');
-      }
-    }
-    /* === FIM NOVO === */
-
-    document.addEventListener('DOMContentLoaded', boot);
-
-    async function boot(){
-      try { sessao = JSON.parse(localStorage.getItem('sessao_portal') || 'null'); } catch {}
-      const params = getParams();
-      if (!sessao) sessao = { email: params.email, curso: params.curso };
-
-      if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
-        alert('Faça login novamente.'); location.href='index.html'; return;
-      }
-
-      // overlay global enquanto carrega o painel do professor
-      setLoading(true, "Carregando painel…");
-      const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
-      bootstrap = await resp.json();
-      setLoading(false);
-
-      if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
-        alert('Acesso de professor não validado. Faça login novamente.');
-        location.href='index.html'; return;
-      }
-
-      qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
-
-      /* === NOVO: popula confirmações com dados do backend === */
-      if (bootstrap?.feedback){
-        renderNextLive(bootstrap.feedback);
-        renderGravada(bootstrap.feedback);
-      }
-      /* === FIM NOVO === */
-
-      // navegação
-      qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
-      qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
-      qs('#btnVoltar1').addEventListener('click', goHome);
-      qs('#btnVoltar2').addEventListener('click', goHome);
-      qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.href='index.html'; });
-
-      // ações
-      qs('#btnEnviarLive').addEventListener('click', enviarLive);
-      qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
-
-      // limpa marcação de erro ao digitar
-      ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
-    }
-
-    function clearForms(){
-      ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
-        const el = qs(sel); if (el) { el.value = ''; markInvalid(el,false); }
-      });
-    }
-
-    function goHome(){
-      // volta para a Home
-      hide(qs('#formLive')); hide(qs('#formGrav'));
-      show(qs('#home'));
-      // limpa campos (opcional)
-      clearForms();
-      // evita que o Voltar do navegador retorne ao form
-      history.replaceState({}, "", location.pathname + location.search);
-      window.scrollTo({top:0,behavior:'smooth'});
-    }
-
-    async function enviarLive(){
-      // ✅ validação antes de enviar
-      const ok = validateLiveForm();
-      if (!ok) return; // não envia se inválido
-
-      const body = {
-        action: 'updateFeedbackLive',
-        curso: sessao.curso,
-        email: sessao.email,
-        link:  qs('#fLink').value.trim(),
-        senha: qs('#fSenha').value.trim(),
-        hora:  qs('#fHora').value.trim(),
-        dia:   qs('#fDia').value.trim(),
-        info:  qs('#fInfo').value.trim()
-      };
-      setLoading(true, "Atualizando informações…");
-      try{
-        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
-        const data = await r.json();
-        if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-
-        /* === NOVO: atualiza confirmação imediatamente === */
-        renderNextLive({
-          dia:  qs('#fDia').value.trim(),
-          hora: qs('#fHora').value.trim(),
-          professor: bootstrap?.nome || '',
-          link: qs('#fLink').value.trim()
-        });
-        /* === FIM NOVO === */
-
-        goHome();
-        setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
-      }catch(e){
-        alert('Erro ao atualizar: ' + e.message);
-      }finally{
-        setLoading(false);
-      }
-    }
-
-    async function enviarGrav(){
-      const body = {
-        action: 'updateGravada',
-        curso: sessao.curso,
-        email: sessao.email,
-        aulaGravada: qs('#fGravada').value.trim()
-      };
-      setLoading(true, "Atualizando aula gravada…");
-      try{
-        const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
-        const data = await r.json();
-        if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
-
-        /* === NOVO: atualiza confirmação imediatamente === */
-        renderGravada({ aulaGravada: qs('#fGravada').value.trim() });
-        /* === FIM NOVO === */
-
-        goHome();
-        setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
-      }catch(e){
-        alert('Erro ao atualizar: ' + e.message);
-      }finally{
-        setLoading(false);
-      }
-    }
-  </script>
-
-  <script>
-    // Controle único do overlay + trava/destrava de botões marcados
-    function setLoading(state, msg = "Carregando…") {
-      const box = document.getElementById("global-loading");
-      const bubble = box ? box.querySelector(".global-loading-bubble") : null;
-      if (bubble) bubble.textContent = msg;
-
-      // desabilita/rehabilita todos elementos com [data-busy]
-      document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
-
-      if (box) box.style.display = state ? "grid" : "none";
-    }
-  </script>
-
-  <!-- Overlay global -->
-  <div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
-    <div class="global-loading-bubble">Carregando…</div>
   </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <strong>Editora Crás • </strong>
+    <a href="mailto:contato@editoracras.com">Suporte</a>
+    <small>© 2025. Todos os direitos reservados.</small>
+  </div>
+</footer>
+
+<script>
+  // mesmo endpoint do aluno
+  const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
+
+  const qs  = s => document.querySelector(s);
+  const show = el => el.classList.remove('hidden');
+  const hide = el => el.classList.add('hidden');
+
+  let sessao = null, bootstrap = null;
+
+  function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+  /* === utilitários de validação === */
+  function isValidURL(url){
+    try{
+      const u = new URL(url);
+      return u.protocol === 'http:' || u.protocol === 'https:';
+    }catch{ return false; }
+  }
+  function isValidTime(hhmm){ return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm); }
+  function markInvalid(el, state=true){ if (!el) return; el.classList.toggle('is-invalid', !!state); }
+  function clearInvalidOnInput(sel){
+    const el = qs(sel); if (!el) return;
+    el.addEventListener('input', ()=> markInvalid(el,false));
+    el.addEventListener('blur',  ()=> markInvalid(el,false));
+  }
+  function validateLiveForm(){
+    const fLink = qs('#fLink'), fHora = qs('#fHora'), fDia  = qs('#fDia');
+    const link = fLink.value.trim(), hora = fHora.value.trim(), dia  = fDia.value.trim();
+    [fLink,fHora,fDia].forEach(el=>markInvalid(el,false));
+    const errors = [];
+    if (!link || !isValidURL(link)){ errors.push('• Informe um LINK válido (http/https).'); markInvalid(fLink,true); }
+    if (!hora || !isValidTime(hora)){ errors.push('• Informe a HORA no formato 24h (ex.: 20:00).'); markInvalid(fHora,true); }
+    if (!dia){ errors.push('• Informe o DIA (ex.: quinta-feira).'); markInvalid(fDia,true); }
+    if (errors.length){
+      alert('Verifique os campos obrigatórios:\n\n' + errors.join('\n'));
+      const firstInvalid = [fLink,fHora,fDia].find(el => el.classList.contains('is-invalid'));
+      if (firstInvalid) firstInvalid.focus();
+      return false;
+    }
+    return { link, hora, dia };
+  }
+
+  /* === NOVO: renderização das confirmações === */
+  function renderNextLive(src){
+    const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
+    const dia  = String(src?.dia || '').trim();
+    const hora = String(src?.hora || '').trim();
+    const prof = String(src?.professor || bootstrap?.nome || '').trim();
+    const link = String(src?.link || '').trim();
+    const parts = []; if (dia) parts.push(dia); if (hora) parts.push(hora);
+    let texto = parts.join(', '); if (prof) texto += (texto ? ' com ' : 'Com ') + prof;
+    const hasText = !!texto, hasLink = !!link;
+    txt.textContent = hasText ? texto : '—';
+    if (hasLink){ a.textContent = link; a.href = link; a.classList.remove('hidden'); }
+    else { a.textContent = ''; a.removeAttribute('href'); a.classList.add('hidden'); }
+    box.classList.toggle('hidden', !(hasText || hasLink));
+  }
+  function renderGravada(src){
+    const p = qs('#gravadaInfo'), a = qs('#gravadaHref'), url = String(src?.aulaGravada || '').trim();
+    if (url){ a.textContent = url; a.href = url; p.classList.remove('hidden'); }
+    else { a.textContent = ''; a.removeAttribute('href'); p.classList.add('hidden'); }
+  }
+
+  document.addEventListener('DOMContentLoaded', boot);
+
+  async function boot(){
+    try { sessao = JSON.parse(localStorage.getItem('sessao_portal') || 'null'); } catch {}
+    if (!sessao || !validEmail(sessao.email) || !sessao.curso) {
+      alert('Faça login para acessar.');
+      location.replace('index.html');
+      return;
+    }
+
+    setLoading(true, "Carregando painel…");
+    const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
+    bootstrap = await resp.json();
+    setLoading(false);
+
+    if (!bootstrap || bootstrap.allowed !== true || String(bootstrap.perfil).toLowerCase() !== 'professor') {
+      alert('Acesso de professor não validado. Faça login novamente.');
+      location.replace('index.html');
+      return;
+    }
+
+    qs('#topbar').textContent = `[${bootstrap.nome || 'professor'}]`;
+
+    if (bootstrap?.feedback){
+      renderNextLive(bootstrap.feedback);
+      renderGravada(bootstrap.feedback);
+    }
+
+    // navegação
+    qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
+    qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
+    qs('#btnVoltar1').addEventListener('click', goHome);
+    qs('#btnVoltar2').addEventListener('click', goHome);
+    qs('#btnSair').addEventListener('click', () => { localStorage.removeItem('sessao_portal'); location.replace('index.html'); });
+
+    // ações
+    qs('#btnEnviarLive').addEventListener('click', enviarLive);
+    qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
+
+    // limpa marcação de erro ao digitar
+    ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
+  }
+
+  function clearForms(){
+    ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
+      const el = qs(sel); if (el) { el.value = ''; markInvalid(el,false); }
+    });
+  }
+
+  function goHome(){
+    hide(qs('#formLive')); hide(qs('#formGrav'));
+    show(qs('#home'));
+    clearForms();
+    history.replaceState({}, "", location.pathname);
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  async function enviarLive(){
+    const ok = validateLiveForm();
+    if (!ok) return;
+
+    const body = {
+      action: 'updateFeedbackLive',
+      curso: sessao.curso,
+      email: sessao.email,
+      link:  qs('#fLink').value.trim(),
+      senha: qs('#fSenha').value.trim(),
+      hora:  qs('#fHora').value.trim(),
+      dia:   qs('#fDia').value.trim(),
+      info:  qs('#fInfo').value.trim()
+    };
+    setLoading(true, "Atualizando informações…");
+    try{
+      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
+      renderNextLive({
+        dia:  qs('#fDia').value.trim(),
+        hora: qs('#fHora').value.trim(),
+        professor: bootstrap?.nome || '',
+        link: qs('#fLink').value.trim()
+      });
+
+      goHome();
+      setTimeout(()=>alert('Próxima aula ao vivo atualizada!'), 50);
+    }catch(e){
+      alert('Erro ao atualizar: ' + e.message);
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  async function enviarGrav(){
+    const body = {
+      action: 'updateGravada',
+      curso: sessao.curso,
+      email: sessao.email,
+      aulaGravada: qs('#fGravada').value.trim()
+    };
+    setLoading(true, "Atualizando aula gravada…");
+    try{
+      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const data = await r.json();
+      if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
+
+      renderGravada({ aulaGravada: qs('#fGravada').value.trim() });
+      goHome();
+      setTimeout(()=>alert('Link da aula gravada atualizado!'), 50);
+    }catch(e){
+      alert('Erro ao atualizar: ' + e.message);
+    }finally{
+      setLoading(false);
+    }
+  }
+</script>
+
+<script>
+  // Controle único do overlay + trava/destrava de botões marcados
+  function setLoading(state, msg = "Carregando…") {
+    const box = document.getElementById("global-loading");
+    const bubble = box ? box.querySelector(".global-loading-bubble") : null;
+    if (bubble) bubble.textContent = msg;
+    document.querySelectorAll("[data-busy]").forEach(el => el.disabled = !!state);
+    if (box) box.style.display = state ? "grid" : "none";
+  }
+</script>
+
+<!-- Overlay global -->
+<div id="global-loading" aria-live="polite" aria-busy="true" style="display:none">
+  <div class="global-loading-bubble">Carregando…</div>
+</div>
 </body>
 </html>
-
-
