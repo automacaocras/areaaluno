@@ -285,13 +285,24 @@
     </div>
   </footer>
 
-  <script>
-    function renderNomeAluno(nome){
-      document.querySelectorAll("[data-nome]").forEach(el => {
-        if (!el.dataset.template) el.dataset.template = el.innerHTML;
-        el.innerHTML = el.dataset.template.replaceAll("{NOME}", nome);
-      });
-    }
+<script>
+  function renderNomeAluno(nome){
+    document.querySelectorAll("[data-nome]").forEach(el => {
+      if (!el.dataset.template) el.dataset.template = el.innerHTML;
+      el.innerHTML = el.dataset.template.replaceAll("{NOME}", nome);
+    });
+  }
+
+  // 👉 Mostra apenas o primeiro nome (sem alterar o nome completo guardado)
+  function getFirstName(full){
+    const t = String(full || "").trim().replace(/\s+/g, " ");
+    if (!t) return "";
+    return t.split(" ")[0];
+  }
+
+
+
+    
 
     let tokensRestantes = 0;        // do bootstrap
     let artesTotal = 0;             // total vitalício
@@ -402,9 +413,13 @@
         bootstrap = await r.json();
         if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
 
-        // Topbar + nome
-        qs(".topbar").textContent = `[${bootstrap.nome || "aluno"}]`;
-        renderNomeAluno(bootstrap.nome || "aluno");
+// Topbar + nome (exibir apenas o primeiro nome na UI)
+const fullName = bootstrap.nome || "";
+const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
+
+qs(".topbar").textContent = `[${first}]`;
+renderNomeAluno(first); // tudo que usa {NOME} passa a mostrar só o primeiro nome
+
 
         // Logo
         const logo = qs("#cursoLogo");
@@ -690,6 +705,7 @@
   </div>
 </body>
 </html>
+
 
 
 
