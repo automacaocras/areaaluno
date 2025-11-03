@@ -109,25 +109,23 @@
 
   /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
-    overflow-x:auto;               /* scroll horizontal só aqui */
-    overflow-y:visible;            /* deixa a página rolar verticalmente */
+    overflow-x:auto;
+    overflow-y:visible;
     -webkit-overflow-scrolling:touch;
     max-width:100%;
     border:1px solid #eee;
     border-radius:12px;
   }
-  /* IMPORTANTE: layout auto para não encolher tudo */
   #exTable{
     border-collapse:collapse;
-    table-layout:auto;             /* ⬅ deixa cada coluna decidir a largura pelo conteúdo */
-    width:max-content;             /* ⬅ tabela pode ser maior que o card (scroll fica no wrap) */
-    min-width:760px;               /* opcional: largura mínima confortável */
+    table-layout:auto;
+    width:max-content;
+    min-width:760px;
   }
   #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
   #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
   #exTable a { word-break:break-all }
 
-  /* células com ellipsis (usadas em Descrição/Links) */
   .cell-clip{
     display:block;
     max-width: 280px;
@@ -143,7 +141,6 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
 
-  /* popover com o texto completo */
   .preview-pop{
     position: fixed;
     z-index: 9999;
@@ -168,7 +165,6 @@
   }
   .small-muted{color:#555;font-size:14px}
 
-  /* ===== Overlay global ===== */
   #global-loading {
     position: fixed;
     inset: 0;
@@ -189,14 +185,10 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.20);
   }
 
-  /* aproxima o texto "Aula gravada" do botão laranja apenas nesse caso */
   .band + .gravada-info { margin-top: 6px; }
-
-  /* ====== Overrides específicos do Portal do Professor ====== */
   #prof-exercicios { margin-left:auto; margin-right:auto; }
   #prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }
 
-  /* ===== Mobile tuning: “tudo um pouco menor” ===== */
   @media (max-width:480px){
     .wrap{ margin:16px auto; }
     .panel{ padding:14px; }
@@ -254,7 +246,6 @@
       <section class="panel" id="linksPanel">
         <h3>Links Úteis:</h3>
         <div class="links-box">
-      
           <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
              target="_blank" rel="noopener">Pasta Central do Drive</a>
           <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
@@ -268,16 +259,16 @@
     <!-- FORM: Próxima aula ao vivo -->
     <section id="formLive" class="panel hidden">
       <h3>Próxima aula ao vivo</h3>
-      <div class="field"><input   id="fLink"  placeholder="Link"></div>
-      <div class="field"><input   id="fSenha" placeholder="Senha"></div>
-      <div class="field"><input   id="fHora"  placeholder="Hora (ex.: 20:00)"></div>
-      <div class="field"><input   id="fDia"   placeholder="Dia (ex.: quinta-feira)"></div>
-      <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
+      <div class="field"><input   id="fLink"    placeholder="Link"></div>
+      <div class="field"><input   id="fSenha"   placeholder="Senha"></div>
+      <div class="field"><input   id="fHora"    placeholder="Hora (ex.: 20:00)"></div>
+      <div class="field"><input   id="fDia"     placeholder="Dia (ex.: quinta-feira)"></div>
+      <!-- ✅ NOVO: Data opcional dd/MM/yyyy -->
+      <div class="field"><input   id="fDataBR"  placeholder="Data (dd/MM/yyyy) – opcional"></div>
+      <div class="field"><textarea id="fInfo"    placeholder="Info"></textarea></div>
 
       <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
-     <p style="text-align:center;">
-  Apenas atualize as informações após o evento ao vivo anterior ter sido finalizado.
-</p>
+      <p style="text-align:center;">Apenas atualize as informações após o evento ao vivo anterior ter sido finalizado.</p>
       <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
     </section>
 
@@ -311,33 +302,46 @@
   let sessao = null, bootstrap = null;
 
   function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
-
   function isValidURL(url){
     try{ const u = new URL(url); return u.protocol === 'http:' || u.protocol === 'https:'; }
     catch{ return false; }
   }
   function isValidTime(hhmm){ return /^([01]\d|2[0-3]):([0-5]\d)$/.test(hhmm); }
+  // ✅ validação leve da data BR (opcional)
+  function isValidBRDate(d){
+    if (!d) return true; // vazio é permitido
+    const m = d.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!m) return false;
+    const dd = +m[1], mm = +m[2], yy = +m[3];
+    const dt = new Date(yy, mm-1, dd);
+    return dt.getFullYear()===yy && dt.getMonth()===mm-1 && dt.getDate()===dd;
+  }
+
   function markInvalid(el, state=true){ if (!el) return; el.classList.toggle('is-invalid', !!state); }
   function clearInvalidOnInput(sel){
     const el = qs(sel); if (!el) return;
     el.addEventListener('input', ()=> markInvalid(el,false));
     el.addEventListener('blur',  ()=> markInvalid(el,false));
   }
+
   function validateLiveForm(){
-    const fLink = qs('#fLink'), fHora = qs('#fHora'), fDia  = qs('#fDia');
-    const link = fLink.value.trim(), hora = fHora.value.trim(), dia  = fDia.value.trim();
-    [fLink,fHora,fDia].forEach(el=>markInvalid(el,false));
+    const fLink = qs('#fLink'), fHora = qs('#fHora'), fDia  = qs('#fDia'), fData = qs('#fDataBR');
+    const link = fLink.value.trim(), hora = fHora.value.trim(), dia  = fDia.value.trim(), dataBR = fData.value.trim();
+
+    [fLink,fHora,fDia,fData].forEach(el=>markInvalid(el,false));
     const errors = [];
     if (!link || !isValidURL(link)){ errors.push('• Informe um LINK válido (http/https).'); markInvalid(fLink,true); }
     if (!hora || !isValidTime(hora)){ errors.push('• Informe a HORA no formato 24h (ex.: 20:00).'); markInvalid(fHora,true); }
     if (!dia){ errors.push('• Informe o DIA (ex.: quinta-feira).'); markInvalid(fDia,true); }
+    if (dataBR && !isValidBRDate(dataBR)){ errors.push('• A DATA deve estar no formato dd/MM/yyyy.'); markInvalid(fData,true); }
+
     if (errors.length){
       alert('Verifique os campos obrigatórios:\n\n' + errors.join('\n'));
-      const firstInvalid = [fLink,fHora,fDia].find(el => el.classList.contains('is-invalid'));
+      const firstInvalid = [fLink,fHora,fDia,fData].find(el => el.classList.contains('is-invalid'));
       if (firstInvalid) firstInvalid.focus();
       return false;
     }
-    return { link, hora, dia };
+    return { link, hora, dia, dataBR };
   }
 
   function renderNextLive(src){
@@ -379,25 +383,21 @@
     const table = document.getElementById("exTable");
     if (!table || !headers || !headers.length) return;
 
-    // encontra a coluna "Descrição" (qualquer variação)
     const descIndex = headers.findIndex(h => /descr/i.test(String(h)));
     if (descIndex === -1) return;
 
-    // remove colgroup anterior
     const old = table.querySelector("colgroup");
     if (old) old.remove();
 
-    // escolhe a largura conforme viewport
     const isMobile = window.matchMedia("(max-width: 480px)").matches;
     const width = isMobile ? mobileWidth : desktopWidth;
 
-    // cria colgroup e aplica a largura apenas na coluna de descrição
     const cg = document.createElement("colgroup");
     headers.forEach((_, i) => {
       const col = document.createElement("col");
       if (i === descIndex){
         col.style.width = width;
-        col.style.minWidth = width; // garante recorte/scroll consistente
+        col.style.minWidth = width;
         col.style.maxWidth = width;
       }
       cg.appendChild(col);
@@ -412,7 +412,6 @@
 
     function show(e){
       const clip = e.currentTarget;
-      // só abre se estiver realmente cortado
       if (clip.scrollWidth <= clip.clientWidth) return;
       if (pop) pop.remove();
       pop = document.createElement('div');
@@ -439,37 +438,30 @@
       el.addEventListener('mouseenter', show);
       el.addEventListener('mousemove', position);
       el.addEventListener('mouseleave', hide);
-      el.addEventListener('click', show); // mobile
+      el.addEventListener('click', show);
     });
     document.addEventListener('touchstart', () => { if (pop) { pop.remove(); pop=null; } }, {passive:true});
   }
 
   // ====== Exercícios – carregar tudo (sem paginação) ======
-  const PAGE_SIZE = 100000; // “ilimitado” para trazer tudo
+  const PAGE_SIZE = 100000;
 
-  function isLinkCol(h){
-  return /\blink/i.test(String(h || "")); // "Link", "Link img 1", etc.
-}
-function linkLabelFromHeader(h){
-  const m = String(h || "").match(/\d+/);
-  return m ? `Envio ${m[0]}` : "Envio";
-}
-// Mantém a URL como <a>, mas mostra "Envio N" nas colunas de link
-function renderCellHTML(header, value){
-  const s = String(value || "").trim();
-  if (!s) return "";
-  if (isLinkCol(header) && /^https?:\/\//i.test(s)){
-    const label = linkLabelFromHeader(header);
-    return `<a href="${s}" target="_blank" rel="noopener">${label}</a>`;
+  function isLinkCol(h){ return /\blink/i.test(String(h || "")); }
+  function linkLabelFromHeader(h){
+    const m = String(h || "").match(/\d+/);
+    return m ? `Envio ${m[0]}` : "Envio";
   }
-  if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
-  return s;
-}
-// Só a coluna "Descrição" recebe ellipsis
-function needsClip(h){
-  return /descr/i.test(String(h || ""));
-}
-
+  function renderCellHTML(header, value){
+    const s = String(value || "").trim();
+    if (!s) return "";
+    if (isLinkCol(header) && /^https?:\/\//i.test(s)){
+      const label = linkLabelFromHeader(header);
+      return `<a href="${s}" target="_blank" rel="noopener">${label}</a>`;
+    }
+    if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+    return s;
+  }
+  function needsClip(h){ return /descr/i.test(String(h || "")); }
 
   async function fetchExercisesPreview() {
     try{
@@ -485,7 +477,6 @@ function needsClip(h){
       const d = await r.json();
       if (!d.ok) throw new Error(d.message || "Falha ao listar exercícios.");
 
-      // cabeçalho
       const thead = document.querySelector("#exTable thead");
       thead.innerHTML = "";
       const trh = document.createElement("tr");
@@ -496,14 +487,10 @@ function needsClip(h){
       });
       thead.appendChild(trh);
 
-      // salva headers em cache para reapply no resize
       if (!bootstrap) bootstrap = {};
       bootstrap.headersCache = d.headers || [];
-
-      // 👉 ajusta só a coluna "Descrição"
       setDescricaoWidth(bootstrap.headersCache);
 
-      // corpo
       const tbody = document.querySelector("#exTable tbody");
       tbody.innerHTML = "";
       (d.rows || []).forEach(row => {
@@ -511,22 +498,18 @@ function needsClip(h){
         (d.headers || []).forEach(h => {
           const td = document.createElement("td");
           const html = renderCellHTML(h, row[h]);
-td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
-
+          td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
 
-      // ativa popover nas células clipadas
       attachOverflowPreview();
 
-      // total (texto embaixo)
       const total = d.totalRows || 0;
       const label = total === 1 ? "exercício" : "exercícios";
       document.getElementById("exTotalText").textContent = `Total ${total} ${label}`;
 
-      // vazio
       if ((d.rows || []).length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
@@ -573,7 +556,6 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
       renderGravada(bootstrap.feedback);
     }
 
-    // botões
     qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnVoltar1').addEventListener('click', goHome);
@@ -584,18 +566,15 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
     qs('#btnEnviarGrav').addEventListener('click', enviarGrav);
 
     document.getElementById("exAtualizar").addEventListener("click", fetchExercisesPreview);
-
-    // primeira carga da tabela
     fetchExercisesPreview();
 
-    // reaplica a largura da Descrição em resize/orientação (usando headers em cache)
     window.addEventListener("resize", () => setDescricaoWidth( (bootstrap?.headersCache || []) ));
 
-    ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
+    ['#fLink','#fHora','#fDia','#fDataBR'].forEach(clearInvalidOnInput); // ✅ inclui data
   }
 
   function clearForms(){
-    ['#fLink','#fSenha','#fHora','#fDia','#fInfo','#fGravada'].forEach(sel=>{
+    ['#fLink','#fSenha','#fHora','#fDia','#fDataBR','#fInfo','#fGravada'].forEach(sel=>{
       const el = qs(sel); if (el) { el.value = ''; markInvalid(el,false); }
     });
   }
@@ -620,6 +599,7 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
       senha: qs('#fSenha').value.trim(),
       hora:  qs('#fHora').value.trim(),
       dia:   qs('#fDia').value.trim(),
+      dataBR: qs('#fDataBR').value.trim(),     // ✅ envia data opcional
       info:  qs('#fInfo').value.trim()
     };
     setLoading(true, "Atualizando informações…");
@@ -684,7 +664,3 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
 </div>
 </body>
 </html>
-
-
-
-
