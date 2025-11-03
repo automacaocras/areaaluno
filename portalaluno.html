@@ -451,7 +451,7 @@
 
         updateUIForTokens();
       }catch(e){
-        alert("Erro ao carregar.");
+        alert(".");
         location.replace("index.html");
       }
     }
@@ -488,7 +488,7 @@
         sel.innerHTML="<option value=''>Selecione o módulo</option>";
         mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
         sel.disabled=false; sel.onchange=carregarAulas;
-      }catch{sel.innerHTML="<option>Erro ao carregar módulos</option>";}
+      }catch{sel.innerHTML="<option>Erro ao carregar. Atualize a página</option>";}
     }
 
     async function carregarAulas(){
@@ -679,4 +679,5 @@
   </div>
 </body>
 </html>
+
 
