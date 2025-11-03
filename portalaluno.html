@@ -161,12 +161,17 @@
         <h3>Próximo feedback:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
-        <p><a id="fbLink" href="#" target="_blank" rel="noopener">[link da aula]</a></p>
+
+        <!-- Correção #1: esconder link quando vazio -->
+        <p><a id="fbLink" href="#" target="_blank" rel="noopener" style="display:none">[link da aula]</a></p>
+
         <p>Senha: <strong id="fbSenha">—</strong></p>
         <p id="fbInfo" style="margin-top:10px;color:#333"></p>
       </div>
 
       <button id="btnAbrirEnvio" class="btn-cta" type="button" data-busy>Envie os exercícios para feedback</button>
+      <!-- Correção #6: aviso de deadline (opcional) -->
+      <p id="prazoEnvioNote" style="text-align:center;color:#333;margin:6px 0 0; display:none;"></p>
 
       <!-- ⬇️ Agora com id e escondido por padrão -->
       <div id="gravadaCard" class="card" style="display:none">
@@ -177,16 +182,14 @@
 
       <div class="links-uteis" style="text-align:center; margin-top:25px;">
         <strong>Links Úteis:</strong><br>
-        
         <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
           target="_blank"
           rel="noopener noreferrer"
           style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
           💬 Grupo dos alunos no WhatsApp
         </a>
-
-<br>
-       <a href="https://discord.gg/Fjxw7kYMfk"
+        <br>
+        <a href="https://discord.gg/Fjxw7kYMfk"
           target="_blank"
           rel="noopener noreferrer"
           style="display:inline-block; margin-top:8px; color:#5A0E71; font-weight:600; text-decoration:none;">
@@ -194,7 +197,6 @@
         </a>
       </div>
 
-      
       <br>
       <div style="text-align:center"><button id="btnSair" class="btn-exit" type="button" data-busy>Sair</button></div>
       <p style="font-size:11px; text-align:center; color:#666; margin-top:0px;">
@@ -300,394 +302,461 @@
     return t.split(" ")[0];
   }
 
+  let tokensRestantes = 0;        // do bootstrap
+  let artesTotal = 0;             // total vitalício
+  let telefone = "";              // telefone atual (só dígitos)
+  let primeiroLogin = false;      // flag da planilha
+  const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
+  const MAX_FILES = 3;
+  let sessao = null, bootstrap = null;
 
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+  const show = el => el.classList.remove('hidden');
+  const hide = el => el.classList.add('hidden');
 
-    
+  /* Helpers telefone */
+  function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
+  function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
+  function formatBRPhone(d){
+    const x = onlyDigits(d);
+    if (x.length === 11) return `(${x.slice(0,2)}) ${x.slice(2,7)}-${x.slice(7)}`;
+    if (x.length === 10) return `(${x.slice(0,2)}) ${x.slice(2,6)}-${x.slice(6)}`;
+    return x;
+  }
 
-    let tokensRestantes = 0;        // do bootstrap
-    let artesTotal = 0;             // total vitalício
-    let telefone = "";              // telefone atual (só dígitos)
-    let primeiroLogin = false;      // flag da planilha
-    const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-    const MAX_FILES = 3;
-    let sessao = null, bootstrap = null;
-
-    const qs = s => document.querySelector(s);
-    const qsa = s => Array.from(document.querySelectorAll(s));
-    const show = el => el.classList.remove('hidden');
-    const hide = el => el.classList.add('hidden');
-
-    /* Helpers telefone */
-    function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
-    function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
-    function formatBRPhone(d){
-      const x = onlyDigits(d);
-      if (x.length === 11) return `(${x.slice(0,2)}) ${x.slice(2,7)}-${x.slice(7)}`;
-      if (x.length === 10) return `(${x.slice(0,2)}) ${x.slice(2,6)}-${x.slice(6)}`;
-      return x;
+  /* Modal telefone */
+  function showPhoneModal(){
+    const m = qs("#phoneModal");
+    const inp = qs("#phoneInput");
+    inp.value = formatBRPhone(telefone||"");
+    m.classList.add("show");
+    m.setAttribute("aria-hidden","false");
+    setTimeout(()=>inp.focus(), 50);
+  }
+  function hidePhoneModal(){
+    const m = qs("#phoneModal");
+    m.classList.remove("show");
+    m.setAttribute("aria-hidden","true");
+  }
+  async function savePhone(){
+    const raw = onlyDigits(qs("#phoneInput").value);
+    if (!isValidBRPhone(raw)){
+      alert("Digite um telefone válido (10 ou 11 dígitos).");
+      return;
     }
-
-    /* Modal telefone */
-    function showPhoneModal(){
-      const m = qs("#phoneModal");
-      const inp = qs("#phoneInput");
-      inp.value = formatBRPhone(telefone||"");
-      m.classList.add("show");
-      m.setAttribute("aria-hidden","false");
-      setTimeout(()=>inp.focus(), 50);
-    }
-    function hidePhoneModal(){
-      const m = qs("#phoneModal");
-      m.classList.remove("show");
-      m.setAttribute("aria-hidden","true");
-    }
-    async function savePhone(){
-      const raw = onlyDigits(qs("#phoneInput").value);
-      if (!isValidBRPhone(raw)){
-        alert("Digite um telefone válido (10 ou 11 dígitos).");
-        return;
-      }
-      try{
-        setLoading(true, "Salvando telefone…");
-        const body = { action:"updatePhone", curso:sessao.curso, email:sessao.email, telefone: raw };
-        const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
-        const d = await r.json();
-        if (!d.ok) throw new Error(d.message || "Falha ao salvar telefone.");
-        telefone = d.telefone;
-        primeiroLogin = true;
-        renderTopbarPhone();
-        hidePhoneModal();
-        alert("Telefone atualizado!");
-      }catch(e){
-        alert("Erro: " + e.message);
-      }finally{
-        setLoading(false);
-      }
-    }
-    function renderTopbarPhone(){
-      const tb = qs(".topbar");
-      const old = tb.querySelector(".topbar-phone");
-      if (old) old.remove();
-      const span = document.createElement("span");
-      span.className = "topbar-phone";
-      const telText = telefone ? formatBRPhone(telefone) : "adicionar telefone";
-      span.innerHTML = ` • 📞 ${telText} <a id="linkEditarTel">(alterar)</a>`;
-      tb.appendChild(span);
-      qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      try{ sessao = JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
-      if(!sessao || !sessao.email || !sessao.curso){
-        alert("Faça login para acessar.");
-        location.replace("index.html");
-        return;
-      }
-
-      setLoading(true, "Carregando as informações...");
-      await carregarBootstrap(sessao.curso, sessao.email);
+    try{
+      setLoading(true, "Salvando telefone…");
+      const body = { action:"updatePhone", curso:sessao.curso, email:sessao.email, telefone: raw };
+      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
+      const d = await r.json();
+      if (!d.ok) throw new Error(d.message || "Falha ao salvar telefone.");
+      telefone = d.telefone;
+      primeiroLogin = true;
+      renderTopbarPhone();
+      hidePhoneModal();
+      alert("Telefone atualizado!");
+    }catch(e){
+      alert("Erro: " + e.message);
+    }finally{
       setLoading(false);
+    }
+  }
+  function renderTopbarPhone(){
+    const tb = qs(".topbar");
+    const old = tb.querySelector(".topbar-phone");
+    if (old) old.remove();
+    const span = document.createElement("span");
+    span.className = "topbar-phone";
+    const telText = telefone ? formatBRPhone(telefone) : "adicionar telefone";
+    span.innerHTML = ` • 📞 ${telText} <a id="linkEditarTel">(alterar)</a>`;
+    tb.appendChild(span);
+    qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
+  }
 
-      qs("#btnAbrirEnvio").onclick = abrirEnvio;
-      qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
-      qs("#btnAddImagem").onclick  = addFileInput;
-      qs("#btnResetar").onclick    = resetFiles;
-      qs("#btnEnviar").onclick     = enviarExercicio;
-      qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
-      qs("#btnSair").onclick       = () => { localStorage.removeItem("sessao_portal"); location.replace("index.html"); };
+  document.addEventListener("DOMContentLoaded", async () => {
+    try{ sessao = JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
+    if(!sessao || !sessao.email || !sessao.curso){
+      alert("Faça login para acessar.");
+      location.replace("index.html");
+      return;
+    }
 
-      // modal telefone
-      qs("#btnSalvarPhone").onclick   = savePhone;
-      qs("#btnCancelarPhone").onclick = hidePhoneModal;
-      qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
+    setLoading(true, "Carregando as informações...");
+    await carregarBootstrap(sessao.curso, sessao.email);
+    setLoading(false);
 
-      // Atualiza UI quando escolher arquivos
-      qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
+    qs("#btnAbrirEnvio").onclick = abrirEnvio;
+    qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
+    qs("#btnAddImagem").onclick  = addFileInput;
+    qs("#btnResetar").onclick    = resetFiles;
+    qs("#btnEnviar").onclick     = enviarExercicio;
+    qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
+    qs("#btnSair").onclick       = () => { localStorage.removeItem("sessao_portal"); location.replace("index.html"); };
 
-      updateAddBtnVisibility();
-    });
+    // modal telefone
+    qs("#btnSalvarPhone").onclick   = savePhone;
+    qs("#btnCancelarPhone").onclick = hidePhoneModal;
+    qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
 
-    async function carregarBootstrap(curso, email){
-      try{
-        const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
-        bootstrap = await r.json();
-        if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
+    // Atualiza UI quando escolher arquivos
+    qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
 
-// Topbar + nome (exibir apenas o primeiro nome na UI)
-const fullName = bootstrap.nome || "";
-const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
+    updateAddBtnVisibility();
+  });
 
-qs(".topbar").textContent = `[${first}]`;
-renderNomeAluno(first); // tudo que usa {NOME} passa a mostrar só o primeiro nome
+  async function carregarBootstrap(curso, email){
+    try{
+      const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+      bootstrap = await r.json();
 
+      // Correção #5: cheque bootstrap antes de usar
+      if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
 
-        // Logo
-        const logo = qs("#cursoLogo");
-        if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+      // Topbar + nome (apenas primeiro nome)
+      const fullName = bootstrap.nome || "";
+      const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
+      qs(".topbar").textContent = `[${first}]`;
+      renderNomeAluno(first);
 
-        // Telefone e flag de primeiro login
-        telefone = String(bootstrap.telefone || "");
-        primeiroLogin = !!bootstrap.primeiroLogin;
-        renderTopbarPhone();
+      // Correção #1: link condicional
+      const linkEl = qs("#fbLink");
 
-        // Dias restantes
-        const dr = +bootstrap.diasRestantes || 0;
-        qs("#diasRestantes").textContent = dr > 0
-          ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
-          : "Acesso expirado.";
+      // Logo
+      const logo = qs("#cursoLogo");
+      if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-        // Cupom (<= 30 dias)
-        if (dr <= 30 && bootstrap.desconto?.cupom){
-          qs("#cupomBox").style.display = "block";
-          qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-          qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
-          qs("#cupomLink").href = bootstrap.desconto.link;
+      // Telefone e flag de primeiro login
+      telefone = String(bootstrap.telefone || "");
+      primeiroLogin = !!bootstrap.primeiroLogin;
+      renderTopbarPhone();
+
+      // Dias restantes
+      const dr = +bootstrap.diasRestantes || 0;
+      qs("#diasRestantes").textContent = dr > 0
+        ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+        : "Acesso expirado.";
+
+      // Cupom (<= 30 dias)
+      if (dr <= 30 && bootstrap.desconto?.cupom){
+        qs("#cupomBox").style.display = "block";
+        qs("#cupomCod").textContent = bootstrap.desconto.cupom;
+        qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
+        qs("#cupomLink").href = bootstrap.desconto.link;
+      }
+
+      // Próximo feedback / aula gravada
+      const fb = bootstrap.feedback || {};
+      if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
+      if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
+
+      // Correção #2: estado "Aguarde a próxima data" + esconder senha/link/info
+      if (!fb.dia && !fb.hora) {
+        const box = document.querySelector(".box-feedback");
+        if (box){
+          box.querySelector("h3").textContent = "Próximo feedback:";
+          const pDiaHora = box.querySelector("#fbDiaTxt")?.parentElement;
+          if (pDiaHora) pDiaHora.innerHTML = "Aguarde a próxima data";
         }
+        qs("#fbSenha").textContent = "—";
+        qs("#fbInfo").textContent  = "";
+        linkEl.style.display = "none";
+      }
 
-        // Próximo feedback / aula gravada
-        const fb = bootstrap.feedback || {};
-        if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
-        if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
-        qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
-        qs("#fbSenha").textContent = fb.senha || "—";
-        qs("#fbInfo").textContent  = fb.info  || "—";
-        if (fb.link){ qs("#fbLink").href = fb.link; qs("#fbLink").textContent = fb.link; }
+      qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
+      qs("#fbSenha").textContent = fb.senha || "—";
+      qs("#fbInfo").textContent  = fb.info  || "—";
 
-        // Card da gravada
-        const gravCard = qs("#gravadaCard");
-        const gravURL  = String(fb.aulaGravada || "").trim();
-        if (gravURL){
-          qs("#ultimaGravada").href = gravURL;
-          qs("#ultimaGravada").textContent = gravURL;
-          if (gravCard) gravCard.style.display = "block";
+      // Link condicional (show/hide)
+      if (fb.link){
+        linkEl.href = fb.link;
+        linkEl.textContent = fb.link;
+        linkEl.style.display = "inline";
+      } else {
+        linkEl.removeAttribute("href");
+        linkEl.textContent = "[link da aula]";
+        linkEl.style.display = "none";
+      }
+
+      // Card da gravada
+      const gravCard = qs("#gravadaCard");
+      const gravURL  = String(fb.aulaGravada || "").trim();
+      if (gravURL){
+        qs("#ultimaGravada").href = gravURL;
+        qs("#ultimaGravada").textContent = gravURL;
+        if (gravCard) gravCard.style.display = "block";
+      } else {
+        qs("#ultimaGravada").removeAttribute("href");
+        qs("#ultimaGravada").textContent = "";
+        if (gravCard) gravCard.style.display = "none";
+      }
+
+      // Tokens e artes
+      tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+      artesTotal = Number(bootstrap.artesTotal || 0);
+
+      // Correção #4: estado do botão de envio respeitando allowUpload
+      const permitir = !!bootstrap.allowUpload;
+      const btnEnvio = qs("#btnAbrirEnvio");
+      const prazoNote = qs("#prazoEnvioNote");
+      if (btnEnvio){
+        if (!permitir){
+          btnEnvio.disabled = true;
+          btnEnvio.textContent = "Envio indisponível no momento";
+          btnEnvio.style.opacity = "0.8";
+          prazoNote.style.display = "none";
         } else {
-          qs("#ultimaGravada").removeAttribute("href");
-          qs("#ultimaGravada").textContent = "";
-          if (gravCard) gravCard.style.display = "none";
+          btnEnvio.disabled = false;
+          btnEnvio.textContent = "Envie os exercícios para feedback";
+          btnEnvio.style.opacity = "";
+          // Correção #6: nota de deadline humana (se disponível)
+          if (bootstrap.janela?.endISO){
+            const end = new Date(bootstrap.janela.endISO);
+            const hh = String(end.getHours()).padStart(2,"0");
+            const mm = String(end.getMinutes()).padStart(2,"0");
+            prazoNote.textContent = `Envios liberados até ${hh}:${mm}.`;
+            prazoNote.style.display = "block";
+          } else {
+            prazoNote.style.display = "none";
+          }
         }
-
-        // Tokens e artes
-        tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
-        artesTotal = Number(bootstrap.artesTotal || 0);
-
-        // Se primeiro login/sem telefone, pedir agora
-        if (!primeiroLogin || !telefone){
-          setTimeout(showPhoneModal, 300);
-        }
-
-        updateUIForTokens();
-      }catch(e){
-        alert(".");
-        location.replace("index.html");
       }
-    }
 
-    async function abrirEnvio(){
-      setLoading(true, "Carregando envio…");
-      hide(qs("#dashboard"));
-
-      // limpar campos
-      resetFiles();
-      qs("#descricao").value = "";
-
-      // linha de artes
-      const info = qs("#artsInfo");
-      const count = qs("#artsCount");
-      if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
-      else { hide(info); }
-
-      await carregarModulos();
-      show(qs("#envio"));
-      window.scrollTo({top:0,behavior:"smooth"});
-      setLoading(false);
+      // Se primeiro login/sem telefone, pedir agora
+      if (!primeiroLogin || !telefone){
+        setTimeout(showPhoneModal, 300);
+      }
 
       updateUIForTokens();
+    }catch(e){
+      alert(".");
+      location.replace("index.html");
+    }
+  }
+
+  async function abrirEnvio(){
+    // Correção #4: não abre se allowUpload=false (defesa extra)
+    if (!bootstrap?.allowUpload){
+      alert("Envio indisponível no momento. Aguarde a próxima data de feedback.");
+      return;
     }
 
-    async function carregarModulos(){
-      const sel=qs("#selModulo"),selA=qs("#selAula");
-      sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
-      selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
-      try{
-        const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
-        const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
-        sel.innerHTML="<option value=''>Selecione o módulo</option>";
-        mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
-        sel.disabled=false; sel.onchange=carregarAulas;
-      }catch{sel.innerHTML="<option>Erro ao carregar. Atualize a página</option>";}
-    }
+    setLoading(true, "Carregando envio…");
+    hide(qs("#dashboard"));
 
-    async function carregarAulas(){
-      const modulo=qs("#selModulo").value,sel=qs("#selAula");
-      if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
-      sel.innerHTML="<option>Carregando aulas...</option>";
-      try{
-        const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
-        const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
-        sel.innerHTML="<option value=''>Selecione a aula</option>";
-        aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
-        sel.disabled=false;
-      }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
-    }
+    // limpar campos
+    resetFiles();
+    qs("#descricao").value = "";
 
-    /* ======== UX / TOKENS ======== */
-    function countSelectedFiles(){
-      return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
-    }
+    // linha de artes
+    const info = qs("#artsInfo");
+    const count = qs("#artsCount");
+    if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
+    else { hide(info); }
 
-    function updateUIForTokens(){
-      const btnEnviar  = qs("#btnEnviar");
-      const btnAdd     = qs("#btnAddImagem");
-      const btnReset   = qs("#btnResetar");
-      const wrapForm   = qs("#envioFields");
-      const wrapLimit  = qs("#limiteWrap");
+    await carregarModulos();
+    show(qs("#envio"));
+    window.scrollTo({top:0,behavior:"smooth"});
+    setLoading(false);
 
-      const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
-      const inputsQtd  = qsa("#filesWrap input[type='file']").length;
+    updateUIForTokens();
+  }
 
-      if (tokensRestantes <= 0){
-        if (wrapForm)  wrapForm.style.display = "none";
-        if (wrapLimit) wrapLimit.classList.remove("hidden");
-        if (btnEnviar){
-          btnEnviar.disabled = false;
-          btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-          btnEnviar.style.opacity = "0.9";
-        }
-        if (btnAdd)   btnAdd.style.display   = "none";
-        if (btnReset) btnReset.style.display = "none";
-        return;
-      }
+  async function carregarModulos(){
+    const sel=qs("#selModulo"),selA=qs("#selAula");
+    sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
+    selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
+    try{
+      const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
+      const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
+      sel.innerHTML="<option value=''>Selecione o módulo</option>";
+      mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
+      sel.disabled=false; sel.onchange=carregarAulas;
+    }catch{sel.innerHTML="<option>Erro ao carregar. Atualize a página</option>";}
+  }
 
-      if (wrapForm)  wrapForm.style.display = "block";
-      if (wrapLimit) wrapLimit.classList.add("hidden");
+  async function carregarAulas(){
+    const modulo=qs("#selModulo").value,sel=qs("#selAula");
+    if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
+    sel.innerHTML="<option>Carregando aulas...</option>";
+    try{
+      const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
+      const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
+      sel.innerHTML="<option value=''>Selecione a aula</option>";
+      aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
+      sel.disabled=false;
+    }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
+  }
 
+  /* ======== UX / TOKENS ======== */
+  function countSelectedFiles(){
+    return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+  }
+
+  function updateUIForTokens(){
+    const btnEnviar  = qs("#btnEnviar");
+    const btnAdd     = qs("#btnAddImagem");
+    const btnReset   = qs("#btnResetar");
+    const wrapForm   = qs("#envioFields");
+    const wrapLimit  = qs("#limiteWrap");
+
+    const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+    const inputsQtd  = qsa("#filesWrap input[type='file']").length;
+
+    if (tokensRestantes <= 0){
+      if (wrapForm)  wrapForm.style.display = "none";
+      if (wrapLimit) wrapLimit.classList.remove("hidden");
       if (btnEnviar){
         btnEnviar.disabled = false;
-        btnEnviar.textContent = "Enviar";
-        btnEnviar.style.opacity = "";
+        btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
+        btnEnviar.style.opacity = "0.9";
+      }
+      if (btnAdd)   btnAdd.style.display   = "none";
+      if (btnReset) btnReset.style.display = "none";
+      return;
+    }
+
+    if (wrapForm)  wrapForm.style.display = "block";
+    if (wrapLimit) wrapLimit.classList.add("hidden");
+
+    if (btnEnviar){
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = "Enviar";
+      btnEnviar.style.opacity = "";
+    }
+
+    const deveMostrarAdd = (
+      tokensRestantes > 1 &&
+      selected < tokensRestantes &&
+      inputsQtd < MAX_FILES
+    );
+    if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
+    if (btnReset) btnReset.style.display = "inline-block";
+  }
+
+  function resetFiles(){
+    qs("#filesWrap").innerHTML =
+      '<input type="file" class="fileItem" accept="image/*">' +
+      '<div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
+    updateUIForTokens();
+  }
+
+  function addFileInput(){
+    if (tokensRestantes <= 0){ return; }
+    const wrap         = qs("#filesWrap");
+    const inputs       = qsa("#filesWrap input[type='file']");
+    const inputsQtd    = inputs.length;
+    const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
+
+    if (inputsQtd >= MAX_FILES) return;
+    if (tokensRestantes <= 1)   return;
+    if (selectedNow >= tokensRestantes) return;
+
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "image/*";
+    inp.className = "fileItem";
+    wrap.insertBefore(inp, wrap.lastElementChild);
+
+    updateUIForTokens();
+  }
+
+  function updateAddBtnVisibility(){
+    updateUIForTokens();
+  }
+
+  /* ======== Envio ======== */
+  async function enviarExercicio(){
+    const modulo = qs("#selModulo").value.trim(),
+          aula   = qs("#selAula").value.trim(),
+          desc   = qs("#descricao").value.trim();
+
+    if(!modulo) return alert("Selecione o módulo.");
+    if(!aula)   return alert("Selecione a aula.");
+
+    if (tokensRestantes <= 0){
+      alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+      return;
+    }
+
+    // Front já bloqueia, mas checagem extra:
+    if (!bootstrap.allowUpload){
+      alert("O envio só fica disponível após a nova data de feedback ser publicada.");
+      return;
+    }
+
+    const chosen = qsa("#filesWrap input[type='file']")
+                    .map(i => i.files[0])
+                    .filter(Boolean);
+
+    if(!chosen.length) return alert("Envie pelo menos uma imagem.");
+    if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
+
+    if(chosen.length > tokensRestantes){
+      const resto = tokensRestantes;
+      alert(resto > 0
+        ? `Você só tem ${resto} envio(s) restante(s) nesta semana.`
+        : "Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+      return;
+    }
+
+    setLoading(true, "Enviando seu desenho…");
+
+    try{
+      const files=[];
+      for(const f of chosen){
+        const base64 = await new Promise((res, rej)=>{
+          const fr = new FileReader();
+          fr.onload  = () => res(fr.result.split(",")[1]);
+          fr.onerror = () => rej();
+          fr.readAsDataURL(f);
+        });
+        files.push({name:f.name,type:f.type,content:base64});
       }
 
-      const deveMostrarAdd = (
-        tokensRestantes > 1 &&
-        selected < tokensRestantes &&
-        inputsQtd < MAX_FILES
-      );
-      if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
-      if (btnReset) btnReset.style.display = "inline-block";
-    }
+      const body = {
+        action:"uploadExercise",
+        curso:sessao.curso,
+        email:sessao.email,
+        nome:bootstrap.nome,
+        modulo,
+        aula,
+        descricao:desc,
+        files
+      };
 
-    function resetFiles(){
-      qs("#filesWrap").innerHTML =
-        '<input type="file" class="fileItem" accept="image/*">' +
-        '<div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
-      updateUIForTokens();
-    }
+      const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+      const d = await r.json();
 
-    function addFileInput(){
-      if (tokensRestantes <= 0){ return; }
-      const wrap         = qs("#filesWrap");
-      const inputs       = qsa("#filesWrap input[type='file']");
-      const inputsQtd    = inputs.length;
-      const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
-
-      if (inputsQtd >= MAX_FILES) return;
-      if (tokensRestantes <= 1)   return;
-      if (selectedNow >= tokensRestantes) return;
-
-      const inp = document.createElement("input");
-      inp.type = "file";
-      inp.accept = "image/*";
-      inp.className = "fileItem";
-      wrap.insertBefore(inp, wrap.lastElementChild);
-
-      updateUIForTokens();
-    }
-
-    function updateAddBtnVisibility(){
-      updateUIForTokens();
-    }
-
-    /* ======== Envio ======== */
-    async function enviarExercicio(){
-      const modulo = qs("#selModulo").value.trim(),
-            aula   = qs("#selAula").value.trim(),
-            desc   = qs("#descricao").value.trim();
-
-      if(!modulo) return alert("Selecione o módulo.");
-      if(!aula)   return alert("Selecione a aula.");
-
-      if (tokensRestantes <= 0){
-        alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-        return;
-      }
-
-      const chosen = qsa("#filesWrap input[type='file']")
-                      .map(i => i.files[0])
-                      .filter(Boolean);
-
-      if(!chosen.length) return alert("Envie pelo menos uma imagem.");
-      if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
-
-      if(chosen.length > tokensRestantes){
-        const resto = tokensRestantes;
-        alert(resto > 0
-          ? `Você só tem ${resto} envio(s) restante(s) nesta semana.`
-          : "Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-        return;
-      }
-
-      setLoading(true, "Enviando seu desenho…");
-
-      try{
-        const files=[];
-        for(const f of chosen){
-          const base64 = await new Promise((res, rej)=>{
-            const fr = new FileReader();
-            fr.onload  = () => res(fr.result.split(",")[1]);
-            fr.onerror = () => rej();
-            fr.readAsDataURL(f);
-          });
-          files.push({name:f.name,type:f.type,content:base64});
+      if(!d.ok){
+        if (d.message === "limit_exceeded"){
+          alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+          return;
         }
-
-        const body = {
-          action:"uploadExercise",
-          curso:sessao.curso,
-          email:sessao.email,
-          nome:bootstrap.nome,
-          modulo,
-          aula,
-          descricao:desc,
-          files
-        };
-
-        const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
-        const d = await r.json();
-
-        if(!d.ok){
-          if (d.message === "limit_exceeded"){
-            alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-            return;
-          }
-          throw new Error(d.message || "Falha");
+        // Correção #3: mensagem amigável fora da janela
+        if (d.message === "envio_fora_da_janela"){
+          alert("O envio só fica disponível após a nova data de feedback ser publicada e até pouco tempo após o horário da aula.");
+          return;
         }
-
-        if(typeof d.tokensRestantes === "number"){
-          tokensRestantes = d.tokensRestantes;
-        }
-
-        resetFiles();
-        hide(qs("#envio"));
-        show(qs("#sucesso"));
-        updateUIForTokens();
-
-      }catch(e){
-        alert("Erro: " + e.message);
-      }finally{
-        setLoading(false);
+        throw new Error(d.message || "Falha");
       }
+
+      if(typeof d.tokensRestantes === "number"){
+        tokensRestantes = d.tokensRestantes;
+      }
+
+      resetFiles();
+      hide(qs("#envio"));
+      show(qs("#sucesso"));
+      updateUIForTokens();
+
+    }catch(e){
+      alert("Erro: " + e.message);
+    }finally{
+      setLoading(false);
     }
-  </script>
+  }
+</script>
 
   <!-- Overlay global -->
   <script>
@@ -705,8 +774,3 @@ renderNomeAluno(first); // tudo que usa {NOME} passa a mostrar só o primeiro no
   </div>
 </body>
 </html>
-
-
-
-
-
