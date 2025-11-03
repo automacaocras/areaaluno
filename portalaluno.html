@@ -162,7 +162,7 @@
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
 
-        <!-- Correção #1: esconder link quando vazio -->
+        <!-- Link: só mostra quando tiver -->
         <p><a id="fbLink" href="#" target="_blank" rel="noopener" style="display:none">[link da aula]</a></p>
 
         <p>Senha: <strong id="fbSenha">—</strong></p>
@@ -170,10 +170,8 @@
       </div>
 
       <button id="btnAbrirEnvio" class="btn-cta" type="button" data-busy>Envie os exercícios para feedback</button>
-      <!-- Correção #6: aviso de deadline (opcional) -->
       <p id="prazoEnvioNote" style="text-align:center;color:#333;margin:6px 0 0; display:none;"></p>
 
-      <!-- ⬇️ Agora com id e escondido por padrão -->
       <div id="gravadaCard" class="card" style="display:none">
         <h3>Última aula gravada:</h3>
         <p class="hint">Aproveite para baixar pois ela expira.</p>
@@ -206,7 +204,6 @@
 
     <!-- ENVIO -->
     <section id="envio" class="hidden">
-      <!-- Linha com total de artes -->
       <p id="artsInfo" class="envio-arts-info hidden">
         Você já enviou <strong id="artsCount">0</strong> artes durante o curso!
       </p>
@@ -295,17 +292,18 @@
     });
   }
 
-  // 👉 Mostra apenas o primeiro nome (sem alterar o nome completo guardado)
+  // 👉 Mostra apenas o primeiro nome
   function getFirstName(full){
     const t = String(full || "").trim().replace(/\s+/g, " ");
     if (!t) return "";
     return t.split(" ")[0];
   }
 
-  let tokensRestantes = 0;        // do bootstrap
-  let artesTotal = 0;             // total vitalício
-  let telefone = "";              // telefone atual (só dígitos)
-  let primeiroLogin = false;      // flag da planilha
+  let tokensRestantes = 0;
+  let artesTotal = 0;
+  let telefone = "";
+  let primeiroLogin = false;
+
   const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
   const MAX_FILES = 3;
   let sessao = null, bootstrap = null;
@@ -410,23 +408,21 @@
       const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
       bootstrap = await r.json();
 
-      // Correção #5: cheque bootstrap antes de usar
       if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
 
-      // Topbar + nome (apenas primeiro nome)
+      // Topbar + nome
       const fullName = bootstrap.nome || "";
       const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
       qs(".topbar").textContent = `[${first}]`;
       renderNomeAluno(first);
 
-      // Correção #1: link condicional
       const linkEl = qs("#fbLink");
 
       // Logo
       const logo = qs("#cursoLogo");
       if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-      // Telefone e flag de primeiro login
+      // Telefone e flag
       telefone = String(bootstrap.telefone || "");
       primeiroLogin = !!bootstrap.primeiroLogin;
       renderTopbarPhone();
@@ -437,7 +433,7 @@
         ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
         : "Acesso expirado.";
 
-      // Cupom (<= 30 dias)
+      // Cupom
       if (dr <= 30 && bootstrap.desconto?.cupom){
         qs("#cupomBox").style.display = "block";
         qs("#cupomCod").textContent = bootstrap.desconto.cupom;
@@ -450,7 +446,6 @@
       if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
       if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
 
-      // Correção #2: estado "Aguarde a próxima data" + esconder senha/link/info
       if (!fb.dia && !fb.hora) {
         const box = document.querySelector(".box-feedback");
         if (box){
@@ -467,7 +462,6 @@
       qs("#fbSenha").textContent = fb.senha || "—";
       qs("#fbInfo").textContent  = fb.info  || "—";
 
-      // Link condicional (show/hide)
       if (fb.link){
         linkEl.href = fb.link;
         linkEl.textContent = fb.link;
@@ -495,7 +489,7 @@
       tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
       artesTotal = Number(bootstrap.artesTotal || 0);
 
-      // Correção #4: estado do botão de envio respeitando allowUpload
+      // Estado do botão de envio respeitando allowUpload
       const permitir = !!bootstrap.allowUpload;
       const btnEnvio = qs("#btnAbrirEnvio");
       const prazoNote = qs("#prazoEnvioNote");
@@ -509,7 +503,6 @@
           btnEnvio.disabled = false;
           btnEnvio.textContent = "Envie os exercícios para feedback";
           btnEnvio.style.opacity = "";
-          // Correção #6: nota de deadline humana (se disponível)
           if (bootstrap.janela?.endISO){
             const end = new Date(bootstrap.janela.endISO);
             const hh = String(end.getHours()).padStart(2,"0");
@@ -535,7 +528,6 @@
   }
 
   async function abrirEnvio(){
-    // Correção #4: não abre se allowUpload=false (defesa extra)
     if (!bootstrap?.allowUpload){
       alert("Envio indisponível no momento. Aguarde a próxima data de feedback.");
       return;
@@ -544,11 +536,9 @@
     setLoading(true, "Carregando envio…");
     hide(qs("#dashboard"));
 
-    // limpar campos
     resetFiles();
     qs("#descricao").value = "";
 
-    // linha de artes
     const info = qs("#artsInfo");
     const count = qs("#artsCount");
     if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
@@ -679,7 +669,6 @@
       return;
     }
 
-    // Front já bloqueia, mas checagem extra:
     if (!bootstrap.allowUpload){
       alert("O envio só fica disponível após a nova data de feedback ser publicada.");
       return;
@@ -733,7 +722,6 @@
           alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
           return;
         }
-        // Correção #3: mensagem amigável fora da janela
         if (d.message === "envio_fora_da_janela"){
           alert("O envio só fica disponível após a nova data de feedback ser publicada e até pouco tempo após o horário da aula.");
           return;
