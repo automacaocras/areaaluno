@@ -179,7 +179,7 @@
       <div class="box-feedback">
 
         <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
-        <h3 id="fbTitulo">Próximo Feedback:</h3>
+        <h3 id="fbTitulo">Próximo feedback:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
 
@@ -332,6 +332,8 @@ let sessao = null, bootstrap = null;
 
 const API_URL   = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 const MAX_FILES = 3;
+  // controle de transição "ao vivo" -> "aguarde"
+let __wasLive = false;
 
 /* --------- badge AO VIVO (independe da janela de envio) --------- */
 function setLiveMode(on){
@@ -351,6 +353,26 @@ function setLiveMode(on){
   if (rowDiaHora) rowDiaHora.style.display = on ? "none" : "";
 }
 
+function renderFeedbackWaitingUI(){
+  const title = qs("#fbTitulo");
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // <p> do dia/hora
+  const rowProf  = qs("#fbProf")?.parentElement;
+  const rowSenha = qs("#fbSenha")?.parentElement;
+  const rowInfo  = qs("#fbInfo");
+  const linkEl   = qs("#fbLink");
+
+  if (title) title.style.display = "";               // mostra título
+  if (rowDiaHora){
+    rowDiaHora.style.display = "";
+    rowDiaHora.textContent = "Aguarde a próxima data";
+  }
+  if (rowProf)  rowProf.style.display = "none";
+  if (rowSenha) rowSenha.style.display = "none";
+  if (rowInfo){ rowInfo.textContent = ""; rowInfo.style.display = "none"; }
+  if (linkEl){ linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
+}
+
+  
 function weekdayPtToIndex(dia){
   const map = { domingo:0, dom:0, "domingo.":0,
     segunda:1, "segunda-feira":1, seg:1,
@@ -380,6 +402,7 @@ function buildNextOccurrenceISO(dia, hora){
 
 
 // Ajuste na regra do "ao vivo"
+// Ajuste na regra do "ao vivo"
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
   const hasDate = !!(fb.dia && fb.hora);
@@ -393,6 +416,7 @@ function updateLiveBadgeFromBootstrap(){
     setLiveMode(false);
     if (title) title.style.display = "";
     if (rowDiaHora) rowDiaHora.style.display = "";
+    __wasLive = false; // reseta estado
     return;
   }
 
@@ -401,6 +425,7 @@ function updateLiveBadgeFromBootstrap(){
     setLiveMode(false);
     if (title) title.style.display = "";
     if (rowDiaHora) rowDiaHora.style.display = "";
+    __wasLive = false;
     return;
   }
 
@@ -416,6 +441,7 @@ function updateLiveBadgeFromBootstrap(){
       setLiveMode(false);
       if (title) title.style.display = "";
       if (rowDiaHora) rowDiaHora.style.display = "";
+      __wasLive = false;
       return;
     }
   }
@@ -427,35 +453,15 @@ function updateLiveBadgeFromBootstrap(){
   // Enquanto ao vivo, esconder título e dia/hora
   if (title) title.style.display = live ? "none" : "";
   if (rowDiaHora) rowDiaHora.style.display = live ? "none" : "";
-}
 
-
-
-/* Regras da tarja: usa só fb.dia + fb.hora (+ opcional atualizadoEm) */
-function updateLiveBadgeFromBootstrap(){
-  const fb = bootstrap?.feedback || {};
-  const hasDate = !!(fb.dia && fb.hora);
-  const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
-
-  if (!hasDate && !hasAnyDetail){ setLiveMode(false); return; }
-  if (!hasDate){ setLiveMode(false); return; }
-
-  const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
-  if (!startISO){ setLiveMode(false); return; }
-
-  const start  = new Date(startISO).getTime();
-  const durMin = Number(fb.duracaoMin ?? 120);
-  const end    = start + durMin*60*1000;
-  const now    = Date.now();
-
-  // não liga antes do professor publicar/atualizar (coluna AtualizadoEm da planilha)
-  if (fb.atualizadoEm){
-    const upd = new Date(fb.atualizadoEm).getTime();
-    if (!Number.isNaN(upd) && now < Math.max(upd, start)){ setLiveMode(false); return; }
+  // Se acabou de sair do ao vivo, troca para “Aguarde a próxima data”
+  if (__wasLive && !live && now > end){
+    renderFeedbackWaitingUI();
   }
-
-  setLiveMode(now >= start && now <= end);
+  __wasLive = live;
 }
+
+
 
 /* --------- UI do botão de envio (controlada por janela start/end) --------- */
 function applyAllowUploadUI(){
@@ -1012,9 +1018,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
-
-
-
-
-
-
