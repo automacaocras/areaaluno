@@ -425,11 +425,10 @@ function updateLiveBadgeFromBootstrap(){
   const title = qs("#fbTitulo");
   const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
 
-  // Sem data/hora ou sem detalhes publicados -> não está ao vivo nem mostra nada extra
+  // Sem data/hora ou sem detalhes -> força UI "Aguarde a próxima data"
   if (!hasDate || !hasAnyDetail){
     setLiveMode(false);
-    if (title) title.style.display = "";
-    if (rowDiaHora) rowDiaHora.style.display = "";
+    renderFeedbackWaitingUI();
     __wasLive = false;
     return;
   }
@@ -438,23 +437,23 @@ function updateLiveBadgeFromBootstrap(){
   const nextISO = buildNextOccurrenceISO(fb.dia, fb.hora);
   if (!thisISO || !nextISO){
     setLiveMode(false);
-    if (title) title.style.display = "";
-    if (rowDiaHora) rowDiaHora.style.display = "";
+    renderFeedbackWaitingUI();
     __wasLive = false;
     return;
   }
 
-  const durMin   = Number(fb.duracaoMin ?? 120);
-  const thisStart= new Date(thisISO).getTime();
-  const thisEnd  = thisStart + durMin*60*1000;
-  const nextStart= new Date(nextISO).getTime();
-  const now      = Date.now();
+  const durMin    = Number(fb.duracaoMin ?? 120);
+  const thisStart = new Date(thisISO).getTime();
+  const thisEnd   = thisStart + durMin * 60 * 1000;
+  const nextStart = new Date(nextISO).getTime();
+  const now       = Date.now();
 
-  // Gatilho de publicação do professor
+  // Só considera ao vivo após publicação/atualização do professor
   if (fb.atualizadoEm){
     const upd = new Date(fb.atualizadoEm).getTime();
     if (!Number.isNaN(upd) && now < Math.max(upd, thisStart)){
       setLiveMode(false);
+      // pré-live: mostra "Próximo ..." normal (dia/hora visíveis)
       if (title) title.style.display = "";
       if (rowDiaHora) rowDiaHora.style.display = "";
       __wasLive = false;
@@ -462,7 +461,7 @@ function updateLiveBadgeFromBootstrap(){
     }
   }
 
-  // Ao vivo se estamos dentro da janela da ocorrência DESTA semana
+  // Dentro da janela desta semana -> AO VIVO
   if (now >= thisStart && now <= thisEnd){
     setLiveMode(true);
     if (title) title.style.display = "none";
@@ -471,15 +470,15 @@ function updateLiveBadgeFromBootstrap(){
     return;
   }
 
-  // Terminou a deste semana e ainda não começou a próxima -> aguarde
+  // Terminou o evento desta semana e a próxima ainda não começou -> "Aguarde a próxima data"
   if (now > thisEnd && now < nextStart){
     setLiveMode(false);
-    renderFeedbackWaitingUI(); // limpa prof/link/senha e mostra "Aguarde a próxima data"
+    renderFeedbackWaitingUI();   // limpa prof/link/senha e mostra a mensagem
     __wasLive = false;
     return;
   }
 
-  // Caso contrário (antes da próxima) mostra "Próximo feedback" normal (dia/hora visíveis)
+  // Caso contrário (pré-próximo evento) -> "Próximo ..." normal
   setLiveMode(false);
   if (title) title.style.display = "";
   if (rowDiaHora) rowDiaHora.style.display = "";
@@ -525,18 +524,36 @@ function clearWindowTimers(){
 }
 async function refreshBootstrap(){
   try{
-    const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, { cache:'no-store' });
-    const data = await r.json();
-    bootstrap.allowUpload     = !!data.allowUpload;
-    bootstrap.janela          = data.janela || null;
-    bootstrap.feedback        = data.feedback || bootstrap.feedback;
-    bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
-    tokensRestantes           = bootstrap.tokensRestantes;
+    const url = `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`;
+    const resp = await fetch(url, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json() || {};
+
+    // garante objeto
+    if (!bootstrap || typeof bootstrap !== "object") bootstrap = {};
+
+    // campos principais
+    bootstrap.allowUpload = !!data.allowUpload;
+    bootstrap.janela      = data.janela ?? null;
+
+    // força {} quando feedback vier null/undefined/""
+    bootstrap.feedback = (data.feedback && typeof data.feedback === "object") ? data.feedback : {};
+
+    // tokens
+    const t = Number(data.tokensRestantes);
+    bootstrap.tokensRestantes = Number.isFinite(t) ? t : (bootstrap.tokensRestantes ?? 0);
+    tokensRestantes = bootstrap.tokensRestantes;
+
+    // aplica UI
     applyAllowUploadUI();
     updateUIForTokens();
-    updateLiveBadgeFromBootstrap();  // recalcula tarja
-  }catch(e){ /* silencioso */ }
+    updateLiveBadgeFromBootstrap(); // recalcula tarja/estado do bloco
+  } catch (e){
+    console.error("refreshBootstrap() falhou:", e);
+    // silencioso para não incomodar o aluno
+  }
 }
+
 function scheduleUploadWindow(){
   clearWindowTimers();
   const sISO = bootstrap?.janela?.startISO || null;
@@ -1043,5 +1060,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
