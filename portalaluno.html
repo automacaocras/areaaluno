@@ -416,8 +416,6 @@
       qs(".topbar").textContent = `[${first}]`;
       renderNomeAluno(first);
 
-      const linkEl = qs("#fbLink");
-
       // Logo
       const logo = qs("#cursoLogo");
       if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
@@ -443,33 +441,93 @@
 
       // Próximo feedback / aula gravada
       const fb = bootstrap.feedback || {};
-      if (fb.dia){ qs("#fbDiaTxt").textContent = fb.dia; qs("#fbDiaTxt").style.display = "block"; }
-      if (fb.hora){ qs("#fbHoraTxt").textContent = fb.hora; qs("#fbHoraTxt").style.display = "block"; }
 
-      if (!fb.dia && !fb.hora) {
-        const box = document.querySelector(".box-feedback");
-        if (box){
-          box.querySelector("h3").textContent = "Próximo feedback:";
-          const pDiaHora = box.querySelector("#fbDiaTxt")?.parentElement;
-          if (pDiaHora) pDiaHora.innerHTML = "Aguarde a próxima data";
-        }
-        qs("#fbSenha").textContent = "—";
-        qs("#fbInfo").textContent  = "";
-        linkEl.style.display = "none";
+      // pega as linhas já existentes no HTML
+      const rowDiaHora = qs("#fbDiaTxt").parentElement; // <p> que contém fbDiaTxt/fbHoraTxt
+      const rowProf    = qs("#fbProf").parentElement;
+      const rowSenha   = qs("#fbSenha").parentElement;
+      const rowInfo    = qs("#fbInfo");                 // já é o <p id="fbInfo">
+      const linkEl     = qs("#fbLink");
+
+      // cacheia o template original (com os dois <strong>)
+      if (!rowDiaHora.dataset.tpl) {
+        rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
       }
 
-      qs("#fbProf").textContent  = bootstrap.feedback?.professor || "—";
-      qs("#fbSenha").textContent = fb.senha || "—";
-      qs("#fbInfo").textContent  = fb.info  || "—";
+      // decide se há dados
+      const hasDate    = !!(fb.dia || fb.hora);
+      const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
 
-      if (fb.link){
-        linkEl.href = fb.link;
-        linkEl.textContent = fb.link;
-        linkEl.style.display = "inline";
+      // === ESTADO VAZIO: mostrar só "Aguarde a próxima data"
+      if (!hasDate && !hasDetails){
+        rowDiaHora.textContent = "Aguarde a próxima data";
+        rowDiaHora.style.display = "";
+        rowProf.style.display  = "none";
+        rowSenha.style.display = "none";
+        rowInfo.style.display  = "none";
+        linkEl.style.display   = "none";
       } else {
-        linkEl.removeAttribute("href");
-        linkEl.textContent = "[link da aula]";
-        linkEl.style.display = "none";
+        // === ESTADO COM DADOS ===
+        if (hasDate){
+          // restaura o template para recolocar os <strong id="fbDiaTxt"> e <strong id="fbHoraTxt">
+          rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
+          rowDiaHora.style.display = "";
+
+          // preenche o que tiver de dia/hora
+          if (fb.dia){
+            qs("#fbDiaTxt").textContent = fb.dia;
+            qs("#fbDiaTxt").style.display = "inline";
+          } else {
+            qs("#fbDiaTxt").style.display = "none";
+          }
+
+          if (fb.hora){
+            const sep = (fb.dia ? " • " : "");
+            qs("#fbHoraTxt").textContent = sep + fb.hora;
+            qs("#fbHoraTxt").style.display = "inline";
+          } else {
+            qs("#fbHoraTxt").style.display = "none";
+          }
+        } else {
+          rowDiaHora.textContent = "";
+          rowDiaHora.style.display = "none"; // evita espaço em branco
+        }
+
+        // Professor
+        if (fb.professor){
+          qs("#fbProf").textContent = fb.professor;
+          rowProf.style.display = "";
+        } else {
+          rowProf.style.display = "none";
+        }
+
+        // Link
+        if (fb.link){
+          linkEl.href = fb.link;
+          linkEl.textContent = fb.link;
+          linkEl.style.display = "inline";
+        } else {
+          linkEl.removeAttribute("href");
+          linkEl.textContent = "";
+          linkEl.style.display = "none";
+        }
+
+        // Senha
+        if (fb.senha){
+          qs("#fbSenha").textContent = fb.senha;
+          rowSenha.style.display = "";
+        } else {
+          rowSenha.style.display = "none";
+        }
+
+        // Info
+        if (fb.info){
+          rowInfo.textContent = fb.info;
+          rowInfo.style.display = "";
+        } else {
+          rowInfo.textContent = "";
+          rowInfo.style.display = "none";
+        }
       }
 
       // Card da gravada
@@ -490,35 +548,34 @@
       artesTotal = Number(bootstrap.artesTotal || 0);
 
       // Estado do botão de envio respeitando allowUpload
-const permitir = !!bootstrap.allowUpload;
-const btnEnvio = qs("#btnAbrirEnvio");
-const prazoNote = qs("#prazoEnvioNote");
+      const permitir = !!bootstrap.allowUpload;
+      const btnEnvio = qs("#btnAbrirEnvio");
+      const prazoNote = qs("#prazoEnvioNote");
 
-if (btnEnvio){
-  if (!permitir){
-    btnEnvio.disabled = true;
-    btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
-    btnEnvio.style.opacity = "0.8";
-    prazoNote.style.display = "none";
-  } else {
-    btnEnvio.disabled = false;
-    btnEnvio.textContent = "Envie os exercícios para feedback";
-    btnEnvio.style.opacity = "";
+      if (btnEnvio){
+        if (!permitir){
+          btnEnvio.disabled = true;
+          btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
+          btnEnvio.style.opacity = "0.8";
+          prazoNote.style.display = "none";
+        } else {
+          btnEnvio.disabled = false;
+          btnEnvio.textContent = "Envie os exercícios para feedback";
+          btnEnvio.style.opacity = "";
 
-    if (bootstrap.janela?.endISO){
-      const end = new Date(bootstrap.janela.endISO);
-      const hh = String(end.getHours()).padStart(2,"0");
-      const mm = String(end.getMinutes()).padStart(2,"0");
+          if (bootstrap.janela?.endISO){
+            const end = new Date(bootstrap.janela.endISO);
+            const hh = String(end.getHours()).padStart(2,"0");
+            const mm = String(end.getMinutes()).padStart(2,"0");
 
-      const diaSemana = (bootstrap.feedback?.dia || "").trim(); 
-      prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
-      prazoNote.style.display = "block";
-    } else {
-      prazoNote.style.display = "none";
-    }
-  }
-}
-
+            const diaSemana = (bootstrap.feedback?.dia || "").trim();
+            prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
+            prazoNote.style.display = "block";
+          } else {
+            prazoNote.style.display = "none";
+          }
+        }
+      }
 
       // Se primeiro login/sem telefone, pedir agora
       if (!primeiroLogin || !telefone){
@@ -767,5 +824,3 @@ if (btnEnvio){
   </div>
 </body>
 </html>
-
-
