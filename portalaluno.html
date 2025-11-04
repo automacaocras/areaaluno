@@ -306,81 +306,41 @@
   </footer>
 
 <script>
-  function renderNomeAluno(nome){
-    document.querySelectorAll("[data-nome]").forEach(el => {
-      if (!el.dataset.template) el.dataset.template = el.innerHTML;
-      el.innerHTML = el.dataset.template.replaceAll("{NOME}", nome);
-    });
-  }
+/* util básico */
+const qs  = s => document.querySelector(s);
+const qsa = s => Array.from(document.querySelectorAll(s));
+const show = el => el.classList.remove("hidden");
+const hide = el => el.classList.add("hidden");
 
-  // 👉 Mostra apenas o primeiro nome
-  function getFirstName(full){
-    const t = String(full || "").trim().replace(/\s+/g, " ");
-    if (!t) return "";
-    return t.split(" ")[0];
-  }
+function renderNomeAluno(nome){
+  document.querySelectorAll("[data-nome]").forEach(el => {
+    if (!el.dataset.template) el.dataset.template = el.innerHTML;
+    el.innerHTML = el.dataset.template.replaceAll("{NOME}", nome);
+  });
+}
+function getFirstName(full){
+  const t = String(full || "").trim().replace(/\s+/g, " ");
+  if (!t) return "";
+  return t.split(" ")[0];
+}
 
-  let tokensRestantes = 0;
-  let artesTotal = 0;
-  let telefone = "";
-  let primeiroLogin = false;
+let tokensRestantes = 0;
+let artesTotal = 0;
+let telefone = "";
+let primeiroLogin = false;
+let sessao = null, bootstrap = null;
 
-  const API_URL = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
-  const MAX_FILES = 3;
-  let sessao = null, bootstrap = null;
+const API_URL   = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
+const MAX_FILES = 3;
 
-  const qs = s => document.querySelector(s);
-  const qsa = s => Array.from(document.querySelectorAll(s));
-  const show = el => el.classList.remove('hidden');
-  const hide = el => el.classList.add('hidden');
-
-  /* ===== agendador da janela de envio (start/end) ===== */
-  const windowTimers = { start: null, end: null, poll: null };
-  function clearWindowTimers(){
-    if (windowTimers.start) { clearTimeout(windowTimers.start); windowTimers.start = null; }
-    if (windowTimers.end)   { clearTimeout(windowTimers.end);   windowTimers.end   = null; }
-    if (windowTimers.poll)  { clearInterval(windowTimers.poll); windowTimers.poll  = null; }
-  }
-
-  function applyAllowUploadUI(){
-    const btnEnvio  = qs("#btnAbrirEnvio");
-    const prazoNote = qs("#prazoEnvioNote");
-
-    if (!btnEnvio) return;
-
-    if (!bootstrap?.allowUpload){
-      btnEnvio.disabled = true;
-      btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
-      btnEnvio.style.opacity = "0.8";
-      if (prazoNote) prazoNote.style.display = "none";
-    } else {
-      btnEnvio.disabled = false;
-      btnEnvio.textContent = "Envie os exercícios para feedback";
-      btnEnvio.style.opacity = "";
-      if (prazoNote && bootstrap?.janela?.endISO){
-        const end = new Date(bootstrap.janela.endISO);
-        const hh = String(end.getHours()).padStart(2,"0");
-        const mm = String(end.getMinutes()).padStart(2,"0");
-        const diaSemana = (bootstrap.feedback?.dia || "").trim();
-        prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
-        prazoNote.style.display = "block";
-      } else if (prazoNote){
-        prazoNote.style.display = "none"; // ← esconde quando não houver prazo
-      }
-    }
-  }
-
-// ——— AO VIVO ———
+/* --------- badge AO VIVO (independe da janela de envio) --------- */
 function setLiveMode(on){
   const badge = qs("#liveBadge");
-  const box   = document.querySelector(".box-feedback");
+  const box   = qs(".box-feedback");
   if (!badge || !box) return;
   badge.style.display = on ? "block" : "none";
   box.classList.toggle("is-live", !!on);
 }
-
-// Se houver start/end da janela vindos do backend, usamos isso.
-// Se não houver, tentamos um fallback com dia+hora (janela de ~120 min).
 function weekdayPtToIndex(dia){
   const map = { domingo:0, dom:0, "domingo.":0,
     segunda:1, "segunda-feira":1, seg:1,
@@ -406,125 +366,90 @@ function buildNextOccurrenceISO(dia, hora){
   if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
   return t.toISOString();
 }
-<script>
-// ——— AO VIVO ———
-function setLiveMode(on){
-  const badge = qs("#liveBadge");
-  const box   = document.querySelector(".box-feedback");
-  if (!badge || !box) return;
-  badge.style.display = on ? "block" : "none";
-  box.classList.toggle("is-live", !!on);
-}
-
-// Converte "segunda", "ter", etc. -> 0..6
-function weekdayPtToIndex(dia){
-  const map = { domingo:0, dom:0, "domingo.":0,
-    segunda:1, "segunda-feira":1, seg:1,
-    terça:2, terca:2, "terça-feira":2, ter:2,
-    quarta:3, "quarta-feira":3, qua:3,
-    quinta:4, "quinta-feira":4, qui:4,
-    sexta:5, "sexta-feira":5, sex:5,
-    sábado:6, sabado:6, sáb:6, sab:6 };
-  const k = String(dia||"").toLowerCase().trim();
-  return (k in map) ? map[k] : null;
-}
-
-// Próxima ocorrência de (dia, hora) no fuso do navegador
-function buildNextOccurrenceISO(dia, hora){
-  const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
-  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
-  const idx = weekdayPtToIndex(dia);
-  const now = new Date();
-  let t = new Date(now);
-  if (idx !== null){
-    const delta = (idx - now.getDay() + 7) % 7;
-    t.setDate(now.getDate() + delta);
-  }
-  t.setHours(hh, mm, 0, 0);
-  if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
-  return t.toISOString();
-}
-
-/**
- * Regra ÚNICA da tarja:
- *  - Só considerar fb.dia + fb.hora
- *  - Duração padrão = 120 min (pode vir de bootstrap.feedback.duracaoMin)
- *  - Se não tiver dia/hora OU professor limpou as infos → tarja OFF
- *  - Ignorar completamente bootstrap.janela (isso só afeta o botão de envio)
- *  - Opcional: se vier 'atualizadoEm' do backend, não liga a tarja antes dessa hora.
- */
+/* Regras da tarja: usa só fb.dia + fb.hora (+ opcional atualizadoEm) */
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
-
-  // Se dados foram limpos, a tarja some
   const hasDate = !!(fb.dia && fb.hora);
   const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
-  if (!hasDate && !hasAnyDetail) { setLiveMode(false); return; }
-  if (!hasDate) { setLiveMode(false); return; }
 
-  // Calcula próximo início a partir de dia + hora
+  if (!hasDate && !hasAnyDetail){ setLiveMode(false); return; }
+  if (!hasDate){ setLiveMode(false); return; }
+
   const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
-  if (!startISO) { setLiveMode(false); return; }
+  if (!startISO){ setLiveMode(false); return; }
 
-  const start = new Date(startISO).getTime();                 // ms epoch
+  const start  = new Date(startISO).getTime();
   const durMin = Number(fb.duracaoMin ?? 120);
-  const end   = start + durMin * 60 * 1000;
-  const now   = Date.now();
+  const end    = start + durMin*60*1000;
+  const now    = Date.now();
 
-  // Honra "AtualizadoEm" da planilha, se vier do backend
-  // (impede tarja antes de o professor publicar/atualizar)
+  // não liga antes do professor publicar/atualizar (coluna AtualizadoEm da planilha)
   if (fb.atualizadoEm){
-    const upd = new Date(fb.atualizadoEm).getTime();          // aceita "2025-11-03T23:26:50-03:00"
-    if (!Number.isNaN(upd) && now < Math.max(upd, start)){
-      setLiveMode(false);
-      return;
-    }
+    const upd = new Date(fb.atualizadoEm).getTime();
+    if (!Number.isNaN(upd) && now < Math.max(upd, start)){ setLiveMode(false); return; }
   }
 
   setLiveMode(now >= start && now <= end);
 }
 
-</script>
+/* --------- UI do botão de envio (controlada por janela start/end) --------- */
+function applyAllowUploadUI(){
+  const btnEnvio  = qs("#btnAbrirEnvio");
+  const prazoNote = qs("#prazoEnvioNote");
+  if (!btnEnvio) return;
 
-
-
-  
-  async function refreshBootstrap(){
-    // Reconsulta o backend para sincronizar (tokens, link, janela, etc.)
-    try{
-      const r = await fetch(
-        `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`,
-        { cache: 'no-store' } // ← evita cache
-      );
-      const data = await r.json();
-      // atualiza apenas os campos que importam para o botão/janela e contadores
-      bootstrap.allowUpload     = !!data.allowUpload;
-      bootstrap.janela          = data.janela || null;
-      bootstrap.feedback        = data.feedback || bootstrap.feedback; // ✅
-      bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
-      tokensRestantes           = bootstrap.tokensRestantes;
-      applyAllowUploadUI();
-      updateUIForTokens();
-      updateLiveBadgeFromBootstrap();
-
-    }catch(e){
-      // silencioso
+  if (!bootstrap?.allowUpload){
+    btnEnvio.disabled = true;
+    btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
+    btnEnvio.style.opacity = "0.8";
+    if (prazoNote) prazoNote.style.display = "none";
+  } else {
+    btnEnvio.disabled = false;
+    btnEnvio.textContent = "Envie os exercícios para feedback";
+    btnEnvio.style.opacity = "";
+    if (prazoNote && bootstrap?.janela?.endISO){
+      const end = new Date(bootstrap.janela.endISO);
+      const hh = String(end.getHours()).padStart(2,"0");
+      const mm = String(end.getMinutes()).padStart(2,"0");
+      const diaSemana = (bootstrap.feedback?.dia || "").trim();
+      prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
+      prazoNote.style.display = "block";
+    } else if (prazoNote){
+      prazoNote.style.display = "none";
     }
   }
+}
 
-<script>
+/* timers da janela (apenas para o botão) */
+const windowTimers = { start:null, end:null, poll:null };
+function clearWindowTimers(){
+  if (windowTimers.start) clearTimeout(windowTimers.start), windowTimers.start=null;
+  if (windowTimers.end)   clearTimeout(windowTimers.end),   windowTimers.end=null;
+  if (windowTimers.poll)  clearInterval(windowTimers.poll), windowTimers.poll=null;
+}
+async function refreshBootstrap(){
+  try{
+    const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, { cache:'no-store' });
+    const data = await r.json();
+    bootstrap.allowUpload     = !!data.allowUpload;
+    bootstrap.janela          = data.janela || null;
+    bootstrap.feedback        = data.feedback || bootstrap.feedback;
+    bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
+    tokensRestantes           = bootstrap.tokensRestantes;
+    applyAllowUploadUI();
+    updateUIForTokens();
+    updateLiveBadgeFromBootstrap();  // recalcula tarja
+  }catch(e){ /* silencioso */ }
+}
 function scheduleUploadWindow(){
   clearWindowTimers();
-
-  // A janela continua existindo apenas para controlar o BOTÃO de envio
   const sISO = bootstrap?.janela?.startISO || null;
   const eISO = bootstrap?.janela?.endISO   || null;
 
-  // Sem janela → botão travado, e seguimos avaliando a tarja via fb.dia/hora
   if (!sISO || !eISO){
     bootstrap.allowUpload = false;
     applyAllowUploadUI();
-    updateLiveBadgeFromBootstrap();
+    updateLiveBadgeFromBootstrap(); // tarja é por fb.dia/hora
     return;
   }
 
@@ -532,12 +457,11 @@ function scheduleUploadWindow(){
   const start = new Date(sISO).getTime();
   const end   = new Date(eISO).getTime();
 
-  // Estado imediato do BOTÃO (tarja é avaliada separadamente)
+  // só controla o botão
   bootstrap.allowUpload = (now >= start && now <= end);
   applyAllowUploadUI();
   updateLiveBadgeFromBootstrap();
 
-  // Início
   if (now < start){
     windowTimers.start = setTimeout(async () => {
       bootstrap.allowUpload = true;
@@ -546,8 +470,6 @@ function scheduleUploadWindow(){
       updateLiveBadgeFromBootstrap();
     }, Math.max(0, start - now));
   }
-
-  // Fim
   if (now < end){
     windowTimers.end = setTimeout(async () => {
       bootstrap.allowUpload = false;
@@ -560,101 +482,417 @@ function scheduleUploadWindow(){
       updateLiveBadgeFromBootstrap();
     }, Math.max(0, end - now));
   }
-
-  // Poll de segurança
   windowTimers.poll = setInterval(async () => {
     const n = Date.now();
     if (n > end + 5*60*1000) { clearWindowTimers(); }
     await refreshBootstrap();
     updateLiveBadgeFromBootstrap();
-  }, 60 * 1000);
+  }, 60_000);
 }
-</script>
 
+/* --------- Helpers telefone --------- */
+function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
+function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
+function formatBRPhone(d){
+  const x = onlyDigits(d);
+  if (x.length === 11) return `(${x.slice(0,2)}) ${x.slice(2,7)}-${x.slice(7)}`;
+  if (x.length === 10) return `(${x.slice(0,2)}) ${x.slice(2,6)}-${x.slice(6)}`;
+  return x;
+}
+function showPhoneModal(){
+  const m = qs("#phoneModal");
+  const inp = qs("#phoneInput");
+  inp.value = formatBRPhone(telefone||"");
+  m.classList.add("show");
+  m.setAttribute("aria-hidden","false");
+  setTimeout(()=>inp.focus(), 50);
+}
+function hidePhoneModal(){
+  const m = qs("#phoneModal");
+  m.classList.remove("show");
+  m.setAttribute("aria-hidden","true");
+}
+async function savePhone(){
+  const raw = onlyDigits(qs("#phoneInput").value);
+  if (!isValidBRPhone(raw)){
+    alert("Digite um telefone válido (10 ou 11 dígitos).");
+    return;
+  }
+  try{
+    setLoading(true, "Salvando telefone…");
+    const body = { action:"updatePhone", curso:sessao.curso, email:sessao.email, telefone: raw };
+    const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.message || "Falha ao salvar telefone.");
+    telefone = d.telefone;
+    primeiroLogin = true;
+    renderTopbarPhone();
+    hidePhoneModal();
+    alert("Telefone atualizado!");
+  }catch(e){
+    alert("Erro: " + e.message);
+  }finally{
+    setLoading(false);
+  }
+}
+function renderTopbarPhone(){
+  const tb = qs(".topbar");
+  const old = tb.querySelector(".topbar-phone");
+  if (old) old.remove();
+  const span = document.createElement("span");
+  span.className = "topbar-phone";
+  const telText = telefone ? formatBRPhone(telefone) : "adicionar telefone";
+  span.innerHTML = ` • 📞 ${telText} <a id="linkEditarTel">(alterar)</a>`;
+  tb.appendChild(span);
+  qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
+}
 
-  // Agenda fim exato
-  if (now < end){
-    windowTimers.end = setTimeout(async () => {
-      bootstrap.allowUpload = false;
-      updateLiveBadgeFromBootstrap(); // calcula pelo backend
-      applyAllowUploadUI();
-      if (!qs("#envio").classList.contains("hidden")){
-        hide(qs("#envio")); show(qs("#dashboard"));
-        alert("O período de envio foi encerrado.");
+/* --------- Bootstrap inicial (CARREGA TUDO) --------- */
+async function carregarBootstrap(curso, email){
+  try{
+    const r = await fetch(
+      `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`,
+      { cache:'no-store' }
+    );
+    bootstrap = await r.json();
+
+    if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
+
+    // Topbar + nome
+    const fullName = bootstrap.nome || "";
+    const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
+    qs(".topbar").textContent = `[${first}]`;
+    renderNomeAluno(first);
+
+    // Logo
+    const logo = qs("#cursoLogo");
+    if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
+
+    // Telefone e flag
+    telefone = String(bootstrap.telefone || "");
+    primeiroLogin = !!bootstrap.primeiroLogin;
+    renderTopbarPhone();
+
+    // Dias restantes
+    const dr = +bootstrap.diasRestantes || 0;
+    qs("#diasRestantes").textContent = dr > 0
+      ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+      : "Acesso expirado.";
+
+    // Cupom
+    if (dr <= 30 && bootstrap.desconto?.cupom){
+      qs("#cupomBox").style.display = "block";
+      qs("#cupomCod").textContent = bootstrap.desconto.cupom;
+      qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
+      qs("#cupomLink").href = bootstrap.desconto.link;
+    }
+
+    // Próximo feedback / aula gravada
+    const fb = bootstrap.feedback || {};
+    const rowDiaHora = qs("#fbDiaTxt").parentElement;
+    const rowProf    = qs("#fbProf").parentElement;
+    const rowSenha   = qs("#fbSenha").parentElement;
+    const rowInfo    = qs("#fbInfo");
+    const linkEl     = qs("#fbLink");
+
+    if (!rowDiaHora.dataset.tpl) rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
+
+    const hasDate    = !!(fb.dia || fb.hora);
+    const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
+
+    if (!hasDate && !hasDetails){
+      rowDiaHora.textContent = "Aguarde a próxima data";
+      rowDiaHora.style.display = "";
+      rowProf.style.display  = "none";
+      rowSenha.style.display = "none";
+      rowInfo.style.display  = "none";
+      linkEl.style.display   = "none";
+      setLiveMode(false);
+    } else {
+      if (hasDate){
+        rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
+        rowDiaHora.style.display = "";
+        if (fb.dia){
+          qs("#fbDiaTxt").textContent = fb.dia;
+          qs("#fbDiaTxt").style.display = "inline";
+        } else {
+          qs("#fbDiaTxt").style.display = "none";
+        }
+        if (fb.hora){
+          const sep = (fb.dia ? " • " : "");
+          qs("#fbHoraTxt").textContent = sep + fb.hora;
+          qs("#fbHoraTxt").style.display = "inline";
+        } else {
+          qs("#fbHoraTxt").style.display = "none";
+        }
+      } else {
+        rowDiaHora.textContent = "";
+        rowDiaHora.style.display = "none";
       }
-      await refreshBootstrap();
-    }, Math.max(0, end - now));
-  }
 
-  // Poll de segurança
-  windowTimers.poll = setInterval(async () => {
-    const n = Date.now();
-    if (n > end + 5*60*1000) { clearWindowTimers(); return; }
-    await refreshBootstrap(); // isto já chama updateLiveBadgeFromBootstrap()
-  }, 60 * 1000);
+      if (fb.professor){ qs("#fbProf").textContent = fb.professor; rowProf.style.display = ""; }
+      else { rowProf.style.display = "none"; }
+
+      if (fb.link){ linkEl.href = fb.link; linkEl.textContent = fb.link; linkEl.style.display = "inline"; }
+      else { linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
+
+      if (fb.senha){ qs("#fbSenha").textContent = fb.senha; rowSenha.style.display = ""; }
+      else { rowSenha.style.display = "none"; }
+
+      if (fb.info){ rowInfo.textContent = fb.info; rowInfo.style.display = ""; }
+      else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
+    }
+
+    // Atualiza o selo verde conforme os dados atuais
+    updateLiveBadgeFromBootstrap();
+
+    // Card da gravada
+    const gravCard = qs("#gravadaCard");
+    const gravURL  = String(fb.aulaGravada || "").trim();
+    if (gravURL){
+      qs("#ultimaGravada").href = gravURL;
+      qs("#ultimaGravada").textContent = gravURL;
+      if (gravCard) gravCard.style.display = "block";
+    } else {
+      qs("#ultimaGravada").removeAttribute("href");
+      qs("#ultimaGravada").textContent = "";
+      if (gravCard) gravCard.style.display = "none";
+    }
+
+    // Tokens e artes
+    tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
+    artesTotal = Number(bootstrap.artesTotal || 0);
+
+    // Aplica UI do botão com base na janela atual + agenda viradas
+    applyAllowUploadUI();
+    scheduleUploadWindow();
+
+    // Se primeiro login/sem telefone, pedir agora
+    if (!primeiroLogin || !telefone){
+      setTimeout(showPhoneModal, 300);
+    }
+
+    updateUIForTokens();
+  }catch(e){
+    alert(".");
+    location.replace("index.html");
+  }
 }
 
-
-
-  /* Helpers telefone */
-  function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
-  function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
-  function formatBRPhone(d){
-    const x = onlyDigits(d);
-    if (x.length === 11) return `(${x.slice(0,2)}) ${x.slice(2,7)}-${x.slice(7)}`;
-    if (x.length === 10) return `(${x.slice(0,2)}) ${x.slice(2,6)}-${x.slice(6)}`;
-    return x;
+/* --------- Abertura de envio / listas --------- */
+async function abrirEnvio(){
+  if (!bootstrap?.allowUpload){
+    alert("Envio indisponível no momento. Aguarde a próxima data de feedback.");
+    return;
   }
+  setLoading(true, "Carregando envio…");
+  hide(qs("#dashboard"));
 
-  /* Modal telefone */
-  function showPhoneModal(){
-    const m = qs("#phoneModal");
-    const inp = qs("#phoneInput");
-    inp.value = formatBRPhone(telefone||"");
-    m.classList.add("show");
-    m.setAttribute("aria-hidden","false");
-    setTimeout(()=>inp.focus(), 50);
-  }
-  function hidePhoneModal(){
-    const m = qs("#phoneModal");
-    m.classList.remove("show");
-    m.setAttribute("aria-hidden","true");
-  }
-  async function savePhone(){
-    const raw = onlyDigits(qs("#phoneInput").value);
-    if (!isValidBRPhone(raw)){
-      alert("Digite um telefone válido (10 ou 11 dígitos).");
-      return;
+  resetFiles();
+  qs("#descricao").value = "";
+
+  const info  = qs("#artsInfo");
+  const count = qs("#artsCount");
+  if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
+  else { hide(info); }
+
+  await carregarModulos();
+  show(qs("#envio"));
+  window.scrollTo({top:0,behavior:"smooth"});
+  setLoading(false);
+
+  updateUIForTokens();
+}
+async function carregarModulos(){
+  const sel=qs("#selModulo"),selA=qs("#selAula");
+  sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
+  selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
+  try{
+    const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
+    const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
+    sel.innerHTML="<option value=''>Selecione o módulo</option>";
+    mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
+    sel.disabled=false; sel.onchange=carregarAulas;
+  }catch{sel.innerHTML="<option>Erro ao carregar. Atualize a página</option>";}
+}
+async function carregarAulas(){
+  const modulo=qs("#selModulo").value,sel=qs("#selAula");
+  if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
+  sel.innerHTML="<option>Carregando aulas...</option>";
+  try{
+    const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
+    const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
+    sel.innerHTML="<option value=''>Selecione a aula</option>";
+    aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
+    sel.disabled=false;
+  }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
+}
+
+/* --------- UX / TOKENS --------- */
+function countSelectedFiles(){
+  return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+}
+function updateUIForTokens(){
+  const btnEnviar  = qs("#btnEnviar");
+  const btnAdd     = qs("#btnAddImagem");
+  const btnReset   = qs("#btnResetar");
+  const wrapForm   = qs("#envioFields");
+  const wrapLimit  = qs("#limiteWrap");
+
+  const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
+  const inputsQtd  = qsa("#filesWrap input[type='file']").length;
+
+  if (tokensRestantes <= 0){
+    if (wrapForm)  wrapForm.style.display = "none";
+    if (wrapLimit) wrapLimit.classList.remove("hidden");
+    if (btnEnviar){
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
+      btnEnviar.style.opacity = "0.9";
     }
-    try{
-      setLoading(true, "Salvando telefone…");
-      const body = { action:"updatePhone", curso:sessao.curso, email:sessao.email, telefone: raw };
-      const r = await fetch(API_URL, { method:"POST", body: JSON.stringify(body) });
-      const d = await r.json();
-      if (!d.ok) throw new Error(d.message || "Falha ao salvar telefone.");
-      telefone = d.telefone;
-      primeiroLogin = true;
-      renderTopbarPhone();
-      hidePhoneModal();
-      alert("Telefone atualizado!");
-    }catch(e){
-      alert("Erro: " + e.message);
-    }finally{
-      setLoading(false);
-    }
-  }
-  function renderTopbarPhone(){
-    const tb = qs(".topbar");
-    const old = tb.querySelector(".topbar-phone");
-    if (old) old.remove();
-    const span = document.createElement("span");
-    span.className = "topbar-phone";
-    const telText = telefone ? formatBRPhone(telefone) : "adicionar telefone";
-    span.innerHTML = ` • 📞 ${telText} <a id="linkEditarTel">(alterar)</a>`;
-    tb.appendChild(span);
-    qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
+    if (btnAdd)   btnAdd.style.display   = "none";
+    if (btnReset) btnReset.style.display = "none";
+    return;
   }
 
+  if (wrapForm)  wrapForm.style.display = "block";
+  if (wrapLimit) wrapLimit.classList.add("hidden");
+
+  if (btnEnviar){
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = "Enviar";
+    btnEnviar.style.opacity = "";
+  }
+
+  const deveMostrarAdd = (
+    tokensRestantes > 1 &&
+    selected < tokensRestantes &&
+    inputsQtd < MAX_FILES
+  );
+  if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
+  if (btnReset) btnReset.style.display = "inline-block";
+}
+function resetFiles(){
+  qs("#filesWrap").innerHTML =
+    '<input type="file" class="fileItem" accept="image/*">' +
+    '<div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
+  updateUIForTokens();
+}
+function addFileInput(){
+  if (tokensRestantes <= 0){ return; }
+  const wrap         = qs("#filesWrap");
+  const inputs       = qsa("#filesWrap input[type='file']");
+  const inputsQtd    = inputs.length;
+  const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
+
+  if (inputsQtd >= MAX_FILES) return;
+  if (tokensRestantes <= 1)   return;
+  if (selectedNow >= tokensRestantes) return;
+
+  const inp = document.createElement("input");
+  inp.type = "file";
+  inp.accept = "image/*";
+  inp.className = "fileItem";
+  wrap.insertBefore(inp, wrap.lastElementChild);
+
+  updateUIForTokens();
+}
+function updateAddBtnVisibility(){ updateUIForTokens(); }
+
+/* --------- Envio --------- */
+async function enviarExercicio(){
+  const modulo = qs("#selModulo").value.trim(),
+        aula   = qs("#selAula").value.trim(),
+        desc   = qs("#descricao").value.trim();
+
+  if(!modulo) return alert("Selecione o módulo.");
+  if(!aula)   return alert("Selecione a aula.");
+
+  if (tokensRestantes <= 0){
+    alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+    return;
+  }
+
+  // trava também aqui, caso a janela tenha fechado milissegundos antes de clicar
+  if (!bootstrap.allowUpload){
+    alert("O envio só fica disponível após a nova data de feedback ser publicada.");
+    return;
+  }
+
+  const chosen = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean);
+  if(!chosen.length) return alert("Envie pelo menos uma imagem.");
+  if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
+
+  if(chosen.length > tokensRestantes){
+    const resto = tokensRestantes;
+    alert(resto > 0
+      ? `Você só tem ${resto} envio(s) restante(s) nesta semana.`
+      : "Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+    return;
+  }
+
+  setLoading(true, "Enviando seu desenho…");
+
+  try{
+    const files=[];
+    for(const f of chosen){
+      const base64 = await new Promise((res, rej)=>{
+        const fr = new FileReader();
+        fr.onload  = () => res(fr.result.split(",")[1]);
+        fr.onerror = () => rej();
+        fr.readAsDataURL(f);
+      });
+      files.push({name:f.name,type:f.type,content:base64});
+    }
+
+    const body = {
+      action:"uploadExercise",
+      curso:sessao.curso,
+      email:sessao.email,
+      nome:bootstrap.nome,
+      modulo,
+      aula,
+      descricao:desc,
+      files
+    };
+
+    const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
+    const d = await r.json();
+
+    if(!d.ok){
+      if (d.message === "limit_exceeded"){
+        alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
+        return;
+      }
+      if (d.message === "envio_fora_da_janela"){
+        alert("O envio só fica disponível após a nova data de feedback ser publicada e até pouco tempo após o horário da aula.");
+        bootstrap.allowUpload = false;
+        applyAllowUploadUI();
+        if (!qs("#envio").classList.contains("hidden")){
+          hide(qs("#envio")); show(qs("#dashboard"));
+        }
+        return;
+      }
+      throw new Error(d.message || "Falha");
+    }
+
+    if(typeof d.tokensRestantes === "number"){
+      tokensRestantes = d.tokensRestantes;
+    }
+
+    resetFiles();
+    hide(qs("#envio"));
+    show(qs("#sucesso"));
+    updateUIForTokens();
+
+  }catch(e){
+    alert("Erro: " + e.message);
+  }finally{
+    setLoading(false);
+  }
+}
+
+/* --------- bootstrap do DOM --------- */
 document.addEventListener("DOMContentLoaded", async () => {
   try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
   if (!sessao || !sessao.email || !sessao.curso) {
@@ -667,6 +905,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await carregarBootstrap(sessao.curso, sessao.email);
   setLoading(false);
 
+  // handlers
   qs("#btnAbrirEnvio").onclick = abrirEnvio;
   qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
   qs("#btnAddImagem").onclick  = addFileInput;
@@ -684,402 +923,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   updateAddBtnVisibility();
 
-  // ✅ Reavalia a tarja periodicamente (fora do guard)
-  setInterval(updateLiveBadgeFromBootstrap, 15 * 1000);
+  // tarja “ao vivo” com avaliação fina
+  updateLiveBadgeFromBootstrap();
+  setInterval(updateLiveBadgeFromBootstrap, 15_000);
 });
-
-
-    setLoading(true, "Carregando as informações...");
-    await carregarBootstrap(sessao.curso, sessao.email);
-    setLoading(false);
-
-    qs("#btnAbrirEnvio").onclick = abrirEnvio;
-    qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
-    qs("#btnAddImagem").onclick  = addFileInput;
-    qs("#btnResetar").onclick    = resetFiles;
-    qs("#btnEnviar").onclick     = enviarExercicio;
-    qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
-    qs("#btnSair").onclick       = () => { localStorage.removeItem("sessao_portal"); location.replace("index.html"); };
-
-    // modal telefone
-    qs("#btnSalvarPhone").onclick   = savePhone;
-    qs("#btnCancelarPhone").onclick = hidePhoneModal;
-    qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
-
-    // Atualiza UI quando escolher arquivos
-    qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
-
-    // 🔄 Atualiza estado ao voltar o foco para a aba
-    document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) refreshBootstrap();
-    });
-
-    updateAddBtnVisibility();
-  });
-
-  async function carregarBootstrap(curso, email){
-    try{
-      const r = await fetch(
-        `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`,
-        { cache:'no-store' } // ← evita cache
-      );
-      bootstrap = await r.json();
-
-      if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
-
-      // Topbar + nome
-      const fullName = bootstrap.nome || "";
-      const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
-      qs(".topbar").textContent = `[${first}]`;
-      renderNomeAluno(first);
-
-      // Logo
-      const logo = qs("#cursoLogo");
-      if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
-
-      // Telefone e flag
-      telefone = String(bootstrap.telefone || "");
-      primeiroLogin = !!bootstrap.primeiroLogin;
-      renderTopbarPhone();
-
-      // Dias restantes
-      const dr = +bootstrap.diasRestantes || 0;
-      qs("#diasRestantes").textContent = dr > 0
-        ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
-        : "Acesso expirado.";
-
-      // Cupom
-      if (dr <= 30 && bootstrap.desconto?.cupom){
-        qs("#cupomBox").style.display = "block";
-        qs("#cupomCod").textContent = bootstrap.desconto.cupom;
-        qs("#cupomPerc").textContent = bootstrap.desconto.porcentagem;
-        qs("#cupomLink").href = bootstrap.desconto.link;
-      }
-
-      // Próximo feedback / aula gravada
-      const fb = bootstrap.feedback || {};
-
-      const rowDiaHora = qs("#fbDiaTxt").parentElement;
-      const rowProf    = qs("#fbProf").parentElement;
-      const rowSenha   = qs("#fbSenha").parentElement;
-      const rowInfo    = qs("#fbInfo");
-      const linkEl     = qs("#fbLink");
-
-      if (!rowDiaHora.dataset.tpl) rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
-
-      const hasDate    = !!(fb.dia || fb.hora);
-      const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
-
-      if (!hasDate && !hasDetails){
-        rowDiaHora.textContent = "Aguarde a próxima data";
-        rowDiaHora.style.display = "";
-        rowProf.style.display  = "none";
-        rowSenha.style.display = "none";
-        rowInfo.style.display  = "none";
-        linkEl.style.display   = "none";
-        setLiveMode(false);
-      } else {
-        if (hasDate){
-          rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
-          rowDiaHora.style.display = "";
-          if (fb.dia){
-            qs("#fbDiaTxt").textContent = fb.dia;
-            qs("#fbDiaTxt").style.display = "inline";
-          } else {
-            qs("#fbDiaTxt").style.display = "none";
-          }
-          if (fb.hora){
-            const sep = (fb.dia ? " • " : "");
-            qs("#fbHoraTxt").textContent = sep + fb.hora;
-            qs("#fbHoraTxt").style.display = "inline";
-          } else {
-            qs("#fbHoraTxt").style.display = "none";
-          }
-        } else {
-          rowDiaHora.textContent = "";
-          rowDiaHora.style.display = "none";
-        }
-
-        if (fb.professor){ qs("#fbProf").textContent = fb.professor; rowProf.style.display = ""; }
-        else { rowProf.style.display = "none"; }
-
-        if (fb.link){ linkEl.href = fb.link; linkEl.textContent = fb.link; linkEl.style.display = "inline"; }
-        else { linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
-
-        if (fb.senha){ qs("#fbSenha").textContent = fb.senha; rowSenha.style.display = ""; }
-        else { rowSenha.style.display = "none"; }
-
-        if (fb.info){ rowInfo.textContent = fb.info; rowInfo.style.display = ""; }
-        else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
-      }
-
-      // Atualiza o selo verde conforme os dados atuais
-updateLiveBadgeFromBootstrap();
-
-      // Card da gravada
-      const gravCard = qs("#gravadaCard");
-      const gravURL  = String(fb.aulaGravada || "").trim();
-      if (gravURL){
-        qs("#ultimaGravada").href = gravURL;
-        qs("#ultimaGravada").textContent = gravURL;
-        if (gravCard) gravCard.style.display = "block";
-      } else {
-        qs("#ultimaGravada").removeAttribute("href");
-        qs("#ultimaGravada").textContent = "";
-        if (gravCard) gravCard.style.display = "none";
-      }
-
-      // Tokens e artes
-      tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
-      artesTotal = Number(bootstrap.artesTotal || 0);
-
-      // Aplica UI do botão com base na janela atual
-      applyAllowUploadUI();
-      // Agenda viradas de estado (abre/fecha sozinho)
-      scheduleUploadWindow();
-
-      // Se primeiro login/sem telefone, pedir agora
-      if (!primeiroLogin || !telefone){
-        setTimeout(showPhoneModal, 300);
-      }
-
-      updateUIForTokens();
-    }catch(e){
-      alert(".");
-      location.replace("index.html");
-    }
-
-
-
-    
-  }
-
-  async function abrirEnvio(){
-    if (!bootstrap?.allowUpload){
-      alert("Envio indisponível no momento. Aguarde a próxima data de feedback.");
-      return;
-    }
-
-    setLoading(true, "Carregando envio…");
-    hide(qs("#dashboard"));
-
-    resetFiles();
-    qs("#descricao").value = "";
-
-    const info = qs("#artsInfo");
-    const count = qs("#artsCount");
-    if (artesTotal > 0){ count.textContent = artesTotal; show(info); }
-    else { hide(info); }
-
-    await carregarModulos();
-    show(qs("#envio"));
-    window.scrollTo({top:0,behavior:"smooth"});
-    setLoading(false);
-
-    updateUIForTokens();
-  }
-
-  async function carregarModulos(){
-    const sel=qs("#selModulo"),selA=qs("#selAula");
-    sel.disabled=true;sel.innerHTML="<option>Carregando...</option>";
-    selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
-    try{
-      const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
-      const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
-      sel.innerHTML="<option value=''>Selecione o módulo</option>";
-      mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
-      sel.disabled=false; sel.onchange=carregarAulas;
-    }catch{sel.innerHTML="<option>Erro ao carregar. Atualize a página</option>";}
-  }
-
-  async function carregarAulas(){
-    const modulo=qs("#selModulo").value,sel=qs("#selAula");
-    if(!modulo){sel.innerHTML="<option>Selecione o módulo primeiro</option>";return;}
-    sel.innerHTML="<option>Carregando aulas...</option>";
-    try{
-      const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
-      const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
-      sel.innerHTML="<option value=''>Selecione a aula</option>";
-      aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
-      sel.disabled=false;
-    }catch{sel.innerHTML="<option>Erro ao carregar aulas</option>";}
-  }
-
-  /* ======== UX / TOKENS ======== */
-  function countSelectedFiles(){
-    return qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
-  }
-
-  function updateUIForTokens(){
-    const btnEnviar  = qs("#btnEnviar");
-    const btnAdd     = qs("#btnAddImagem");
-    const btnReset   = qs("#btnResetar");
-    const wrapForm   = qs("#envioFields");
-    const wrapLimit  = qs("#limiteWrap");
-
-    const selected   = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean).length;
-    const inputsQtd  = qsa("#filesWrap input[type='file']").length;
-
-    if (tokensRestantes <= 0){
-      if (wrapForm)  wrapForm.style.display = "none";
-      if (wrapLimit) wrapLimit.classList.remove("hidden");
-      if (btnEnviar){
-        btnEnviar.disabled = false;
-        btnEnviar.textContent = "❗ Você já enviou o máximo desta semana";
-        btnEnviar.style.opacity = "0.9";
-      }
-      if (btnAdd)   btnAdd.style.display   = "none";
-      if (btnReset) btnReset.style.display = "none";
-      return;
-    }
-
-    if (wrapForm)  wrapForm.style.display = "block";
-    if (wrapLimit) wrapLimit.classList.add("hidden");
-
-    if (btnEnviar){
-      btnEnviar.disabled = false;
-      btnEnviar.textContent = "Enviar";
-      btnEnviar.style.opacity = "";
-    }
-
-    const deveMostrarAdd = (
-      tokensRestantes > 1 &&
-      selected < tokensRestantes &&
-      inputsQtd < MAX_FILES
-    );
-    if (btnAdd)   btnAdd.style.display   = deveMostrarAdd ? "inline-block" : "none";
-    if (btnReset) btnReset.style.display = "inline-block";
-  }
-
-  function resetFiles(){
-    qs("#filesWrap").innerHTML =
-      '<input type="file" class="fileItem" accept="image/*">' +
-      '<div class="thumb-hint">Formatos JPG/PNG. Até 3 envios.</div>';
-    updateUIForTokens();
-  }
-
-  function addFileInput(){
-    if (tokensRestantes <= 0){ return; }
-    const wrap         = qs("#filesWrap");
-    const inputs       = qsa("#filesWrap input[type='file']");
-    const inputsQtd    = inputs.length;
-    const selectedNow  = inputs.map(i => i.files[0]).filter(Boolean).length;
-
-    if (inputsQtd >= MAX_FILES) return;
-    if (tokensRestantes <= 1)   return;
-    if (selectedNow >= tokensRestantes) return;
-
-    const inp = document.createElement("input");
-    inp.type = "file";
-    inp.accept = "image/*";
-    inp.className = "fileItem";
-    wrap.insertBefore(inp, wrap.lastElementChild);
-
-    updateUIForTokens();
-  }
-
-  function updateAddBtnVisibility(){
-    updateUIForTokens();
-  }
-
-  /* ======== Envio ======== */
-  async function enviarExercicio(){
-    const modulo = qs("#selModulo").value.trim(),
-          aula   = qs("#selAula").value.trim(),
-          desc   = qs("#descricao").value.trim();
-
-    if(!modulo) return alert("Selecione o módulo.");
-    if(!aula)   return alert("Selecione a aula.");
-
-    if (tokensRestantes <= 0){
-      alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-      return;
-    }
-
-    // trava também aqui, caso a janela tenha fechado milissegundos antes de clicar
-    if (!bootstrap.allowUpload){
-      alert("O envio só fica disponível após a nova data de feedback ser publicada.");
-      return;
-    }
-
-    const chosen = qsa("#filesWrap input[type='file']")
-                    .map(i => i.files[0])
-                    .filter(Boolean);
-
-    if(!chosen.length) return alert("Envie pelo menos uma imagem.");
-    if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
-
-    if(chosen.length > tokensRestantes){
-      const resto = tokensRestantes;
-      alert(resto > 0
-        ? `Você só tem ${resto} envio(s) restante(s) nesta semana.`
-        : "Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-      return;
-    }
-
-    setLoading(true, "Enviando seu desenho…");
-
-    try{
-      const files=[];
-      for(const f of chosen){
-        const base64 = await new Promise((res, rej)=>{
-          const fr = new FileReader();
-          fr.onload  = () => res(fr.result.split(",")[1]);
-          fr.onerror = () => rej();
-          fr.readAsDataURL(f);
-        });
-        files.push({name:f.name,type:f.type,content:base64});
-      }
-
-      const body = {
-        action:"uploadExercise",
-        curso:sessao.curso,
-        email:sessao.email,
-        nome:bootstrap.nome,
-        modulo,
-        aula,
-        descricao:desc,
-        files
-      };
-
-      const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
-      const d = await r.json();
-
-      if(!d.ok){
-        if (d.message === "limit_exceeded"){
-          alert("Semana que vem você conseguirá enviar novamente. Aproveite esse tempo para estudar o feedback que te foi passado.");
-          return;
-        }
-        if (d.message === "envio_fora_da_janela"){
-          alert("O envio só fica disponível após a nova data de feedback ser publicada e até pouco tempo após o horário da aula.");
-          // Garantia extra: marca como fechado e volta ao dashboard
-          bootstrap.allowUpload = false;
-          applyAllowUploadUI();
-          if (!qs("#envio").classList.contains("hidden")){
-            hide(qs("#envio")); show(qs("#dashboard"));
-          }
-          return;
-        }
-        throw new Error(d.message || "Falha");
-      }
-
-      if(typeof d.tokensRestantes === "number"){
-        tokensRestantes = d.tokensRestantes;
-      }
-
-      resetFiles();
-      hide(qs("#envio"));
-      show(qs("#sucesso"));
-      updateUIForTokens();
-
-    }catch(e){
-      alert("Erro: " + e.message);
-    }finally{
-      setLoading(false);
-    }
-  }
 </script>
-
+ 
   <!-- Overlay global -->
   <script>
     function setLoading(state, msg = "Carregando…") {
@@ -1096,6 +945,3 @@ updateLiveBadgeFromBootstrap();
   </div>
 </body>
 </html>
-
-
-
