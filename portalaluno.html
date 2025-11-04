@@ -313,6 +313,110 @@
   const show = el => el.classList.remove('hidden');
   const hide = el => el.classList.add('hidden');
 
+  /* ===== agendador da janela de envio (start/end) ===== */
+  const windowTimers = { start: null, end: null, poll: null };
+  function clearWindowTimers(){
+    if (windowTimers.start) { clearTimeout(windowTimers.start); windowTimers.start = null; }
+    if (windowTimers.end)   { clearTimeout(windowTimers.end);   windowTimers.end   = null; }
+    if (windowTimers.poll)  { clearInterval(windowTimers.poll); windowTimers.poll  = null; }
+  }
+
+  function applyAllowUploadUI(){
+    const btnEnvio  = qs("#btnAbrirEnvio");
+    const prazoNote = qs("#prazoEnvioNote");
+
+    if (!btnEnvio) return;
+
+    if (!bootstrap?.allowUpload){
+      btnEnvio.disabled = true;
+      btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
+      btnEnvio.style.opacity = "0.8";
+      if (prazoNote) prazoNote.style.display = "none";
+    } else {
+      btnEnvio.disabled = false;
+      btnEnvio.textContent = "Envie os exercícios para feedback";
+      btnEnvio.style.opacity = "";
+      if (prazoNote && bootstrap?.janela?.endISO){
+        const end = new Date(bootstrap.janela.endISO);
+        const hh = String(end.getHours()).padStart(2,"0");
+        const mm = String(end.getMinutes()).padStart(2,"0");
+        const diaSemana = (bootstrap.feedback?.dia || "").trim();
+        prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
+        prazoNote.style.display = "block";
+      }
+    }
+  }
+
+  async function refreshBootstrap(){
+    // Reconsulta o backend para sincronizar (tokens, link, janela, etc.)
+    try{
+      const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`);
+      const data = await r.json();
+      // atualiza apenas os campos que importam para o botão/janela e contadores
+      bootstrap.allowUpload   = !!data.allowUpload;
+      bootstrap.janela        = data.janela || null;
+      bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
+      tokensRestantes = bootstrap.tokensRestantes;
+      applyAllowUploadUI();
+      updateUIForTokens();
+    }catch(e){
+      // silencioso
+    }
+  }
+
+  function scheduleUploadWindow(){
+    clearWindowTimers();
+    if (!bootstrap?.janela) return;
+
+    const now   = Date.now();
+    const start = bootstrap.janela.startISO ? new Date(bootstrap.janela.startISO).getTime() : NaN;
+    const end   = bootstrap.janela.endISO   ? new Date(bootstrap.janela.endISO).getTime()   : NaN;
+
+    // Estado imediato
+    if (!isNaN(start) && !isNaN(end)){
+      if (now < start) {
+        bootstrap.allowUpload = false;
+      } else if (now >= start && now <= end) {
+        bootstrap.allowUpload = true;
+      } else if (now > end) {
+        bootstrap.allowUpload = false;
+      }
+      applyAllowUploadUI();
+    }
+
+    // Agenda início
+    if (!isNaN(start) && now < start){
+      windowTimers.start = setTimeout(async () => {
+        bootstrap.allowUpload = true;
+        applyAllowUploadUI();
+        await refreshBootstrap(); // sincroniza tokens/janela
+      }, Math.max(0, start - now));
+    }
+
+    // Agenda fim
+    if (!isNaN(end) && now < end){
+      windowTimers.end = setTimeout(async () => {
+        bootstrap.allowUpload = false;
+        applyAllowUploadUI();
+        // se o aluno estiver na tela de envio, volta para o dashboard e avisa
+        if (!qs("#envio").classList.contains("hidden")){
+          hide(qs("#envio")); show(qs("#dashboard"));
+          alert("O período de envio foi encerrado.");
+        }
+        await refreshBootstrap();
+      }, Math.max(0, end - now));
+    }
+
+    // Poll de segurança a cada 60s (pega alterações manuais do professor)
+    windowTimers.poll = setInterval(async () => {
+      // Se já estamos fora da janela ou sem janela, para de checar
+      const n = Date.now();
+      if (isNaN(end) || n > end + 5*60*1000) { clearWindowTimers(); return; }
+      await refreshBootstrap();
+      // Se allowUpload mudou, UI já é ajustada pelo refreshBootstrap()
+    }, 60 * 1000);
+  }
+
   /* Helpers telefone */
   function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
   function isValidBRPhone(d){ return /^\d{10,11}$/.test(d); }
@@ -442,23 +546,17 @@
       // Próximo feedback / aula gravada
       const fb = bootstrap.feedback || {};
 
-      // pega as linhas já existentes no HTML
-      const rowDiaHora = qs("#fbDiaTxt").parentElement; // <p> que contém fbDiaTxt/fbHoraTxt
+      const rowDiaHora = qs("#fbDiaTxt").parentElement;
       const rowProf    = qs("#fbProf").parentElement;
       const rowSenha   = qs("#fbSenha").parentElement;
-      const rowInfo    = qs("#fbInfo");                 // já é o <p id="fbInfo">
+      const rowInfo    = qs("#fbInfo");
       const linkEl     = qs("#fbLink");
 
-      // cacheia o template original (com os dois <strong>)
-      if (!rowDiaHora.dataset.tpl) {
-        rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
-      }
+      if (!rowDiaHora.dataset.tpl) rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
 
-      // decide se há dados
       const hasDate    = !!(fb.dia || fb.hora);
       const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
 
-      // === ESTADO VAZIO: mostrar só "Aguarde a próxima data"
       if (!hasDate && !hasDetails){
         rowDiaHora.textContent = "Aguarde a próxima data";
         rowDiaHora.style.display = "";
@@ -467,20 +565,15 @@
         rowInfo.style.display  = "none";
         linkEl.style.display   = "none";
       } else {
-        // === ESTADO COM DADOS ===
         if (hasDate){
-          // restaura o template para recolocar os <strong id="fbDiaTxt"> e <strong id="fbHoraTxt">
           rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
           rowDiaHora.style.display = "";
-
-          // preenche o que tiver de dia/hora
           if (fb.dia){
             qs("#fbDiaTxt").textContent = fb.dia;
             qs("#fbDiaTxt").style.display = "inline";
           } else {
             qs("#fbDiaTxt").style.display = "none";
           }
-
           if (fb.hora){
             const sep = (fb.dia ? " • " : "");
             qs("#fbHoraTxt").textContent = sep + fb.hora;
@@ -490,44 +583,20 @@
           }
         } else {
           rowDiaHora.textContent = "";
-          rowDiaHora.style.display = "none"; // evita espaço em branco
+          rowDiaHora.style.display = "none";
         }
 
-        // Professor
-        if (fb.professor){
-          qs("#fbProf").textContent = fb.professor;
-          rowProf.style.display = "";
-        } else {
-          rowProf.style.display = "none";
-        }
+        if (fb.professor){ qs("#fbProf").textContent = fb.professor; rowProf.style.display = ""; }
+        else { rowProf.style.display = "none"; }
 
-        // Link
-        if (fb.link){
-          linkEl.href = fb.link;
-          linkEl.textContent = fb.link;
-          linkEl.style.display = "inline";
-        } else {
-          linkEl.removeAttribute("href");
-          linkEl.textContent = "";
-          linkEl.style.display = "none";
-        }
+        if (fb.link){ linkEl.href = fb.link; linkEl.textContent = fb.link; linkEl.style.display = "inline"; }
+        else { linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
 
-        // Senha
-        if (fb.senha){
-          qs("#fbSenha").textContent = fb.senha;
-          rowSenha.style.display = "";
-        } else {
-          rowSenha.style.display = "none";
-        }
+        if (fb.senha){ qs("#fbSenha").textContent = fb.senha; rowSenha.style.display = ""; }
+        else { rowSenha.style.display = "none"; }
 
-        // Info
-        if (fb.info){
-          rowInfo.textContent = fb.info;
-          rowInfo.style.display = "";
-        } else {
-          rowInfo.textContent = "";
-          rowInfo.style.display = "none";
-        }
+        if (fb.info){ rowInfo.textContent = fb.info; rowInfo.style.display = ""; }
+        else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
       }
 
       // Card da gravada
@@ -547,35 +616,10 @@
       tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
       artesTotal = Number(bootstrap.artesTotal || 0);
 
-      // Estado do botão de envio respeitando allowUpload
-      const permitir = !!bootstrap.allowUpload;
-      const btnEnvio = qs("#btnAbrirEnvio");
-      const prazoNote = qs("#prazoEnvioNote");
-
-      if (btnEnvio){
-        if (!permitir){
-          btnEnvio.disabled = true;
-          btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
-          btnEnvio.style.opacity = "0.8";
-          prazoNote.style.display = "none";
-        } else {
-          btnEnvio.disabled = false;
-          btnEnvio.textContent = "Envie os exercícios para feedback";
-          btnEnvio.style.opacity = "";
-
-          if (bootstrap.janela?.endISO){
-            const end = new Date(bootstrap.janela.endISO);
-            const hh = String(end.getHours()).padStart(2,"0");
-            const mm = String(end.getMinutes()).padStart(2,"0");
-
-            const diaSemana = (bootstrap.feedback?.dia || "").trim();
-            prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
-            prazoNote.style.display = "block";
-          } else {
-            prazoNote.style.display = "none";
-          }
-        }
-      }
+      // Aplica UI do botão com base na janela atual
+      applyAllowUploadUI();
+      // Agenda viradas de estado (abre/fecha sozinho)
+      scheduleUploadWindow();
 
       // Se primeiro login/sem telefone, pedir agora
       if (!primeiroLogin || !telefone){
@@ -731,6 +775,7 @@
       return;
     }
 
+    // trava também aqui, caso a janela tenha fechado milissegundos antes de clicar
     if (!bootstrap.allowUpload){
       alert("O envio só fica disponível após a nova data de feedback ser publicada.");
       return;
@@ -786,6 +831,12 @@
         }
         if (d.message === "envio_fora_da_janela"){
           alert("O envio só fica disponível após a nova data de feedback ser publicada e até pouco tempo após o horário da aula.");
+          // Garantia extra: marca como fechado e volta ao dashboard
+          bootstrap.allowUpload = false;
+          applyAllowUploadUI();
+          if (!qs("#envio").classList.contains("hidden")){
+            hide(qs("#envio")); show(qs("#dashboard"));
+          }
           return;
         }
         throw new Error(d.message || "Falha");
