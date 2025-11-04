@@ -179,7 +179,7 @@
       <div class="box-feedback">
 
         <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
-        <h3>Próximo feedback:</h3>
+        <h3 id="fbTitulo">Próximo feedback:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
 
@@ -337,10 +337,20 @@ const MAX_FILES = 3;
 function setLiveMode(on){
   const badge = qs("#liveBadge");
   const box   = qs(".box-feedback");
+  const title = qs("#fbTitulo");
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // é o <p> que contém dia/hora
+
   if (!badge || !box) return;
+
+  // tarja e destaque da caixa
   badge.style.display = on ? "block" : "none";
   box.classList.toggle("is-live", !!on);
+
+  // enquanto AO VIVO: some com o título e com a linha do "próximo feedback"
+  if (title)      title.style.display = on ? "none" : "";
+  if (rowDiaHora) rowDiaHora.style.display = on ? "none" : "";
 }
+
 function weekdayPtToIndex(dia){
   const map = { domingo:0, dom:0, "domingo.":0,
     segunda:1, "segunda-feira":1, seg:1,
@@ -369,32 +379,57 @@ function buildNextOccurrenceISO(dia, hora){
 }
 
 
-// Ajuste na regra do "ao vivo":
+// Ajuste na regra do "ao vivo"
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
   const hasDate = !!(fb.dia && fb.hora);
   const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
 
-  // se não tem data/hora OU não tem nenhum detalhe, não mostra a tarja
-  if (!hasDate || !hasAnyDetail){ setLiveMode(false); return; }
+  const title = qs("#fbTitulo");
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // <p> que contém dia/hora
 
-  const startISO = buildThisWeekOccurrenceISO(fb.dia, fb.hora);
-  if (!startISO){ setLiveMode(false); return; }
+  // Sem data/hora ou sem detalhes publicados -> não está ao vivo
+  if (!hasDate || !hasAnyDetail){
+    setLiveMode(false);
+    if (title) title.style.display = "";
+    if (rowDiaHora) rowDiaHora.style.display = "";
+    return;
+  }
+
+  const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
+  if (!startISO){
+    setLiveMode(false);
+    if (title) title.style.display = "";
+    if (rowDiaHora) rowDiaHora.style.display = "";
+    return;
+  }
 
   const start  = new Date(startISO).getTime();
   const durMin = Number(fb.duracaoMin ?? 120);
-  const end    = start + durMin*60*1000;
+  const end    = start + durMin * 60 * 1000;
   const now    = Date.now();
 
-  // não liga antes do professor publicar/atualizar (AtualizadoEm)
+  // Só considera ao vivo após a publicação/atualização do professor
   if (fb.atualizadoEm){
     const upd = new Date(fb.atualizadoEm).getTime();
-    if (!Number.isNaN(upd) && now < Math.max(upd, start)){ setLiveMode(false); return; }
+    if (!Number.isNaN(upd) && now < Math.max(upd, start)){
+      setLiveMode(false);
+      if (title) title.style.display = "";
+      if (rowDiaHora) rowDiaHora.style.display = "";
+      return;
+    }
   }
 
-  // "Ao vivo" só se a ocorrência desta semana estiver rolando agora
-  setLiveMode(now >= start && now <= end);
+  // Está ao vivo se now ∈ [start, end]
+  const live = now >= start && now <= end;
+  setLiveMode(live);
+
+  // Enquanto ao vivo, esconder título e dia/hora
+  if (title) title.style.display = live ? "none" : "";
+  if (rowDiaHora) rowDiaHora.style.display = live ? "none" : "";
 }
+
+
 
 /* Regras da tarja: usa só fb.dia + fb.hora (+ opcional atualizadoEm) */
 function updateLiveBadgeFromBootstrap(){
@@ -977,6 +1012,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
 
