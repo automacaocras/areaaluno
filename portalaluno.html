@@ -407,29 +407,20 @@ function buildNextOccurrenceISO(dia, hora){
   return t.toISOString();
 }
 function updateLiveBadgeFromBootstrap(){
-  const now = Date.now();
   const sISO = bootstrap?.janela?.startISO || null;
   const eISO = bootstrap?.janela?.endISO   || null;
 
   if (sISO && eISO){
+    const now = Date.now();
     const s = new Date(sISO).getTime();
     const e = new Date(eISO).getTime();
     setLiveMode(now >= s && now <= e);
-    return;
+  } else {
+    // Sem janela definida → nunca mostra
+    setLiveMode(false);
   }
-
-  const fb = bootstrap?.feedback || {};
-  if (fb.dia && fb.hora){
-    const guess = buildNextOccurrenceISO(fb.dia, fb.hora);
-    if (guess){
-      const s = new Date(guess).getTime();
-      const e = s + 120*60*1000; // 2h de janela estimada
-      setLiveMode(now >= s && now <= e);
-      return;
-    }
-  }
-  setLiveMode(false);
 }
+
 
   
   async function refreshBootstrap(){
@@ -457,47 +448,40 @@ function updateLiveBadgeFromBootstrap(){
 
 function scheduleUploadWindow(){
   clearWindowTimers();
-  if (!bootstrap?.janela){
-    // Se não houver janela, garante selo desligado
+
+  const sISO = bootstrap?.janela?.startISO || null;
+  const eISO = bootstrap?.janela?.endISO   || null;
+
+  // Sem janela → garante tarja desligada
+  if (!sISO || !eISO){
     setLiveMode(false);
     return;
   }
 
   const now   = Date.now();
-  const start = bootstrap.janela.startISO ? new Date(bootstrap.janela.startISO).getTime() : NaN;
-  const end   = bootstrap.janela.endISO   ? new Date(bootstrap.janela.endISO).getTime()   : NaN;
+  const start = new Date(sISO).getTime();
+  const end   = new Date(eISO).getTime();
 
-  // Estado imediato
-  if (!isNaN(start) && !isNaN(end)){
-    if (now < start) {
-      bootstrap.allowUpload = false;
-    } else if (now >= start && now <= end) {
-      bootstrap.allowUpload = true;
-    } else { // now > end
-      bootstrap.allowUpload = false;
-    }
+  // Estado imediato (e já ajusta UI)
+  bootstrap.allowUpload = (now >= start && now <= end);
+  setLiveMode(bootstrap.allowUpload);
+  applyAllowUploadUI();
 
-    // ✅ atualiza o selo SEMPRE com base no intervalo atual
-    setLiveMode(now >= start && now <= end);
-
-    applyAllowUploadUI();
-  }
-
-  // Agenda início
-  if (!isNaN(start) && now < start){
+  // Agenda início exato
+  if (now < start){
     windowTimers.start = setTimeout(async () => {
       bootstrap.allowUpload = true;
-      setLiveMode(true);              // liga o selo ao iniciar
+      updateLiveBadgeFromBootstrap(); // calcula pelo backend
       applyAllowUploadUI();
-      await refreshBootstrap();       // sincroniza tokens/janela
+      await refreshBootstrap();
     }, Math.max(0, start - now));
   }
 
-  // Agenda fim
-  if (!isNaN(end) && now < end){
+  // Agenda fim exato
+  if (now < end){
     windowTimers.end = setTimeout(async () => {
       bootstrap.allowUpload = false;
-      setLiveMode(false);             // desliga o selo ao encerrar
+      updateLiveBadgeFromBootstrap(); // calcula pelo backend
       applyAllowUploadUI();
       if (!qs("#envio").classList.contains("hidden")){
         hide(qs("#envio")); show(qs("#dashboard"));
@@ -507,15 +491,14 @@ function scheduleUploadWindow(){
     }, Math.max(0, end - now));
   }
 
-  // Poll de segurança a cada 60s (pega alterações manuais do professor)
+  // Poll de segurança
   windowTimers.poll = setInterval(async () => {
     const n = Date.now();
-    if (isNaN(end) || n > end + 5*60*1000) { clearWindowTimers(); return; }
-    await refreshBootstrap();
-    // setLiveMode() já é chamado dentro de refreshBootstrap() via updateLiveBadgeFromBootstrap(),
-    // mas se preferir pode manter só lá.
+    if (n > end + 5*60*1000) { clearWindowTimers(); return; }
+    await refreshBootstrap(); // isto já chama updateLiveBadgeFromBootstrap()
   }, 60 * 1000);
 }
+
 
 
   /* Helpers telefone */
@@ -992,4 +975,5 @@ updateLiveBadgeFromBootstrap();
   </div>
 </body>
 </html>
+
 
