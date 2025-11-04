@@ -435,7 +435,7 @@ function applyAllowUploadUI(){
 
   if (!bootstrap?.allowUpload){
     btnEnvio.disabled = true;
-    btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
+    btnEnvio.textContent = "Envio indisponível";
     btnEnvio.style.opacity = "0.8";
     if (prazoNote) prazoNote.style.display = "none";
   } else {
@@ -982,5 +982,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
