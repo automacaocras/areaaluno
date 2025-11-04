@@ -178,7 +178,7 @@
     <section id="dashboard">
       <div class="box-feedback">
 
-        <div id="liveBadge" class="live-badge">Estamos ao vivo</div>
+        <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
         <h3 id="fbTitulo">Próximo evento ao vivo:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
@@ -494,12 +494,15 @@ function applyAllowUploadUI(){
   if (!btnEnvio) return;
 
   if (!bootstrap?.allowUpload){
-    btnEnvio.disabled = true;
+    // ❌ Não usar disabled aqui, para continuar clicável
+    btnEnvio.removeAttribute("disabled");
+    btnEnvio.setAttribute("aria-disabled","true");
     btnEnvio.textContent = "Envio indisponível";
-    btnEnvio.style.opacity = "0.8";
+    btnEnvio.style.opacity = ""; // deixa pro CSS cuidar
     if (prazoNote) prazoNote.style.display = "none";
   } else {
-    btnEnvio.disabled = false;
+    btnEnvio.removeAttribute("aria-disabled");
+    btnEnvio.removeAttribute("disabled");
     btnEnvio.textContent = "Envie os exercícios para feedback";
     btnEnvio.style.opacity = "";
     if (prazoNote && bootstrap?.janela?.endISO){
@@ -514,6 +517,7 @@ function applyAllowUploadUI(){
     }
   }
 }
+
 
 /* timers da janela (apenas para o botão) */
 const windowTimers = { start:null, end:null, poll:null };
@@ -1060,6 +1064,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
 
