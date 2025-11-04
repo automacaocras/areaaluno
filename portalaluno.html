@@ -352,23 +352,22 @@ function weekdayPtToIndex(dia){
   const k = String(dia||"").toLowerCase().trim();
   return (k in map) ? map[k] : null;
 }
-// Substitui a antiga buildNextOccurrenceISO por esta:
-// -> calcula a ocorrência "desta semana" (incluindo hoje sem empurrar p/ semana que vem)
-// -> quem decide se está ao vivo é a janela (start..end)
-function buildThisWeekOccurrenceISO(dia, hora){
+
+function buildNextOccurrenceISO(dia, hora){
   const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
   if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
   const idx = weekdayPtToIndex(dia);
   if (idx === null) return null;
 
   const now = new Date();
-  // põe no mesmo dia desta semana (pode ficar no passado)
+  // ocorrência desta semana (pode ficar no passado se já passou hoje)
   const t = new Date(now);
   const delta = (idx - now.getDay() + 7) % 7;
   t.setDate(now.getDate() + delta);
   t.setHours(hh, mm, 0, 0);
   return t.toISOString();
 }
+
 
 // Ajuste na regra do "ao vivo":
 function updateLiveBadgeFromBootstrap(){
@@ -976,5 +975,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
