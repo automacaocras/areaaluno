@@ -179,7 +179,7 @@
       <div class="box-feedback">
 
         <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
-        <h3 id="fbTitulo">Próximo evento ao vivo:</h3>
+        <h3 id="fbTitulo">Próximo Evento ao vivo:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
 
@@ -399,6 +399,20 @@ function buildNextOccurrenceISO(dia, hora){
   t.setHours(hh, mm, 0, 0);
   return t.toISOString();
 }
+function buildThisWeekOccurrenceISO(dia, hora){
+  const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
+  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+  const idx = weekdayPtToIndex(dia);
+  if (idx === null) return null;
+
+  const now = new Date();
+  // última ocorrência no ciclo semanal (hoje, se for o mesmo dia)
+  const t = new Date(now);
+  const diff = (now.getDay() - idx + 7) % 7;
+  t.setDate(now.getDate() - diff);
+  t.setHours(hh, mm, 0, 0);
+  return t.toISOString();
+}
 
 
 // Ajuste na regra do "ao vivo"
@@ -409,19 +423,10 @@ function updateLiveBadgeFromBootstrap(){
   const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
 
   const title = qs("#fbTitulo");
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // <p> que contém dia/hora
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
 
-  // Sem data/hora ou sem detalhes publicados -> não está ao vivo
+  // Sem data/hora ou sem detalhes publicados -> não está ao vivo nem mostra nada extra
   if (!hasDate || !hasAnyDetail){
-    setLiveMode(false);
-    if (title) title.style.display = "";
-    if (rowDiaHora) rowDiaHora.style.display = "";
-    __wasLive = false; // reseta estado
-    return;
-  }
-
-  const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
-  if (!startISO){
     setLiveMode(false);
     if (title) title.style.display = "";
     if (rowDiaHora) rowDiaHora.style.display = "";
@@ -429,15 +434,26 @@ function updateLiveBadgeFromBootstrap(){
     return;
   }
 
-  const start  = new Date(startISO).getTime();
-  const durMin = Number(fb.duracaoMin ?? 120);
-  const end    = start + durMin * 60 * 1000;
-  const now    = Date.now();
+  const thisISO = buildThisWeekOccurrenceISO(fb.dia, fb.hora);
+  const nextISO = buildNextOccurrenceISO(fb.dia, fb.hora);
+  if (!thisISO || !nextISO){
+    setLiveMode(false);
+    if (title) title.style.display = "";
+    if (rowDiaHora) rowDiaHora.style.display = "";
+    __wasLive = false;
+    return;
+  }
 
-  // Só considera ao vivo após a publicação/atualização do professor
+  const durMin   = Number(fb.duracaoMin ?? 120);
+  const thisStart= new Date(thisISO).getTime();
+  const thisEnd  = thisStart + durMin*60*1000;
+  const nextStart= new Date(nextISO).getTime();
+  const now      = Date.now();
+
+  // Gatilho de publicação do professor
   if (fb.atualizadoEm){
     const upd = new Date(fb.atualizadoEm).getTime();
-    if (!Number.isNaN(upd) && now < Math.max(upd, start)){
+    if (!Number.isNaN(upd) && now < Math.max(upd, thisStart)){
       setLiveMode(false);
       if (title) title.style.display = "";
       if (rowDiaHora) rowDiaHora.style.display = "";
@@ -446,10 +462,8 @@ function updateLiveBadgeFromBootstrap(){
     }
   }
 
-  // Está ao vivo?
-  const live = now >= start && now <= end;
-
-  if (live){
+  // Ao vivo se estamos dentro da janela da ocorrência DESTA semana
+  if (now >= thisStart && now <= thisEnd){
     setLiveMode(true);
     if (title) title.style.display = "none";
     if (rowDiaHora) rowDiaHora.style.display = "none";
@@ -457,15 +471,16 @@ function updateLiveBadgeFromBootstrap(){
     return;
   }
 
-  // Já passou do horário → força UI "Aguarde a próxima data"
-  setLiveMode(false);
-  if (now > end){
-    renderFeedbackWaitingUI();   // limpa prof/link/senha e mostra "Aguarde a próxima data"
+  // Terminou a deste semana e ainda não começou a próxima -> aguarde
+  if (now > thisEnd && now < nextStart){
+    setLiveMode(false);
+    renderFeedbackWaitingUI(); // limpa prof/link/senha e mostra "Aguarde a próxima data"
     __wasLive = false;
     return;
   }
 
-  // Ainda antes do horário → deixa “Próximo feedback” normal (dia/hora visíveis)
+  // Caso contrário (antes da próxima) mostra "Próximo feedback" normal (dia/hora visíveis)
+  setLiveMode(false);
   if (title) title.style.display = "";
   if (rowDiaHora) rowDiaHora.style.display = "";
   __wasLive = false;
@@ -1028,4 +1043,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
