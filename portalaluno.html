@@ -703,10 +703,12 @@ async function carregarBootstrap(curso, email){
     }
 
     updateUIForTokens();
-  }catch(e){
-    alert(".");
-    location.replace("index.html");
-  }
+ } catch (e) {
+  console.error("Erro no carregarBootstrap:", e);
+  alert("❌ Falha ao carregar seus dados. Tente novamente.\n\nDetalhes técnicos: " + (e?.message || e));
+  location.replace("index.html");
+}
+
 }
 
 /* --------- Abertura de envio / listas --------- */
@@ -975,6 +977,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
 
