@@ -406,20 +406,86 @@ function buildNextOccurrenceISO(dia, hora){
   if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
   return t.toISOString();
 }
-function updateLiveBadgeFromBootstrap(){
-  const sISO = bootstrap?.janela?.startISO || null;
-  const eISO = bootstrap?.janela?.endISO   || null;
-
-  if (sISO && eISO){
-    const now = Date.now();
-    const s = new Date(sISO).getTime();
-    const e = new Date(eISO).getTime();
-    setLiveMode(now >= s && now <= e);
-  } else {
-    // Sem janela definida → nunca mostra
-    setLiveMode(false);
-  }
+<script>
+// ——— AO VIVO ———
+function setLiveMode(on){
+  const badge = qs("#liveBadge");
+  const box   = document.querySelector(".box-feedback");
+  if (!badge || !box) return;
+  badge.style.display = on ? "block" : "none";
+  box.classList.toggle("is-live", !!on);
 }
+
+// Converte "segunda", "ter", etc. -> 0..6
+function weekdayPtToIndex(dia){
+  const map = { domingo:0, dom:0, "domingo.":0,
+    segunda:1, "segunda-feira":1, seg:1,
+    terça:2, terca:2, "terça-feira":2, ter:2,
+    quarta:3, "quarta-feira":3, qua:3,
+    quinta:4, "quinta-feira":4, qui:4,
+    sexta:5, "sexta-feira":5, sex:5,
+    sábado:6, sabado:6, sáb:6, sab:6 };
+  const k = String(dia||"").toLowerCase().trim();
+  return (k in map) ? map[k] : null;
+}
+
+// Próxima ocorrência de (dia, hora) no fuso do navegador
+function buildNextOccurrenceISO(dia, hora){
+  const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
+  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+  const idx = weekdayPtToIndex(dia);
+  const now = new Date();
+  let t = new Date(now);
+  if (idx !== null){
+    const delta = (idx - now.getDay() + 7) % 7;
+    t.setDate(now.getDate() + delta);
+  }
+  t.setHours(hh, mm, 0, 0);
+  if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
+  return t.toISOString();
+}
+
+/**
+ * Regra ÚNICA da tarja:
+ *  - Só considerar fb.dia + fb.hora
+ *  - Duração padrão = 120 min (pode vir de bootstrap.feedback.duracaoMin)
+ *  - Se não tiver dia/hora OU professor limpou as infos → tarja OFF
+ *  - Ignorar completamente bootstrap.janela (isso só afeta o botão de envio)
+ *  - Opcional: se vier 'atualizadoEm' do backend, não liga a tarja antes dessa hora.
+ */
+function updateLiveBadgeFromBootstrap(){
+  const fb = bootstrap?.feedback || {};
+
+  // Se dados foram limpos, a tarja some
+  const hasDate = !!(fb.dia && fb.hora);
+  const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
+  if (!hasDate && !hasAnyDetail) { setLiveMode(false); return; }
+  if (!hasDate) { setLiveMode(false); return; }
+
+  // Calcula próximo início a partir de dia + hora
+  const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
+  if (!startISO) { setLiveMode(false); return; }
+
+  const start = new Date(startISO).getTime();                 // ms epoch
+  const durMin = Number(fb.duracaoMin ?? 120);
+  const end   = start + durMin * 60 * 1000;
+  const now   = Date.now();
+
+  // Honra "AtualizadoEm" da planilha, se vier do backend
+  // (impede tarja antes de o professor publicar/atualizar)
+  if (fb.atualizadoEm){
+    const upd = new Date(fb.atualizadoEm).getTime();          // aceita "2025-11-03T23:26:50-03:00"
+    if (!Number.isNaN(upd) && now < Math.max(upd, start)){
+      setLiveMode(false);
+      return;
+    }
+  }
+
+  setLiveMode(now >= start && now <= end);
+}
+
+</script>
+
 
 
   
@@ -446,15 +512,19 @@ function updateLiveBadgeFromBootstrap(){
     }
   }
 
+<script>
 function scheduleUploadWindow(){
   clearWindowTimers();
 
+  // A janela continua existindo apenas para controlar o BOTÃO de envio
   const sISO = bootstrap?.janela?.startISO || null;
   const eISO = bootstrap?.janela?.endISO   || null;
 
-  // Sem janela → garante tarja desligada
+  // Sem janela → botão travado, e seguimos avaliando a tarja via fb.dia/hora
   if (!sISO || !eISO){
-    setLiveMode(false);
+    bootstrap.allowUpload = false;
+    applyAllowUploadUI();
+    updateLiveBadgeFromBootstrap();
     return;
   }
 
@@ -462,20 +532,45 @@ function scheduleUploadWindow(){
   const start = new Date(sISO).getTime();
   const end   = new Date(eISO).getTime();
 
-  // Estado imediato (e já ajusta UI)
+  // Estado imediato do BOTÃO (tarja é avaliada separadamente)
   bootstrap.allowUpload = (now >= start && now <= end);
-  setLiveMode(bootstrap.allowUpload);
   applyAllowUploadUI();
+  updateLiveBadgeFromBootstrap();
 
-  // Agenda início exato
+  // Início
   if (now < start){
     windowTimers.start = setTimeout(async () => {
       bootstrap.allowUpload = true;
-      updateLiveBadgeFromBootstrap(); // calcula pelo backend
       applyAllowUploadUI();
       await refreshBootstrap();
+      updateLiveBadgeFromBootstrap();
     }, Math.max(0, start - now));
   }
+
+  // Fim
+  if (now < end){
+    windowTimers.end = setTimeout(async () => {
+      bootstrap.allowUpload = false;
+      applyAllowUploadUI();
+      if (!qs("#envio").classList.contains("hidden")){
+        hide(qs("#envio")); show(qs("#dashboard"));
+        alert("O período de envio foi encerrado.");
+      }
+      await refreshBootstrap();
+      updateLiveBadgeFromBootstrap();
+    }, Math.max(0, end - now));
+  }
+
+  // Poll de segurança
+  windowTimers.poll = setInterval(async () => {
+    const n = Date.now();
+    if (n > end + 5*60*1000) { clearWindowTimers(); }
+    await refreshBootstrap();
+    updateLiveBadgeFromBootstrap();
+  }, 60 * 1000);
+}
+</script>
+
 
   // Agenda fim exato
   if (now < end){
@@ -560,13 +655,39 @@ function scheduleUploadWindow(){
     qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
   }
 
-  document.addEventListener("DOMContentLoaded", async () => {
-    try{ sessao = JSON.parse(localStorage.getItem("sessao_portal")||"null"); }catch{}
-    if(!sessao || !sessao.email || !sessao.curso){
-      alert("Faça login para acessar.");
-      location.replace("index.html");
-      return;
-    }
+document.addEventListener("DOMContentLoaded", async () => {
+  try { sessao = JSON.parse(localStorage.getItem("sessao_portal") || "null"); } catch {}
+  if (!sessao || !sessao.email || !sessao.curso) {
+    alert("Faça login para acessar.");
+    location.replace("index.html");
+    return;
+  }
+
+  setLoading(true, "Carregando as informações...");
+  await carregarBootstrap(sessao.curso, sessao.email);
+  setLoading(false);
+
+  qs("#btnAbrirEnvio").onclick = abrirEnvio;
+  qs("#btnVoltarEnvio").onclick = () => { hide(qs("#envio")); show(qs("#dashboard")); window.scrollTo({top:0,behavior:"smooth"}); };
+  qs("#btnAddImagem").onclick  = addFileInput;
+  qs("#btnResetar").onclick    = resetFiles;
+  qs("#btnEnviar").onclick     = enviarExercicio;
+  qs("#btnVoltarMenu").onclick = () => { hide(qs("#sucesso")); show(qs("#dashboard")); };
+  qs("#btnSair").onclick       = () => { localStorage.removeItem("sessao_portal"); location.replace("index.html"); };
+
+  qs("#btnSalvarPhone").onclick   = savePhone;
+  qs("#btnCancelarPhone").onclick = hidePhoneModal;
+  qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
+
+  qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshBootstrap(); });
+
+  updateAddBtnVisibility();
+
+  // ✅ Reavalia a tarja periodicamente (fora do guard)
+  setInterval(updateLiveBadgeFromBootstrap, 15 * 1000);
+});
+
 
     setLoading(true, "Carregando as informações...");
     await carregarBootstrap(sessao.curso, sessao.email);
@@ -975,5 +1096,6 @@ updateLiveBadgeFromBootstrap();
   </div>
 </body>
 </html>
+
 
 
