@@ -1038,13 +1038,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
 
   qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshBootstrap(); });
+document.addEventListener("visibilitychange", () => { 
+  if (!document.hidden) refreshBootstrap(); 
+});
+
 
   updateAddBtnVisibility();
 
   // tarja “ao vivo” com avaliação fina
   updateLiveBadgeFromBootstrap();
   setInterval(updateLiveBadgeFromBootstrap, 15_000);
+  // Atualiza todo o bootstrap de tempos em tempos, mesmo sem janela de envio
+setInterval(refreshBootstrap, 45_000);  // 45s é um bom equilíbrio
+
+// Kick inicial para capturar uma atualização recém-publicada
+setTimeout(refreshBootstrap, 5_000);
+
 });
 </script>
  
@@ -1064,6 +1073,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
 
 
 
