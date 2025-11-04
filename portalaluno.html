@@ -329,7 +329,7 @@
 
     if (!bootstrap?.allowUpload){
       btnEnvio.disabled = true;
-      btnEnvio.textContent = "Envio de arte indisponível";
+      btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
       btnEnvio.style.opacity = "0.8";
       if (prazoNote) prazoNote.style.display = "none";
     } else {
@@ -343,6 +343,8 @@
         const diaSemana = (bootstrap.feedback?.dia || "").trim();
         prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
         prazoNote.style.display = "block";
+      } else if (prazoNote){
+        prazoNote.style.display = "none"; // ← esconde quando não houver prazo
       }
     }
   }
@@ -350,13 +352,16 @@
   async function refreshBootstrap(){
     // Reconsulta o backend para sincronizar (tokens, link, janela, etc.)
     try{
-      const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`);
+      const r = await fetch(
+        `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`,
+        { cache: 'no-store' } // ← evita cache
+      );
       const data = await r.json();
       // atualiza apenas os campos que importam para o botão/janela e contadores
-      bootstrap.allowUpload   = !!data.allowUpload;
-      bootstrap.janela        = data.janela || null;
+      bootstrap.allowUpload     = !!data.allowUpload;
+      bootstrap.janela          = data.janela || null;
       bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
-      tokensRestantes = bootstrap.tokensRestantes;
+      tokensRestantes           = bootstrap.tokensRestantes;
       applyAllowUploadUI();
       updateUIForTokens();
     }catch(e){
@@ -504,12 +509,20 @@
     // Atualiza UI quando escolher arquivos
     qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
 
+    // 🔄 Atualiza estado ao voltar o foco para a aba
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) refreshBootstrap();
+    });
+
     updateAddBtnVisibility();
   });
 
   async function carregarBootstrap(curso, email){
     try{
-      const r = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`);
+      const r = await fetch(
+        `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(curso)}&email=${encodeURIComponent(email)}`,
+        { cache:'no-store' } // ← evita cache
+      );
       bootstrap = await r.json();
 
       if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
@@ -875,5 +888,3 @@
   </div>
 </body>
 </html>
-
-
