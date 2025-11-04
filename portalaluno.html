@@ -490,30 +490,35 @@
       artesTotal = Number(bootstrap.artesTotal || 0);
 
       // Estado do botão de envio respeitando allowUpload
-      const permitir = !!bootstrap.allowUpload;
-      const btnEnvio = qs("#btnAbrirEnvio");
-      const prazoNote = qs("#prazoEnvioNote");
-      if (btnEnvio){
-        if (!permitir){
-          btnEnvio.disabled = true;
-          btnEnvio.textContent = "Envio indisponível no momento";
-          btnEnvio.style.opacity = "0.8";
-          prazoNote.style.display = "none";
-        } else {
-          btnEnvio.disabled = false;
-          btnEnvio.textContent = "Envie os exercícios para feedback";
-          btnEnvio.style.opacity = "";
-          if (bootstrap.janela?.endISO){
-            const end = new Date(bootstrap.janela.endISO);
-            const hh = String(end.getHours()).padStart(2,"0");
-            const mm = String(end.getMinutes()).padStart(2,"0");
-            prazoNote.textContent = `Envios liberados até ${hh}:${mm}.`;
-            prazoNote.style.display = "block";
-          } else {
-            prazoNote.style.display = "none";
-          }
-        }
-      }
+const permitir = !!bootstrap.allowUpload;
+const btnEnvio = qs("#btnAbrirEnvio");
+const prazoNote = qs("#prazoEnvioNote");
+
+if (btnEnvio){
+  if (!permitir){
+    btnEnvio.disabled = true;
+    btnEnvio.textContent = "Envio indisponível no momento";
+    btnEnvio.style.opacity = "0.8";
+    prazoNote.style.display = "none";
+  } else {
+    btnEnvio.disabled = false;
+    btnEnvio.textContent = "Envie os exercícios para feedback";
+    btnEnvio.style.opacity = "";
+
+    if (bootstrap.janela?.endISO){
+      const end = new Date(bootstrap.janela.endISO);
+      const hh = String(end.getHours()).padStart(2,"0");
+      const mm = String(end.getMinutes()).padStart(2,"0");
+
+      const diaSemana = (bootstrap.feedback?.dia || "").trim(); 
+      prazoNote.textContent = `Envios liberados até ${hh}:${mm}${diaSemana ? ` - ${diaSemana}` : ""}.`;
+      prazoNote.style.display = "block";
+    } else {
+      prazoNote.style.display = "none";
+    }
+  }
+}
+
 
       // Se primeiro login/sem telefone, pedir agora
       if (!primeiroLogin || !telefone){
@@ -762,3 +767,4 @@
   </div>
 </body>
 </html>
+
