@@ -352,20 +352,51 @@ function weekdayPtToIndex(dia){
   const k = String(dia||"").toLowerCase().trim();
   return (k in map) ? map[k] : null;
 }
-function buildNextOccurrenceISO(dia, hora){
+// Substitui a antiga buildNextOccurrenceISO por esta:
+// -> calcula a ocorrência "desta semana" (incluindo hoje sem empurrar p/ semana que vem)
+// -> quem decide se está ao vivo é a janela (start..end)
+function buildThisWeekOccurrenceISO(dia, hora){
   const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
   if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
   const idx = weekdayPtToIndex(dia);
+  if (idx === null) return null;
+
   const now = new Date();
-  let t = new Date(now);
-  if (idx !== null){
-    const delta = (idx - now.getDay() + 7) % 7;
-    t.setDate(now.getDate() + delta);
-  }
+  // põe no mesmo dia desta semana (pode ficar no passado)
+  const t = new Date(now);
+  const delta = (idx - now.getDay() + 7) % 7;
+  t.setDate(now.getDate() + delta);
   t.setHours(hh, mm, 0, 0);
-  if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
   return t.toISOString();
 }
+
+// Ajuste na regra do "ao vivo":
+function updateLiveBadgeFromBootstrap(){
+  const fb = bootstrap?.feedback || {};
+  const hasDate = !!(fb.dia && fb.hora);
+  const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
+
+  // se não tem data/hora OU não tem nenhum detalhe, não mostra a tarja
+  if (!hasDate || !hasAnyDetail){ setLiveMode(false); return; }
+
+  const startISO = buildThisWeekOccurrenceISO(fb.dia, fb.hora);
+  if (!startISO){ setLiveMode(false); return; }
+
+  const start  = new Date(startISO).getTime();
+  const durMin = Number(fb.duracaoMin ?? 120);
+  const end    = start + durMin*60*1000;
+  const now    = Date.now();
+
+  // não liga antes do professor publicar/atualizar (AtualizadoEm)
+  if (fb.atualizadoEm){
+    const upd = new Date(fb.atualizadoEm).getTime();
+    if (!Number.isNaN(upd) && now < Math.max(upd, start)){ setLiveMode(false); return; }
+  }
+
+  // "Ao vivo" só se a ocorrência desta semana estiver rolando agora
+  setLiveMode(now >= start && now <= end);
+}
+
 /* Regras da tarja: usa só fb.dia + fb.hora (+ opcional atualizadoEm) */
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
@@ -945,3 +976,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
