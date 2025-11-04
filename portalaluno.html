@@ -135,6 +135,25 @@
     .small-hint{font-size:12px;color:#666;text-align:center;margin-top:6px}
     .topbar-phone{font-weight:600;font-size:14px;margin-left:6px}
     .topbar-phone a{color:#000;text-decoration:underline;cursor:pointer}
+
+/* Selo “ao vivo” */
+.live-badge{
+  display:none;                 /* fica oculto por padrão */
+  width:max-content;
+  margin:0 auto 10px;
+  padding:6px 14px;
+  background:#c9f96a;           /* verde claro */
+  color:#1a1a1a;
+  border-radius:8px;
+  font-weight:800;
+}
+
+/* opcional: dar um “realce” na caixa quando ao vivo */
+.box-feedback.is-live{
+  box-shadow:0 0 0 3px rgba(114,210,0,.25), 0 8px 24px rgba(0,0,0,.06);
+}
+
+    
   </style>
 </head>
 <body>
@@ -158,6 +177,8 @@
     <!-- DASHBOARD -->
     <section id="dashboard">
       <div class="box-feedback">
+
+        <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
         <h3>Próximo Feedback:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
@@ -349,6 +370,68 @@
     }
   }
 
+// ——— AO VIVO ———
+function setLiveMode(on){
+  const badge = qs("#liveBadge");
+  const box   = document.querySelector(".box-feedback");
+  if (!badge || !box) return;
+  badge.style.display = on ? "block" : "none";
+  box.classList.toggle("is-live", !!on);
+}
+
+// Se houver start/end da janela vindos do backend, usamos isso.
+// Se não houver, tentamos um fallback com dia+hora (janela de ~120 min).
+function weekdayPtToIndex(dia){
+  const map = { domingo:0, dom:0, "domingo.":0,
+    segunda:1, "segunda-feira":1, seg:1,
+    terça:2, terca:2, "terça-feira":2, ter:2,
+    quarta:3, "quarta-feira":3, qua:3,
+    quinta:4, "quinta-feira":4, qui:4,
+    sexta:5, "sexta-feira":5, sex:5,
+    sábado:6, sabado:6, sáb:6, sab:6 };
+  const k = String(dia||"").toLowerCase().trim();
+  return (k in map) ? map[k] : null;
+}
+function buildNextOccurrenceISO(dia, hora){
+  const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
+  if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
+  const idx = weekdayPtToIndex(dia);
+  const now = new Date();
+  let t = new Date(now);
+  if (idx !== null){
+    const delta = (idx - now.getDay() + 7) % 7;
+    t.setDate(now.getDate() + delta);
+  }
+  t.setHours(hh, mm, 0, 0);
+  if (t.getTime() < now.getTime()) t.setDate(t.getDate()+7);
+  return t.toISOString();
+}
+function updateLiveBadgeFromBootstrap(){
+  const now = Date.now();
+  const sISO = bootstrap?.janela?.startISO || null;
+  const eISO = bootstrap?.janela?.endISO   || null;
+
+  if (sISO && eISO){
+    const s = new Date(sISO).getTime();
+    const e = new Date(eISO).getTime();
+    setLiveMode(now >= s && now <= e);
+    return;
+  }
+
+  const fb = bootstrap?.feedback || {};
+  if (fb.dia && fb.hora){
+    const guess = buildNextOccurrenceISO(fb.dia, fb.hora);
+    if (guess){
+      const s = new Date(guess).getTime();
+      const e = s + 120*60*1000; // 2h de janela estimada
+      setLiveMode(now >= s && now <= e);
+      return;
+    }
+  }
+  setLiveMode(false);
+}
+
+  
   async function refreshBootstrap(){
     // Reconsulta o backend para sincronizar (tokens, link, janela, etc.)
     try{
@@ -360,67 +443,80 @@
       // atualiza apenas os campos que importam para o botão/janela e contadores
       bootstrap.allowUpload     = !!data.allowUpload;
       bootstrap.janela          = data.janela || null;
+      bootstrap.feedback        = data.feedback || bootstrap.feedback; // ✅
       bootstrap.tokensRestantes = Number(data.tokensRestantes ?? tokensRestantes);
       tokensRestantes           = bootstrap.tokensRestantes;
       applyAllowUploadUI();
       updateUIForTokens();
+      updateLiveBadgeFromBootstrap();
+
     }catch(e){
       // silencioso
     }
   }
 
-  function scheduleUploadWindow(){
-    clearWindowTimers();
-    if (!bootstrap?.janela) return;
-
-    const now   = Date.now();
-    const start = bootstrap.janela.startISO ? new Date(bootstrap.janela.startISO).getTime() : NaN;
-    const end   = bootstrap.janela.endISO   ? new Date(bootstrap.janela.endISO).getTime()   : NaN;
-
-    // Estado imediato
-    if (!isNaN(start) && !isNaN(end)){
-      if (now < start) {
-        bootstrap.allowUpload = false;
-      } else if (now >= start && now <= end) {
-        bootstrap.allowUpload = true;
-      } else if (now > end) {
-        bootstrap.allowUpload = false;
-      }
-      applyAllowUploadUI();
-    }
-
-    // Agenda início
-    if (!isNaN(start) && now < start){
-      windowTimers.start = setTimeout(async () => {
-        bootstrap.allowUpload = true;
-        applyAllowUploadUI();
-        await refreshBootstrap(); // sincroniza tokens/janela
-      }, Math.max(0, start - now));
-    }
-
-    // Agenda fim
-    if (!isNaN(end) && now < end){
-      windowTimers.end = setTimeout(async () => {
-        bootstrap.allowUpload = false;
-        applyAllowUploadUI();
-        // se o aluno estiver na tela de envio, volta para o dashboard e avisa
-        if (!qs("#envio").classList.contains("hidden")){
-          hide(qs("#envio")); show(qs("#dashboard"));
-          alert("O período de envio foi encerrado.");
-        }
-        await refreshBootstrap();
-      }, Math.max(0, end - now));
-    }
-
-    // Poll de segurança a cada 60s (pega alterações manuais do professor)
-    windowTimers.poll = setInterval(async () => {
-      // Se já estamos fora da janela ou sem janela, para de checar
-      const n = Date.now();
-      if (isNaN(end) || n > end + 5*60*1000) { clearWindowTimers(); return; }
-      await refreshBootstrap();
-      // Se allowUpload mudou, UI já é ajustada pelo refreshBootstrap()
-    }, 60 * 1000);
+function scheduleUploadWindow(){
+  clearWindowTimers();
+  if (!bootstrap?.janela){
+    // Se não houver janela, garante selo desligado
+    setLiveMode(false);
+    return;
   }
+
+  const now   = Date.now();
+  const start = bootstrap.janela.startISO ? new Date(bootstrap.janela.startISO).getTime() : NaN;
+  const end   = bootstrap.janela.endISO   ? new Date(bootstrap.janela.endISO).getTime()   : NaN;
+
+  // Estado imediato
+  if (!isNaN(start) && !isNaN(end)){
+    if (now < start) {
+      bootstrap.allowUpload = false;
+    } else if (now >= start && now <= end) {
+      bootstrap.allowUpload = true;
+    } else { // now > end
+      bootstrap.allowUpload = false;
+    }
+
+    // ✅ atualiza o selo SEMPRE com base no intervalo atual
+    setLiveMode(now >= start && now <= end);
+
+    applyAllowUploadUI();
+  }
+
+  // Agenda início
+  if (!isNaN(start) && now < start){
+    windowTimers.start = setTimeout(async () => {
+      bootstrap.allowUpload = true;
+      setLiveMode(true);              // liga o selo ao iniciar
+      applyAllowUploadUI();
+      await refreshBootstrap();       // sincroniza tokens/janela
+    }, Math.max(0, start - now));
+  }
+
+  // Agenda fim
+  if (!isNaN(end) && now < end){
+    windowTimers.end = setTimeout(async () => {
+      bootstrap.allowUpload = false;
+      setLiveMode(false);             // desliga o selo ao encerrar
+      applyAllowUploadUI();
+      if (!qs("#envio").classList.contains("hidden")){
+        hide(qs("#envio")); show(qs("#dashboard"));
+        alert("O período de envio foi encerrado.");
+      }
+      await refreshBootstrap();
+    }, Math.max(0, end - now));
+  }
+
+  // Poll de segurança a cada 60s (pega alterações manuais do professor)
+  windowTimers.poll = setInterval(async () => {
+    const n = Date.now();
+    if (isNaN(end) || n > end + 5*60*1000) { clearWindowTimers(); return; }
+    await refreshBootstrap();
+    // setLiveMode() já é chamado dentro de refreshBootstrap() via updateLiveBadgeFromBootstrap(),
+    // mas se preferir pode manter só lá.
+  }, 60 * 1000);
+}
+
 
   /* Helpers telefone */
   function onlyDigits(s){ return String(s||"").replace(/\D+/g,""); }
@@ -577,6 +673,7 @@
         rowSenha.style.display = "none";
         rowInfo.style.display  = "none";
         linkEl.style.display   = "none";
+        setLiveMode(false);
       } else {
         if (hasDate){
           rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
@@ -612,6 +709,9 @@
         else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
       }
 
+      // Atualiza o selo verde conforme os dados atuais
+updateLiveBadgeFromBootstrap();
+
       // Card da gravada
       const gravCard = qs("#gravadaCard");
       const gravURL  = String(fb.aulaGravada || "").trim();
@@ -644,6 +744,10 @@
       alert(".");
       location.replace("index.html");
     }
+
+
+
+    
   }
 
   async function abrirEnvio(){
@@ -888,3 +992,4 @@
   </div>
 </body>
 </html>
+
