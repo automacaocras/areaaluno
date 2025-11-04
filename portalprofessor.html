@@ -340,20 +340,45 @@
     return { link, hora, dia };
   }
 
-  function renderNextLive(src){
-    const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
-    const dia  = String(src?.dia || '').trim();
-    const hora = String(src?.hora || '').trim();
-    const prof = String(src?.professor || bootstrap?.nome || '').trim();
-    const link = String(src?.link || '').trim();
-    const parts = []; if (dia) parts.push(dia); if (hora) parts.push(hora);
-    let texto = parts.join(', '); if (prof) texto += (texto ? ' com ' : 'Com ') + prof;
-    const hasText = !!texto, hasLink = !!link;
-    txt.textContent = hasText ? texto : '—';
-    if (hasLink){ a.textContent = link; a.href = link; a.classList.remove('hidden'); }
-    else { a.textContent = ''; a.removeAttribute('href'); a.classList.add('hidden'); }
-    box.classList.toggle('hidden', !(hasText || hasLink));
+function renderNextLive(src){
+  const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
+
+  const dia  = String(src?.dia || '').trim();
+  const hora = String(src?.hora || '').trim();
+  const prof = String(src?.professor || '').trim();   // ← sem fallback
+  const link = String(src?.link || '').trim();
+
+  const parts = [];
+  if (dia)  parts.push(dia);
+  if (hora) parts.push(hora);
+
+  // só mostra "com <prof>" se houver dia ou hora + professor na planilha
+  let texto = parts.join(', ');
+  if (texto && prof) texto += ' com ' + prof;
+
+  const hasText = !!texto;
+  const hasLink = !!link;
+
+  txt.textContent = hasText ? texto : '—';
+
+  if (hasLink){
+    a.textContent = link;
+    a.href = link;
+    a.classList.remove('hidden');
+  } else {
+    a.textContent = '';
+    a.removeAttribute('href');
+    a.classList.add('hidden');
   }
+
+  // se não houver nada, esconde o bloco
+  box.classList.toggle('hidden', !(hasText || hasLink));
+}
+
+
+
+
+  
   function renderGravada(src){
     const p = qs('#gravadaInfo'), a = qs('#gravadaHref'), url = String(src?.aulaGravada || '').trim();
     if (url){ a.textContent = url; a.href = url; p.classList.remove('hidden'); }
@@ -684,6 +709,7 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
 </div>
 </body>
 </html>
+
 
 
 
