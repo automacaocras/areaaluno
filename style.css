@@ -197,3 +197,11 @@ button:disabled{ background:#fffaaa; cursor:not-allowed; }
   .btn-band { padding: 14px 12px; font-size: 15px; }
   .panel { padding: 14px; }
 }
+
+/* Estado visual "indisponível", porém clicável */
+.btn-cta[aria-disabled="true"]{
+  opacity: .8;
+  filter: saturate(.7);
+  cursor: pointer;          /* mantém clicável */
+  pointer-events: auto;     /* garante clique mesmo com estilos herdados */
+}
