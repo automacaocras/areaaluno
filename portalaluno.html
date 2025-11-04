@@ -179,7 +179,7 @@
       <div class="box-feedback">
 
         <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
-        <h3 id="fbTitulo">Próximo Evento ao vivo:</h3>
+        <h3 id="fbTitulo">Próximo evento ao vivo:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
 
@@ -526,105 +526,12 @@ function clearWindowTimers(){
   if (windowTimers.end)   clearTimeout(windowTimers.end),   windowTimers.end=null;
   if (windowTimers.poll)  clearInterval(windowTimers.poll), windowTimers.poll=null;
 }
-
-
-function renderFeedbackCardFromBootstrap(){
-  const fb = bootstrap?.feedback || {};
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
-  const rowProf    = qs("#fbProf")?.parentElement;
-  const rowSenha   = qs("#fbSenha")?.parentElement;
-  const rowInfo    = qs("#fbInfo");
-  const linkEl     = qs("#fbLink");
-
-  if (rowDiaHora && !rowDiaHora.dataset.tpl) {
-    rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
-  }
-  const hasDate    = !!(fb.dia || fb.hora);
-  const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
-
-  if (!hasDate && !hasDetails){
-    // estado “aguarde”
-    rowDiaHora.textContent   = "Aguarde a próxima data";
-    rowDiaHora.style.display = "";
-    if (rowProf)  rowProf.style.display  = "none";
-    if (rowSenha) rowSenha.style.display = "none";
-    if (rowInfo){ rowInfo.textContent = ""; rowInfo.style.display = "none"; }
-    if (linkEl){ linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
-  } else {
-    // popula dia/hora
-    if (hasDate){
-      rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
-      rowDiaHora.style.display = "";
-      if (fb.dia){
-        qs("#fbDiaTxt").textContent = fb.dia;
-        qs("#fbDiaTxt").style.display = "inline";
-      } else {
-        qs("#fbDiaTxt").style.display = "none";
-      }
-      if (fb.hora){
-        const sep = (fb.dia ? " • " : "");
-        qs("#fbHoraTxt").textContent = sep + fb.hora;
-        qs("#fbHoraTxt").style.display = "inline";
-      } else {
-        qs("#fbHoraTxt").style.display = "none";
-      }
-    } else {
-      rowDiaHora.textContent = "";
-      rowDiaHora.style.display = "none";
-    }
-
-    // professor, link, senha, info
-    if (rowProf)  rowProf.style.display  = fb.professor ? "" : "none";
-    if (fb.professor) qs("#fbProf").textContent = fb.professor;
-
-    if (fb.link){
-      linkEl.href = fb.link;
-      linkEl.textContent = fb.link;
-      linkEl.style.display = "inline";
-    } else {
-      linkEl.removeAttribute("href");
-      linkEl.textContent = "";
-      linkEl.style.display = "none";
-    }
-
-    if (rowSenha) rowSenha.style.display = fb.senha ? "" : "none";
-    if (fb.senha) qs("#fbSenha").textContent = fb.senha;
-
-    if (rowInfo){
-      if (fb.info){ rowInfo.textContent = fb.info; rowInfo.style.display = ""; }
-      else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
-    }
-  }
-
-  // gravada
-  const gravCard = qs("#gravadaCard");
-  const gravURL  = String(fb.aulaGravada || "").trim();
-  if (gravURL){
-    qs("#ultimaGravada").href = gravURL;
-    qs("#ultimaGravada").textContent = gravURL;
-    if (gravCard) gravCard.style.display = "block";
-  } else {
-    qs("#ultimaGravada").removeAttribute("href");
-    qs("#ultimaGravada").textContent = "";
-    if (gravCard) gravCard.style.display = "none";
-  }
-
-  // por fim, recalcula selo/ocultações
-  updateLiveBadgeFromBootstrap();
-}
-
-  
 async function refreshBootstrap(){
   try{
-    const url  = `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`;
+    const url = `${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`;
     const resp = await fetch(url, { cache: "no-store" });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json() || {};
-
-    // snapshots para detectar mudanças
-    const prevJanela    = bootstrap?.janela ? JSON.stringify(bootstrap.janela) : null;
-    const prevAllow     = !!bootstrap?.allowUpload;
-    const prevFeedback  = bootstrap?.feedback ? JSON.stringify(bootstrap.feedback) : null;
 
     // garante objeto
     if (!bootstrap || typeof bootstrap !== "object") bootstrap = {};
@@ -633,7 +540,7 @@ async function refreshBootstrap(){
     bootstrap.allowUpload = !!data.allowUpload;
     bootstrap.janela      = data.janela ?? null;
 
-    // feedback sempre como objeto
+    // força {} quando feedback vier null/undefined/""
     bootstrap.feedback = (data.feedback && typeof data.feedback === "object") ? data.feedback : {};
 
     // tokens
@@ -641,36 +548,15 @@ async function refreshBootstrap(){
     bootstrap.tokensRestantes = Number.isFinite(t) ? t : (bootstrap.tokensRestantes ?? 0);
     tokensRestantes = bootstrap.tokensRestantes;
 
-    // detectar mudanças relevantes
-    const changedJanela   = (bootstrap.janela ? JSON.stringify(bootstrap.janela) : null) !== prevJanela;
-    const changedAllow    = (!!bootstrap.allowUpload) !== prevAllow;
-    const changedFeedback = (bootstrap.feedback ? JSON.stringify(bootstrap.feedback) : null) !== prevFeedback;
-
-    // UI do botão / notas
+    // aplica UI
     applyAllowUploadUI();
-
-    // Reagendar timers da janela só quando necessário
-    if (changedJanela || changedAllow) {
-      scheduleUploadWindow();
-    }
-
-    // Re-render do card de feedback (dia/hora, prof, link, senha, gravada)
-    if (changedFeedback) {
-      renderFeedbackCardFromBootstrap();
-    }
-
-    // Tarja verde e estados finos
-    updateLiveBadgeFromBootstrap();
-
-    // UX de tokens/botões do envio
     updateUIForTokens();
-
+    updateLiveBadgeFromBootstrap(); // recalcula tarja/estado do bloco
   } catch (e){
     console.error("refreshBootstrap() falhou:", e);
     // silencioso para não incomodar o aluno
   }
 }
-
 
 function scheduleUploadWindow(){
   clearWindowTimers();
@@ -806,10 +692,9 @@ async function carregarBootstrap(curso, email){
 
     // Dias restantes
     const dr = +bootstrap.diasRestantes || 0;
-qs("#diasRestantes").textContent = dr > 0
-  ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
-  : "Acesso expirado.";
-
+    qs("#diasRestantes").textContent = dr > 0
+      ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
+      : "Acesso expirado.";
 
     // Cupom
     if (dr <= 30 && bootstrap.desconto?.cupom){
@@ -819,30 +704,108 @@ qs("#diasRestantes").textContent = dr > 0
       qs("#cupomLink").href = bootstrap.desconto.link;
     }
 
-    // >>> Renderização centralizada do card de feedback / gravada
-    renderFeedbackCardFromBootstrap();
+    // Próximo feedback / aula gravada
+    const fb = bootstrap.feedback || {};
+    const rowDiaHora = qs("#fbDiaTxt").parentElement;
+    const rowProf    = qs("#fbProf").parentElement;
+    const rowSenha   = qs("#fbSenha").parentElement;
+    const rowInfo    = qs("#fbInfo");
+    const linkEl     = qs("#fbLink");
+
+    if (!rowDiaHora.dataset.tpl) rowDiaHora.dataset.tpl = rowDiaHora.innerHTML;
+
+    const hasDate    = !!(fb.dia || fb.hora);
+    const hasDetails = !!(fb.professor || fb.senha || fb.info || fb.link);
+
+    if (!hasDate && !hasDetails){
+      rowDiaHora.textContent = "Aguarde a próxima data";
+      rowDiaHora.style.display = "";
+      rowProf.style.display  = "none";
+      rowSenha.style.display = "none";
+      rowInfo.style.display  = "none";
+      linkEl.style.display   = "none";
+      setLiveMode(false);
+    } else {
+      if (hasDate){
+        rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
+        rowDiaHora.style.display = "";
+        if (fb.dia){
+          qs("#fbDiaTxt").textContent = fb.dia;
+          qs("#fbDiaTxt").style.display = "inline";
+        } else {
+          qs("#fbDiaTxt").style.display = "none";
+        }
+        if (fb.hora){
+          const sep = (fb.dia ? " • " : "");
+          qs("#fbHoraTxt").textContent = sep + fb.hora;
+          qs("#fbHoraTxt").style.display = "inline";
+        } else {
+          qs("#fbHoraTxt").style.display = "none";
+        }
+      } else {
+        rowDiaHora.textContent = "";
+        rowDiaHora.style.display = "none";
+      }
+
+      if (fb.professor){ qs("#fbProf").textContent = fb.professor; rowProf.style.display = ""; }
+      else { rowProf.style.display = "none"; }
+
+if (fb.link){
+  linkEl.href = fb.link;
+  linkEl.textContent = "Entrar na aula";
+  linkEl.setAttribute("aria-label", "Entrar na aula ao vivo");
+  linkEl.style.display = "inline";
+} else {
+  linkEl.removeAttribute("href");
+  linkEl.textContent = "";
+  linkEl.style.display = "none";
+}
+
+
+      if (fb.senha){ qs("#fbSenha").textContent = fb.senha; rowSenha.style.display = ""; }
+      else { rowSenha.style.display = "none"; }
+
+      if (fb.info){ rowInfo.textContent = fb.info; rowInfo.style.display = ""; }
+      else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
+    }
+
+    // Atualiza o selo verde conforme os dados atuais
+    updateLiveBadgeFromBootstrap();
+
+    // Card da gravada
+    const gravCard = qs("#gravadaCard");
+    const gravURL  = String(fb.aulaGravada || "").trim();
+    if (gravURL){
+      qs("#ultimaGravada").href = gravURL;
+      qs("#ultimaGravada").textContent = gravURL;
+      if (gravCard) gravCard.style.display = "block";
+    } else {
+      qs("#ultimaGravada").removeAttribute("href");
+      qs("#ultimaGravada").textContent = "";
+      if (gravCard) gravCard.style.display = "none";
+    }
 
     // Tokens e artes
     tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
     artesTotal = Number(bootstrap.artesTotal || 0);
 
-    // Botão de envio + timers
+    // Aplica UI do botão com base na janela atual + agenda viradas
     applyAllowUploadUI();
     scheduleUploadWindow();
 
-    // Telefone no 1º login
+    // Se primeiro login/sem telefone, pedir agora
     if (!primeiroLogin || !telefone){
       setTimeout(showPhoneModal, 300);
     }
 
     updateUIForTokens();
-  } catch (e) {
-    console.error("Erro no carregarBootstrap:", e);
-    alert("❌ Falha ao carregar seus dados. Tente novamente.\n\nDetalhes técnicos: " + (e?.message || e));
-    location.replace("index.html");
-  }
+ } catch (e) {
+  console.error("Erro no carregarBootstrap:", e);
+  alert("❌ Falha ao carregar seus dados. Tente novamente.\n\nDetalhes técnicos: " + (e?.message || e));
+  location.replace("index.html");
 }
 
+}
 
 /* --------- Abertura de envio / listas --------- */
 async function abrirEnvio(){
@@ -1084,22 +1047,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   qs("#phoneInput").addEventListener("input", e => { e.target.value = formatBRPhone(e.target.value); });
 
   qs("#filesWrap").addEventListener("change", () => updateUIForTokens());
-document.addEventListener("visibilitychange", () => { 
-  if (!document.hidden) refreshBootstrap(); 
-});
-
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshBootstrap(); });
 
   updateAddBtnVisibility();
 
   // tarja “ao vivo” com avaliação fina
   updateLiveBadgeFromBootstrap();
   setInterval(updateLiveBadgeFromBootstrap, 15_000);
-  // Atualiza todo o bootstrap de tempos em tempos, mesmo sem janela de envio
-setInterval(refreshBootstrap, 45_000);  // 45s é um bom equilíbrio
-
-// Kick inicial para capturar uma atualização recém-publicada
-setTimeout(refreshBootstrap, 5_000);
-
 });
 </script>
  
@@ -1119,10 +1073,6 @@ setTimeout(refreshBootstrap, 5_000);
   </div>
 </body>
 </html>
-
-
-
-
 
 
 
