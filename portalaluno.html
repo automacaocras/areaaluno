@@ -402,65 +402,29 @@ function buildNextOccurrenceISO(dia, hora){
 
 
 // Ajuste na regra do "ao vivo"
-// Ajuste na regra do "ao vivo"
-function updateLiveBadgeFromBootstrap(){
-  const fb = bootstrap?.feedback || {};
-  const hasDate = !!(fb.dia && fb.hora);
-  const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
+  // Está ao vivo?
+  const live = now >= start && now <= end;
 
-  const title = qs("#fbTitulo");
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // <p> que contém dia/hora
-
-  // Sem data/hora ou sem detalhes publicados -> não está ao vivo
-  if (!hasDate || !hasAnyDetail){
-    setLiveMode(false);
-    if (title) title.style.display = "";
-    if (rowDiaHora) rowDiaHora.style.display = "";
-    __wasLive = false; // reseta estado
+  if (live){
+    setLiveMode(true);
+    if (title) title.style.display = "none";
+    if (rowDiaHora) rowDiaHora.style.display = "none";
+    __wasLive = true;
     return;
   }
 
-  const startISO = buildNextOccurrenceISO(fb.dia, fb.hora);
-  if (!startISO){
-    setLiveMode(false);
-    if (title) title.style.display = "";
-    if (rowDiaHora) rowDiaHora.style.display = "";
+  // Já passou do horário → força UI "Aguarde a próxima data"
+  setLiveMode(false);
+  if (now > end){
+    renderFeedbackWaitingUI();   // limpa prof/link/senha e escreve "Aguarde a próxima data"
     __wasLive = false;
     return;
   }
 
-  const start  = new Date(startISO).getTime();
-  const durMin = Number(fb.duracaoMin ?? 120);
-  const end    = start + durMin * 60 * 1000;
-  const now    = Date.now();
-
-  // Só considera ao vivo após a publicação/atualização do professor
-  if (fb.atualizadoEm){
-    const upd = new Date(fb.atualizadoEm).getTime();
-    if (!Number.isNaN(upd) && now < Math.max(upd, start)){
-      setLiveMode(false);
-      if (title) title.style.display = "";
-      if (rowDiaHora) rowDiaHora.style.display = "";
-      __wasLive = false;
-      return;
-    }
-  }
-
-  // Está ao vivo se now ∈ [start, end]
-  const live = now >= start && now <= end;
-  setLiveMode(live);
-
-  // Enquanto ao vivo, esconder título e dia/hora
-  if (title) title.style.display = live ? "none" : "";
-  if (rowDiaHora) rowDiaHora.style.display = live ? "none" : "";
-
-  // Se acabou de sair do ao vivo, troca para “Aguarde a próxima data”
-  if (__wasLive && !live && now > end){
-    renderFeedbackWaitingUI();
-  }
-  __wasLive = live;
-}
-
+  // Ainda antes do horário → deixa “Próximo feedback” normal (dia/hora visíveis)
+  if (title) title.style.display = "";
+  if (rowDiaHora) rowDiaHora.style.display = "";
+  __wasLive = false;
 
 
 /* --------- UI do botão de envio (controlada por janela start/end) --------- */
@@ -1018,3 +982,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
+
