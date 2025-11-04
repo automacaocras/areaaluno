@@ -497,7 +497,7 @@ const prazoNote = qs("#prazoEnvioNote");
 if (btnEnvio){
   if (!permitir){
     btnEnvio.disabled = true;
-    btnEnvio.textContent = "Envio indisponível no momento";
+    btnEnvio.textContent = "Envio indisponível. Aguarde o próximo feedback";
     btnEnvio.style.opacity = "0.8";
     prazoNote.style.display = "none";
   } else {
@@ -767,4 +767,5 @@ if (btnEnvio){
   </div>
 </body>
 </html>
+
 
