@@ -24,14 +24,14 @@
   <link rel="canonical" href="http://areadosartistas.com.br/areaaluno/portalaluno.html">
   <meta property="og:url" content="http://areadosartistas.com.br/areaaluno/portalaluno.html">
 
-  <!-- ✅ Imagem correta no GitHub Pages -->
+  <!-- ✅ Imagem correta -->
   <meta property="og:image" content="http://areadosartistas.com.br/areaaluno/assets/wppcompartilhar.png">
   <meta property="og:image:secure_url" content="http://areadosartistas.com.br/areaaluno/assets/wppcompartilhar.png">
   <meta property="og:image:type" content="image/png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
-  <!-- Guard: exige sessão e perfil aluno (executa o quanto antes) -->
+  <!-- Guard: exige sessão e perfil aluno -->
   <script>
     (function enforceAlunoRole() {
       try {
@@ -64,64 +64,24 @@
   <link rel="stylesheet" href="style.css?v=7">
 
   <style>
-    .topbar{
-      width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);
-      background:#e6b200;color:#000;font-weight:800;text-align:center;
-      padding:12px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
-    }
+    .topbar{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);background:#e6b200;color:#000;font-weight:800;text-align:center;padding:12px 0;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08)}
     .curso-logo{width:200px;max-width:60vw;height:auto;display:block;margin:10px auto 6px}
     .dias-restantes{font-weight:800;margin:8px 0 6px;text-align:center}
     .dias-danger{color:#d93025}
-
-    .card,.box-feedback{
-      max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;
-      border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center;
-    }
-
+    .card,.box-feedback{max-width:900px;margin:14px auto;background:#fff;border:1px solid #f2e3a6;border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.06);text-align:center}
     label{display:block;text-align:left;font-weight:700;margin-top:10px;margin-bottom:4px}
     select,textarea,input[type="file"]{width:100%;max-width:100%;box-sizing:border-box}
     textarea{min-height:120px;border-radius:10px;border:1px solid #ccc;padding:10px}
-
-    .btn-cta{
-      display:block;width:100%;max-width:900px;margin:16px auto 10px;padding:16px 18px;
-      border:none;border-radius:18px;background:#e6b200;color:#111;font-weight:800;cursor:pointer;
-    }
+    .btn-cta{display:block;width:100%;max-width:900px;margin:16px auto 10px;padding:16px 18px;border:none;border-radius:18px;background:#e6b200;color:#111;font-weight:800;cursor:pointer}
     .flex-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
     .btn-sec{background:#ddd;color:#111;border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
     .btn-exit{display:inline-block;margin:8px auto 24px;padding:10px 18px;background:#e53935;color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer}
     .btn-back{background:#ddd;color:#111;border:none;border-radius:12px;padding:10px 18px;font-weight:800;cursor:pointer}
     .hidden{display:none!important}
-
-    /* Selects */
-    select {
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: #fff url('data:image/svg+xml;utf8,<svg fill="%23000" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polygon points="5,8 10,13 15,8"/></svg>') no-repeat right 12px center;
-      background-size: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 10px 36px 10px 12px;
-      font-size: 16px;
-      font-weight: 600;
-      color: #222;
-      cursor: pointer;
-      transition: border-color .2s;
-    }
-    select:hover { border-color: #999; }
-    select:disabled { background-color: #f8f8f8; color: #888; }
-
-    /* Linha “Você já enviou X artes...” (aparece só no Envio) */
-    .envio-arts-info{
-      max-width:900px;
-      margin:10px auto 0;
-      text-align:center;
-      font-weight:800;
-      font-size:14.5px;
-      color:#222;
-    }
-
-    /* ===== Modal Telefone ===== */
+    select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background:#fff url('data:image/svg+xml;utf8,<svg fill="%23000" height="20" width="20" xmlns="http://www.w3.org/2000/svg"><polygon points="5,8 10,13 15,8"/></svg>') no-repeat right 12px center;background-size:12px;border:1px solid #ccc;border-radius:10px;padding:10px 36px 10px 12px;font-size:16px;font-weight:600;color:#222;cursor:pointer;transition:border-color .2s}
+    select:hover{border-color:#999}
+    select:disabled{background-color:#f8f8f8;color:#888}
+    .envio-arts-info{max-width:900px;margin:10px auto 0;text-align:center;font-weight:800;font-size:14.5px;color:#222}
     .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.45);z-index:9999}
     .modal.show{display:grid}
     .modal-card{width:min(480px,92vw);background:#fff;border-radius:14px;padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.2)}
@@ -134,21 +94,8 @@
     .small-hint{font-size:12px;color:#666;text-align:center;margin-top:6px}
     .topbar-phone{font-weight:600;font-size:14px;margin-left:6px}
     .topbar-phone a{color:#000;text-decoration:underline;cursor:pointer}
-
-    /* Selo “ao vivo” */
-    .live-badge{
-      display:none;
-      width:max-content;
-      margin:0 auto 10px;
-      padding:6px 14px;
-      background:#c9f96a;
-      color:#1a1a1a;
-      border-radius:8px;
-      font-weight:800;
-    }
-    .box-feedback.is-live{
-      box-shadow:0 0 0 3px rgba(114,210,0,.25), 0 8px 24px rgba(0,0,0,.06);
-    }
+    .live-badge{display:none;width:max-content;margin:0 auto 10px;padding:6px 14px;background:#c9f96a;color:#1a1a1a;border-radius:8px;font-weight:800}
+    .box-feedback.is-live{box-shadow:0 0 0 3px rgba(114,210,0,.25), 0 8px 24px rgba(0,0,0,.06)}
   </style>
 </head>
 <body>
@@ -192,19 +139,9 @@
 
       <div class="links-uteis" style="text-align:center; margin-top:25px;">
         <strong>Links Úteis:</strong><br>
-        <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">
-          💬 Grupo dos alunos no WhatsApp
-        </a>
+        <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:8px; color:#075e54; font-weight:600; text-decoration:none;">💬 Grupo dos alunos no WhatsApp</a>
         <br>
-        <a href="https://discord.gg/Fjxw7kYMfk"
-          target="_blank"
-          rel="noopener noreferrer"
-          style="display:inline-block; margin-top:8px; color:#5A0E71; font-weight:600; text-decoration:none;">
-          🎨 Servidor dos alunos no Discord
-        </a>
+        <a href="https://discord.gg/Fjxw7kYMfk" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:8px; color:#5A0E71; font-weight:600; text-decoration:none;">🎨 Servidor dos alunos no Discord</a>
       </div>
 
       <br>
@@ -339,6 +276,28 @@ function setLiveMode(on){
   if (title)      title.style.display = on ? "none" : "";
   if (rowDiaHora) rowDiaHora.style.display = on ? "none" : "";
 }
+
+/* 👉 helper novo: sempre reconstrói os spans e popula dia/hora */
+function renderDiaHoraFromFeedback(fb){
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
+  if (!rowDiaHora) return;
+  if (!rowDiaHora.dataset.tpl) {
+    // guarda o HTML padrão caso tenha sido substituído por texto “Aguarde…”
+    rowDiaHora.dataset.tpl = '<strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong>';
+  }
+  rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
+  rowDiaHora.style.display = "";
+
+  const diaEl = qs("#fbDiaTxt");
+  const horEl = qs("#fbHoraTxt");
+  if (fb.dia){ diaEl.textContent = fb.dia; diaEl.style.display = "inline"; }
+  if (fb.hora){
+    horEl.textContent = (fb.dia ? " • " : "") + fb.hora;
+    horEl.style.display = "inline";
+  }
+}
+
+/* estado “espera próxima data” */
 function renderFeedbackWaitingUI(){
   const title = qs("#fbTitulo");
   const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
@@ -357,6 +316,7 @@ function renderFeedbackWaitingUI(){
   if (rowInfo){ rowInfo.textContent = ""; rowInfo.style.display = "none"; }
   if (linkEl){ linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
 }
+
 function weekdayPtToIndex(dia){
   const map = { domingo:0, dom:0, "domingo.":0,
     segunda:1, "segunda-feira":1, seg:1,
@@ -394,21 +354,21 @@ function buildThisWeekOccurrenceISO(dia, hora){
   t.setHours(hh, mm, 0, 0);
   return t.toISOString();
 }
+
+/* 👉 reescrita para não derrubar o conteúdo quando há data/hora */
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
   const hasDate = !!(fb.dia && fb.hora);
-  const hasAnyDetail = !!(fb.professor || fb.senha || fb.info || fb.link || fb.aulaGravada);
 
-  const title = qs("#fbTitulo");
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
-
-  if (!hasDate || !hasAnyDetail){
+  // sem data/hora → modo espera
+  if (!hasDate){
     setLiveMode(false);
     renderFeedbackWaitingUI();
     __wasLive = false;
     return;
   }
 
+  // temos data/hora → calcula janelas
   const thisISO = buildThisWeekOccurrenceISO(fb.dia, fb.hora);
   const nextISO = buildNextOccurrenceISO(fb.dia, fb.hora);
   if (!thisISO || !nextISO){
@@ -428,31 +388,31 @@ function updateLiveBadgeFromBootstrap(){
     const upd = new Date(fb.atualizadoEm).getTime();
     if (!Number.isNaN(upd) && now < Math.max(upd, thisStart)){
       setLiveMode(false);
-      if (title) title.style.display = "";
-      if (rowDiaHora) rowDiaHora.style.display = "";
+      renderFeedbackWaitingUI();
       __wasLive = false;
       return;
     }
   }
 
   if (now >= thisStart && now <= thisEnd){
+    // durante a live
     setLiveMode(true);
-    if (title) title.style.display = "none";
-    if (rowDiaHora) rowDiaHora.style.display = "none";
+    renderDiaHoraFromFeedback(fb);
     __wasLive = true;
     return;
   }
 
   if (now > thisEnd && now < nextStart){
+    // depois da live atual e antes da próxima → mostra a próxima (não “Aguarde”)
     setLiveMode(false);
-    renderFeedbackWaitingUI();
+    renderDiaHoraFromFeedback(fb);
     __wasLive = false;
     return;
   }
 
+  // estado normal (antes da live)
   setLiveMode(false);
-  if (title) title.style.display = "";
-  if (rowDiaHora) rowDiaHora.style.display = "";
+  renderDiaHoraFromFeedback(fb);
   __wasLive = false;
 }
 
@@ -678,21 +638,7 @@ async function carregarBootstrap(curso, email){
       setLiveMode(false);
     } else {
       if (hasDate){
-        rowDiaHora.innerHTML = rowDiaHora.dataset.tpl;
-        rowDiaHora.style.display = "";
-        if (fb.dia){
-          qs("#fbDiaTxt").textContent = fb.dia;
-          qs("#fbDiaTxt").style.display = "inline";
-        } else {
-          qs("#fbDiaTxt").style.display = "none";
-        }
-        if (fb.hora){
-          const sep = (fb.dia ? " • " : "");
-          qs("#fbHoraTxt").textContent = sep + fb.hora;
-          qs("#fbHoraTxt").style.display = "inline";
-        } else {
-          qs("#fbHoraTxt").style.display = "none";
-        }
+        renderDiaHoraFromFeedback(fb);
       } else {
         rowDiaHora.textContent = "";
         rowDiaHora.style.display = "none";
@@ -925,12 +871,10 @@ async function enviarExercicio(){
     fd.append("modulo", modulo);
     fd.append("aula",   aula);
     fd.append("descricao", desc);
-    // manda os arquivos como JSON em uma única chave (Apps Script lerá como string)
     fd.append("files", JSON.stringify(files));
 
     const r = await fetch(API_URL, { method: "POST", body: fd });
 
-    // valida resposta HTTP e JSON
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
 
     let d;
@@ -1021,4 +965,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
-
