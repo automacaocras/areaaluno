@@ -109,25 +109,23 @@
 
   /* ====== TABELA (somente leitura) ====== */
   .table-wrap{
-    overflow-x:auto;               /* scroll horizontal só aqui */
-    overflow-y:visible;            /* deixa a página rolar verticalmente */
+    overflow-x:auto;
+    overflow-y:visible;
     -webkit-overflow-scrolling:touch;
     max-width:100%;
     border:1px solid #eee;
     border-radius:12px;
   }
-  /* IMPORTANTE: layout auto para não encolher tudo */
   #exTable{
     border-collapse:collapse;
-    table-layout:auto;             /* ⬅ deixa cada coluna decidir a largura pelo conteúdo */
-    width:max-content;             /* ⬅ tabela pode ser maior que o card (scroll fica no wrap) */
-    min-width:760px;               /* opcional: largura mínima confortável */
+    table-layout:auto;
+    width:max-content;
+    min-width:760px;
   }
   #exTable th, #exTable td { border-bottom:1px solid #eee; padding:10px; text-align:left; font-size:14px; vertical-align:top; }
   #exTable th { position:sticky; top:0; background:#fff; z-index:1; }
   #exTable a { word-break:break-all }
 
-  /* células com ellipsis (usadas em Descrição/Links) */
   .cell-clip{
     display:block;
     max-width: 280px;
@@ -143,7 +141,6 @@
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
 
-  /* popover com o texto completo */
   .preview-pop{
     position: fixed;
     z-index: 9999;
@@ -168,7 +165,6 @@
   }
   .small-muted{color:#555;font-size:14px}
 
-  /* ===== Overlay global ===== */
   #global-loading {
     position: fixed;
     inset: 0;
@@ -189,14 +185,11 @@
     box-shadow: 0 8px 24px rgba(0,0,0,0.20);
   }
 
-  /* aproxima o texto "Aula gravada" do botão laranja apenas nesse caso */
   .band + .gravada-info { margin-top: 6px; }
 
-  /* ====== Overrides específicos do Portal do Professor ====== */
   #prof-exercicios { margin-left:auto; margin-right:auto; }
   #prof-exercicios .table-wrap { margin: 0 auto; max-width: 100%; }
 
-  /* ===== Mobile tuning: “tudo um pouco menor” ===== */
   @media (max-width:480px){
     .wrap{ margin:16px auto; }
     .panel{ padding:14px; }
@@ -216,8 +209,8 @@
     <section id="home">
 
       <h2 style="text-align:center;margin:8px 0 6px">Área do professor</h2>
-<br><br>
-      <!-- CONFIRMAÇÕES -->
+      <br><br>
+
       <p id="nextLive" class="next-live hidden">
         <strong>Próximo evento ao vivo:</strong><br>
         <span id="nextLiveText">—</span><br>
@@ -234,7 +227,7 @@
         <a id="gravadaHref" href="#" target="_blank" rel="noopener"></a>
       </p>
 
-      <!-- ====== Exercícios enviados (somente leitura) ====== -->
+      <!-- Exercícios enviados (somente leitura) -->
       <section id="prof-exercicios" class="panel" style="max-width:1100px">
         <h3 style="margin-top:0">Exercícios para feedback:</h3>
 
@@ -250,11 +243,12 @@
           <div class="small-muted" id="exTotalText">Total 0 exercícios</div>
         </div>
       </section>
-<br>
+
+      <br>
+
       <section class="panel" id="linksPanel">
         <h3>Links Úteis:</h3>
         <div class="links-box">
-      
           <a href="https://drive.google.com/drive/folders/1WLXyVj5PXzm1ZOaCjWLvUctu_aoYohUV"
              target="_blank" rel="noopener">Pasta Central do Drive</a>
           <a href="https://chat.whatsapp.com/JCnc5OfSkXVJyKB5uDQk81?mode=wwt"
@@ -275,9 +269,9 @@
       <div class="field"><textarea id="fInfo"  placeholder="Info"></textarea></div>
 
       <button id="btnEnviarLive" class="btn-primary" data-busy>Atualizar</button>
-     <p style="text-align:center;">
-  Apenas atualize as informações após o evento ao vivo anterior ter sido finalizado.
-</p>
+      <p style="text-align:center;">
+        Apenas atualize as informações após o evento ao vivo anterior ter sido finalizado.
+      </p>
       <button id="btnVoltar1" class="btn-neutral" type="button" data-busy>Voltar</button>
     </section>
 
@@ -340,45 +334,39 @@
     return { link, hora, dia };
   }
 
-function renderNextLive(src){
-  const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
+  function renderNextLive(src){
+    const box = qs('#nextLive'), txt = qs('#nextLiveText'), a = qs('#nextLiveHref');
 
-  const dia  = String(src?.dia || '').trim();
-  const hora = String(src?.hora || '').trim();
-  const prof = String(src?.professor || '').trim();   // ← sem fallback
-  const link = String(src?.link || '').trim();
+    const dia  = String(src?.dia || '').trim();
+    const hora = String(src?.hora || '').trim();
+    const prof = String(src?.professor || '').trim();
+    const link = String(src?.link || '').trim();
 
-  const parts = [];
-  if (dia)  parts.push(dia);
-  if (hora) parts.push(hora);
+    const parts = [];
+    if (dia)  parts.push(dia);
+    if (hora) parts.push(hora);
 
-  // só mostra "com <prof>" se houver dia ou hora + professor na planilha
-  let texto = parts.join(', ');
-  if (texto && prof) texto += ' com ' + prof;
+    let texto = parts.join(', ');
+    if (texto && prof) texto += ' com ' + prof;
 
-  const hasText = !!texto;
-  const hasLink = !!link;
+    const hasText = !!texto;
+    const hasLink = !!link;
 
-  txt.textContent = hasText ? texto : '—';
+    txt.textContent = hasText ? texto : '—';
 
-  if (hasLink){
-    a.textContent = link;
-    a.href = link;
-    a.classList.remove('hidden');
-  } else {
-    a.textContent = '';
-    a.removeAttribute('href');
-    a.classList.add('hidden');
+    if (hasLink){
+      a.textContent = link;
+      a.href = link;
+      a.classList.remove('hidden');
+    } else {
+      a.textContent = '';
+      a.removeAttribute('href');
+      a.classList.add('hidden');
+    }
+
+    box.classList.toggle('hidden', !(hasText || hasLink));
   }
 
-  // se não houver nada, esconde o bloco
-  box.classList.toggle('hidden', !(hasText || hasLink));
-}
-
-
-
-
-  
   function renderGravada(src){
     const p = qs('#gravadaInfo'), a = qs('#gravadaHref'), url = String(src?.aulaGravada || '').trim();
     if (url){ a.textContent = url; a.href = url; p.classList.remove('hidden'); }
@@ -404,25 +392,21 @@ function renderNextLive(src){
     const table = document.getElementById("exTable");
     if (!table || !headers || !headers.length) return;
 
-    // encontra a coluna "Descrição" (qualquer variação)
     const descIndex = headers.findIndex(h => /descr/i.test(String(h)));
     if (descIndex === -1) return;
 
-    // remove colgroup anterior
     const old = table.querySelector("colgroup");
     if (old) old.remove();
 
-    // escolhe a largura conforme viewport
     const isMobile = window.matchMedia("(max-width: 480px)").matches;
     const width = isMobile ? mobileWidth : desktopWidth;
 
-    // cria colgroup e aplica a largura apenas na coluna de descrição
     const cg = document.createElement("colgroup");
     headers.forEach((_, i) => {
       const col = document.createElement("col");
       if (i === descIndex){
         col.style.width = width;
-        col.style.minWidth = width; // garante recorte/scroll consistente
+        col.style.minWidth = width;
         col.style.maxWidth = width;
       }
       cg.appendChild(col);
@@ -437,7 +421,6 @@ function renderNextLive(src){
 
     function show(e){
       const clip = e.currentTarget;
-      // só abre se estiver realmente cortado
       if (clip.scrollWidth <= clip.clientWidth) return;
       if (pop) pop.remove();
       pop = document.createElement('div');
@@ -464,37 +447,34 @@ function renderNextLive(src){
       el.addEventListener('mouseenter', show);
       el.addEventListener('mousemove', position);
       el.addEventListener('mouseleave', hide);
-      el.addEventListener('click', show); // mobile
+      el.addEventListener('click', show);
     });
     document.addEventListener('touchstart', () => { if (pop) { pop.remove(); pop=null; } }, {passive:true});
   }
 
   // ====== Exercícios – carregar tudo (sem paginação) ======
-  const PAGE_SIZE = 100000; // “ilimitado” para trazer tudo
+  const PAGE_SIZE = 100000;
 
   function isLinkCol(h){
-  return /\blink/i.test(String(h || "")); // "Link", "Link img 1", etc.
-}
-function linkLabelFromHeader(h){
-  const m = String(h || "").match(/\d+/);
-  return m ? `Envio ${m[0]}` : "Envio";
-}
-// Mantém a URL como <a>, mas mostra "Envio N" nas colunas de link
-function renderCellHTML(header, value){
-  const s = String(value || "").trim();
-  if (!s) return "";
-  if (isLinkCol(header) && /^https?:\/\//i.test(s)){
-    const label = linkLabelFromHeader(header);
-    return `<a href="${s}" target="_blank" rel="noopener">${label}</a>`;
+    return /\blink/i.test(String(h || ""));
   }
-  if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
-  return s;
-}
-// Só a coluna "Descrição" recebe ellipsis
-function needsClip(h){
-  return /descr/i.test(String(h || ""));
-}
-
+  function linkLabelFromHeader(h){
+    const m = String(h || "").match(/\d+/);
+    return m ? `Envio ${m[0]}` : "Envio";
+  }
+  function renderCellHTML(header, value){
+    const s = String(value || "").trim();
+    if (!s) return "";
+    if (isLinkCol(header) && /^https?:\/\//i.test(s)){
+      const label = linkLabelFromHeader(header);
+      return `<a href="${s}" target="_blank" rel="noopener">${label}</a>`;
+    }
+    if (/^https?:\/\//i.test(s)) return `<a href="${s}" target="_blank" rel="noopener">${s}</a>`;
+    return s;
+  }
+  function needsClip(h){
+    return /descr/i.test(String(h || ""));
+  }
 
   async function fetchExercisesPreview() {
     try{
@@ -506,11 +486,11 @@ function needsClip(h){
         limit:  PAGE_SIZE,
         offset: 0
       });
-      const r = await fetch(`${API_URL}?${params.toString()}`, {cache:'no-store'});
+      const r = await fetch(`${API_URL}?${params.toString()}`, { cache:'no-store' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);            /* ✅ */
       const d = await r.json();
       if (!d.ok) throw new Error(d.message || "Falha ao listar exercícios.");
 
-      // cabeçalho
       const thead = document.querySelector("#exTable thead");
       thead.innerHTML = "";
       const trh = document.createElement("tr");
@@ -521,14 +501,11 @@ function needsClip(h){
       });
       thead.appendChild(trh);
 
-      // salva headers em cache para reapply no resize
       if (!bootstrap) bootstrap = {};
       bootstrap.headersCache = d.headers || [];
 
-      // 👉 ajusta só a coluna "Descrição"
       setDescricaoWidth(bootstrap.headersCache);
 
-      // corpo
       const tbody = document.querySelector("#exTable tbody");
       tbody.innerHTML = "";
       (d.rows || []).forEach(row => {
@@ -536,22 +513,18 @@ function needsClip(h){
         (d.headers || []).forEach(h => {
           const td = document.createElement("td");
           const html = renderCellHTML(h, row[h]);
-td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
-
+          td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
           tr.appendChild(td);
         });
         tbody.appendChild(tr);
       });
 
-      // ativa popover nas células clipadas
       attachOverflowPreview();
 
-      // total (texto embaixo)
       const total = d.totalRows || 0;
       const label = total === 1 ? "exercício" : "exercícios";
       document.getElementById("exTotalText").textContent = `Total ${total} ${label}`;
 
-      // vazio
       if ((d.rows || []).length === 0) {
         const tr = document.createElement("tr");
         const td = document.createElement("td");
@@ -581,7 +554,8 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
     }
 
     setLoading(true, "Carregando painel…");
-    const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, {cache:'no-store'});
+    const resp = await fetch(`${API_URL}?action=portalBootstrap&curso=${encodeURIComponent(sessao.curso)}&email=${encodeURIComponent(sessao.email)}`, { cache:'no-store' });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);       /* ✅ */
     bootstrap = await resp.json();
     setLoading(false);
 
@@ -598,7 +572,6 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
       renderGravada(bootstrap.feedback);
     }
 
-    // botões
     qs('#btnAbrirLive').addEventListener('click', () => { hide(qs('#home')); show(qs('#formLive')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnAbrirGrav').addEventListener('click', () => { hide(qs('#home')); show(qs('#formGrav')); window.scrollTo({top:0,behavior:'smooth'}); });
     qs('#btnVoltar1').addEventListener('click', goHome);
@@ -610,10 +583,8 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
 
     document.getElementById("exAtualizar").addEventListener("click", fetchExercisesPreview);
 
-    // primeira carga da tabela
     fetchExercisesPreview();
 
-    // reaplica a largura da Descrição em resize/orientação (usando headers em cache)
     window.addEventListener("resize", () => setDescricaoWidth( (bootstrap?.headersCache || []) ));
 
     ['#fLink','#fHora','#fDia'].forEach(clearInvalidOnInput);
@@ -637,19 +608,21 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
     const ok = validateLiveForm();
     if (!ok) return;
 
-    const body = {
+    const body = new URLSearchParams({
       action: 'updateFeedbackLive',
-      curso: sessao.curso,
-      email: sessao.email,
-      link:  qs('#fLink').value.trim(),
-      senha: qs('#fSenha').value.trim(),
-      hora:  qs('#fHora').value.trim(),
-      dia:   qs('#fDia').value.trim(),
-      info:  qs('#fInfo').value.trim()
-    };
+      curso:  sessao.curso,
+      email:  sessao.email,
+      link:   qs('#fLink').value.trim(),
+      senha:  qs('#fSenha').value.trim(),
+      hora:   qs('#fHora').value.trim(),
+      dia:    qs('#fDia').value.trim(),
+      info:   qs('#fInfo').value.trim()
+    });
+
     setLoading(true, "Atualizando informações…");
     try{
-      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const r = await fetch(API_URL, { method:'POST', body });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);            /* ✅ */
       const data = await r.json();
       if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
 
@@ -670,15 +643,17 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
   }
 
   async function enviarGrav(){
-    const body = {
+    const body = new URLSearchParams({
       action: 'updateGravada',
-      curso: sessao.curso,
-      email: sessao.email,
+      curso:  sessao.curso,
+      email:  sessao.email,
       aulaGravada: qs('#fGravada').value.trim()
-    };
+    });
+
     setLoading(true, "Atualizando aula gravada…");
     try{
-      const r = await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=UTF-8'}, body: JSON.stringify(body) });
+      const r = await fetch(API_URL, { method:'POST', body });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);            /* ✅ */
       const data = await r.json();
       if (!data || data.ok !== true) throw new Error((data && (data.message || data.error)) || 'Falha ao atualizar');
 
@@ -709,7 +684,3 @@ td.innerHTML = needsClip(h) ? wrapClipHTML(html) : html;
 </div>
 </body>
 </html>
-
-
-
-
