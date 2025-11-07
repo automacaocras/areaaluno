@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
-<title>Portal do Aluno – Editora Crás</title>
+<title>Área dos artistas – Portal do aluno</title>
 <meta name="description" content="Acompanhe feedbacks, aulas gravadas e envios de exercícios.">
 
 <!-- Favicons -->
@@ -175,7 +175,7 @@
 
     // Popup “Esqueci a senha”
     function esqueciSenha(){
-      alert('Acesse a plataforma do seu curso e busque pela data que o adquiriu. Caso tenha sido em 22/12/2024" a senha será: 22122024');
+     alert('Acesse a plataforma do seu curso e busque pela data que o adquiriu. Caso tenha sido em 22/12/2024, a senha será: 22122024');
     }
 
     async function login() {
@@ -201,12 +201,18 @@
           senha
         });
 
-        const resp = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-          body
-        });
-        const data = await resp.json();
+   const resp = await fetch(API_URL, {
+  method: "POST",
+  body
+});
+
+// ✅ Verifica se a resposta veio realmente válida do servidor
+if (!resp.ok) {
+  throw new Error(`HTTP ${resp.status}`);
+}
+
+const data = await resp.json();
+
 
         if (data && data.allowed === true) {
           // detecta perfil com fallback
@@ -287,6 +293,7 @@
   </div>
 </body>
 </html>
+
 
 
 
