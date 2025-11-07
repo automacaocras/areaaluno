@@ -51,7 +51,6 @@
           return;
         }
 
-        // Hardening: remove querystring se alguém tentar injetar
         if (location.search) history.replaceState({}, "", location.pathname);
       } catch (e) {
         console.error(e);
@@ -136,24 +135,20 @@
     .topbar-phone{font-weight:600;font-size:14px;margin-left:6px}
     .topbar-phone a{color:#000;text-decoration:underline;cursor:pointer}
 
-/* Selo “ao vivo” */
-.live-badge{
-  display:none;                 /* fica oculto por padrão */
-  width:max-content;
-  margin:0 auto 10px;
-  padding:6px 14px;
-  background:#c9f96a;           /* verde claro */
-  color:#1a1a1a;
-  border-radius:8px;
-  font-weight:800;
-}
-
-/* opcional: dar um “realce” na caixa quando ao vivo */
-.box-feedback.is-live{
-  box-shadow:0 0 0 3px rgba(114,210,0,.25), 0 8px 24px rgba(0,0,0,.06);
-}
-
-    
+    /* Selo “ao vivo” */
+    .live-badge{
+      display:none;
+      width:max-content;
+      margin:0 auto 10px;
+      padding:6px 14px;
+      background:#c9f96a;
+      color:#1a1a1a;
+      border-radius:8px;
+      font-weight:800;
+    }
+    .box-feedback.is-live{
+      box-shadow:0 0 0 3px rgba(114,210,0,.25), 0 8px 24px rgba(0,0,0,.06);
+    }
   </style>
 </head>
 <body>
@@ -177,15 +172,11 @@
     <!-- DASHBOARD -->
     <section id="dashboard">
       <div class="box-feedback">
-
         <div id="liveBadge" class="live-badge">Estamos ao vivo!</div>
         <h3 id="fbTitulo">Próximo evento ao vivo:</h3>
         <p><strong id="fbDiaTxt" style="display:none"></strong><strong id="fbHoraTxt" style="display:none"></strong></p>
         <p>Professor: <strong id="fbProf">—</strong></p>
-
-        <!-- Link: só mostra quando tiver -->
         <p><a id="fbLink" href="#" target="_blank" rel="noopener" style="display:none">[link da aula]</a></p>
-
         <p>Senha: <strong id="fbSenha">—</strong></p>
         <p id="fbInfo" style="margin-top:10px;color:#333"></p>
       </div>
@@ -332,36 +323,31 @@ let sessao = null, bootstrap = null;
 
 const API_URL   = "https://script.google.com/macros/s/AKfycbwQ9utyV79uWjpVHuBRWbie_2kkgTX-lPBudob49WA2daqn5qdbdqyzhl3LqYC0y_fVuQ/exec";
 const MAX_FILES = 3;
-  // controle de transição "ao vivo" -> "aguarde"
 let __wasLive = false;
 
-/* --------- badge AO VIVO (independe da janela de envio) --------- */
+/* --------- badge AO VIVO --------- */
 function setLiveMode(on){
   const badge = qs("#liveBadge");
   const box   = qs(".box-feedback");
   const title = qs("#fbTitulo");
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // é o <p> que contém dia/hora
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
 
   if (!badge || !box) return;
-
-  // tarja e destaque da caixa
   badge.style.display = on ? "block" : "none";
   box.classList.toggle("is-live", !!on);
 
-  // enquanto AO VIVO: some com o título e com a linha do "próximo feedback"
   if (title)      title.style.display = on ? "none" : "";
   if (rowDiaHora) rowDiaHora.style.display = on ? "none" : "";
 }
-
 function renderFeedbackWaitingUI(){
   const title = qs("#fbTitulo");
-  const rowDiaHora = qs("#fbDiaTxt")?.parentElement; // <p> do dia/hora
+  const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
   const rowProf  = qs("#fbProf")?.parentElement;
   const rowSenha = qs("#fbSenha")?.parentElement;
   const rowInfo  = qs("#fbInfo");
   const linkEl   = qs("#fbLink");
 
-  if (title) title.style.display = "";               // mostra título
+  if (title) title.style.display = "";
   if (rowDiaHora){
     rowDiaHora.style.display = "";
     rowDiaHora.textContent = "Aguarde a próxima data";
@@ -371,8 +357,6 @@ function renderFeedbackWaitingUI(){
   if (rowInfo){ rowInfo.textContent = ""; rowInfo.style.display = "none"; }
   if (linkEl){ linkEl.removeAttribute("href"); linkEl.textContent = ""; linkEl.style.display = "none"; }
 }
-
-  
 function weekdayPtToIndex(dia){
   const map = { domingo:0, dom:0, "domingo.":0,
     segunda:1, "segunda-feira":1, seg:1,
@@ -384,7 +368,6 @@ function weekdayPtToIndex(dia){
   const k = String(dia||"").toLowerCase().trim();
   return (k in map) ? map[k] : null;
 }
-
 function buildNextOccurrenceISO(dia, hora){
   const [hh, mm] = String(hora||"").split(":").map(n=>parseInt(n,10));
   if (Number.isNaN(hh) || Number.isNaN(mm)) return null;
@@ -392,7 +375,6 @@ function buildNextOccurrenceISO(dia, hora){
   if (idx === null) return null;
 
   const now = new Date();
-  // ocorrência desta semana (pode ficar no passado se já passou hoje)
   const t = new Date(now);
   const delta = (idx - now.getDay() + 7) % 7;
   t.setDate(now.getDate() + delta);
@@ -406,17 +388,12 @@ function buildThisWeekOccurrenceISO(dia, hora){
   if (idx === null) return null;
 
   const now = new Date();
-  // última ocorrência no ciclo semanal (hoje, se for o mesmo dia)
   const t = new Date(now);
   const diff = (now.getDay() - idx + 7) % 7;
   t.setDate(now.getDate() - diff);
   t.setHours(hh, mm, 0, 0);
   return t.toISOString();
 }
-
-
-// Ajuste na regra do "ao vivo"
-
 function updateLiveBadgeFromBootstrap(){
   const fb = bootstrap?.feedback || {};
   const hasDate = !!(fb.dia && fb.hora);
@@ -425,7 +402,6 @@ function updateLiveBadgeFromBootstrap(){
   const title = qs("#fbTitulo");
   const rowDiaHora = qs("#fbDiaTxt")?.parentElement;
 
-  // Sem data/hora ou sem detalhes -> força UI "Aguarde a próxima data"
   if (!hasDate || !hasAnyDetail){
     setLiveMode(false);
     renderFeedbackWaitingUI();
@@ -448,12 +424,10 @@ function updateLiveBadgeFromBootstrap(){
   const nextStart = new Date(nextISO).getTime();
   const now       = Date.now();
 
-  // Só considera ao vivo após publicação/atualização do professor
   if (fb.atualizadoEm){
     const upd = new Date(fb.atualizadoEm).getTime();
     if (!Number.isNaN(upd) && now < Math.max(upd, thisStart)){
       setLiveMode(false);
-      // pré-live: mostra "Próximo ..." normal (dia/hora visíveis)
       if (title) title.style.display = "";
       if (rowDiaHora) rowDiaHora.style.display = "";
       __wasLive = false;
@@ -461,7 +435,6 @@ function updateLiveBadgeFromBootstrap(){
     }
   }
 
-  // Dentro da janela desta semana -> AO VIVO
   if (now >= thisStart && now <= thisEnd){
     setLiveMode(true);
     if (title) title.style.display = "none";
@@ -470,35 +443,30 @@ function updateLiveBadgeFromBootstrap(){
     return;
   }
 
-  // Terminou o evento desta semana e a próxima ainda não começou -> "Aguarde a próxima data"
   if (now > thisEnd && now < nextStart){
     setLiveMode(false);
-    renderFeedbackWaitingUI();   // limpa prof/link/senha e mostra a mensagem
+    renderFeedbackWaitingUI();
     __wasLive = false;
     return;
   }
 
-  // Caso contrário (pré-próximo evento) -> "Próximo ..." normal
   setLiveMode(false);
   if (title) title.style.display = "";
   if (rowDiaHora) rowDiaHora.style.display = "";
   __wasLive = false;
 }
 
-
-
-/* --------- UI do botão de envio (controlada por janela start/end) --------- */
+/* --------- UI do botão de envio --------- */
 function applyAllowUploadUI(){
   const btnEnvio  = qs("#btnAbrirEnvio");
   const prazoNote = qs("#prazoEnvioNote");
   if (!btnEnvio) return;
 
   if (!bootstrap?.allowUpload){
-    // ❌ Não usar disabled aqui, para continuar clicável
     btnEnvio.removeAttribute("disabled");
     btnEnvio.setAttribute("aria-disabled","true");
     btnEnvio.textContent = "Envio indisponível";
-    btnEnvio.style.opacity = ""; // deixa pro CSS cuidar
+    btnEnvio.style.opacity = "";
     if (prazoNote) prazoNote.style.display = "none";
   } else {
     btnEnvio.removeAttribute("aria-disabled");
@@ -518,7 +486,6 @@ function applyAllowUploadUI(){
   }
 }
 
-
 /* timers da janela (apenas para o botão) */
 const windowTimers = { start:null, end:null, poll:null };
 function clearWindowTimers(){
@@ -533,31 +500,22 @@ async function refreshBootstrap(){
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json() || {};
 
-    // garante objeto
     if (!bootstrap || typeof bootstrap !== "object") bootstrap = {};
-
-    // campos principais
     bootstrap.allowUpload = !!data.allowUpload;
     bootstrap.janela      = data.janela ?? null;
+    bootstrap.feedback    = (data.feedback && typeof data.feedback === "object") ? data.feedback : {};
 
-    // força {} quando feedback vier null/undefined/""
-    bootstrap.feedback = (data.feedback && typeof data.feedback === "object") ? data.feedback : {};
-
-    // tokens
     const t = Number(data.tokensRestantes);
     bootstrap.tokensRestantes = Number.isFinite(t) ? t : (bootstrap.tokensRestantes ?? 0);
     tokensRestantes = bootstrap.tokensRestantes;
 
-    // aplica UI
     applyAllowUploadUI();
     updateUIForTokens();
-    updateLiveBadgeFromBootstrap(); // recalcula tarja/estado do bloco
+    updateLiveBadgeFromBootstrap();
   } catch (e){
     console.error("refreshBootstrap() falhou:", e);
-    // silencioso para não incomodar o aluno
   }
 }
-
 function scheduleUploadWindow(){
   clearWindowTimers();
   const sISO = bootstrap?.janela?.startISO || null;
@@ -566,7 +524,7 @@ function scheduleUploadWindow(){
   if (!sISO || !eISO){
     bootstrap.allowUpload = false;
     applyAllowUploadUI();
-    updateLiveBadgeFromBootstrap(); // tarja é por fb.dia/hora
+    updateLiveBadgeFromBootstrap();
     return;
   }
 
@@ -574,7 +532,6 @@ function scheduleUploadWindow(){
   const start = new Date(sISO).getTime();
   const end   = new Date(eISO).getTime();
 
-  // só controla o botão
   bootstrap.allowUpload = (now >= start && now <= end);
   applyAllowUploadUI();
   updateLiveBadgeFromBootstrap();
@@ -664,7 +621,7 @@ function renderTopbarPhone(){
   qs("#linkEditarTel").onclick = (e)=>{ e.preventDefault(); showPhoneModal(); };
 }
 
-/* --------- Bootstrap inicial (CARREGA TUDO) --------- */
+/* --------- Bootstrap inicial --------- */
 async function carregarBootstrap(curso, email){
   try{
     const r = await fetch(
@@ -675,28 +632,23 @@ async function carregarBootstrap(curso, email){
 
     if(!bootstrap || bootstrap.allowed !== true){ location.replace("index.html"); return; }
 
-    // Topbar + nome
     const fullName = bootstrap.nome || "";
     const first = getFirstName(fullName) || (sessao.email?.split("@")[0] || "aluno");
     qs(".topbar").textContent = `[${first}]`;
     renderNomeAluno(first);
 
-    // Logo
     const logo = qs("#cursoLogo");
     if (bootstrap.logoUrl){ logo.src = bootstrap.logoUrl; logo.style.display = "block"; }
 
-    // Telefone e flag
     telefone = String(bootstrap.telefone || "");
     primeiroLogin = !!bootstrap.primeiroLogin;
     renderTopbarPhone();
 
-    // Dias restantes
     const dr = +bootstrap.diasRestantes || 0;
     qs("#diasRestantes").textContent = dr > 0
       ? (dr === 1 ? `[${dr}] dia restante de acesso ao curso.` : `[${dr}] dias restantes de acesso ao curso.`)
       : "Acesso expirado.";
 
-    // Cupom
     if (dr <= 30 && bootstrap.desconto?.cupom){
       qs("#cupomBox").style.display = "block";
       qs("#cupomCod").textContent = bootstrap.desconto.cupom;
@@ -704,7 +656,6 @@ async function carregarBootstrap(curso, email){
       qs("#cupomLink").href = bootstrap.desconto.link;
     }
 
-    // Próximo feedback / aula gravada
     const fb = bootstrap.feedback || {};
     const rowDiaHora = qs("#fbDiaTxt").parentElement;
     const rowProf    = qs("#fbProf").parentElement;
@@ -750,17 +701,16 @@ async function carregarBootstrap(curso, email){
       if (fb.professor){ qs("#fbProf").textContent = fb.professor; rowProf.style.display = ""; }
       else { rowProf.style.display = "none"; }
 
-if (fb.link){
-  linkEl.href = fb.link;
-  linkEl.textContent = "Entrar na aula";
-  linkEl.setAttribute("aria-label", "Entrar na aula ao vivo");
-  linkEl.style.display = "inline";
-} else {
-  linkEl.removeAttribute("href");
-  linkEl.textContent = "";
-  linkEl.style.display = "none";
-}
-
+      if (fb.link){
+        linkEl.href = fb.link;
+        linkEl.textContent = "Entrar na aula";
+        linkEl.setAttribute("aria-label", "Entrar na aula ao vivo");
+        linkEl.style.display = "inline";
+      } else {
+        linkEl.removeAttribute("href");
+        linkEl.textContent = "";
+        linkEl.style.display = "none";
+      }
 
       if (fb.senha){ qs("#fbSenha").textContent = fb.senha; rowSenha.style.display = ""; }
       else { rowSenha.style.display = "none"; }
@@ -769,10 +719,8 @@ if (fb.link){
       else { rowInfo.textContent = ""; rowInfo.style.display = "none"; }
     }
 
-    // Atualiza o selo verde conforme os dados atuais
     updateLiveBadgeFromBootstrap();
 
-    // Card da gravada
     const gravCard = qs("#gravadaCard");
     const gravURL  = String(fb.aulaGravada || "").trim();
     if (gravURL){
@@ -785,15 +733,12 @@ if (fb.link){
       if (gravCard) gravCard.style.display = "none";
     }
 
-    // Tokens e artes
     tokensRestantes = Number(bootstrap.tokensRestantes ?? 0);
     artesTotal = Number(bootstrap.artesTotal || 0);
 
-    // Aplica UI do botão com base na janela atual + agenda viradas
     applyAllowUploadUI();
     scheduleUploadWindow();
 
-    // Se primeiro login/sem telefone, pedir agora
     if (!primeiroLogin || !telefone){
       setTimeout(showPhoneModal, 300);
     }
@@ -804,7 +749,6 @@ if (fb.link){
   alert("❌ Falha ao carregar seus dados. Tente novamente.\n\nDetalhes técnicos: " + (e?.message || e));
   location.replace("index.html");
 }
-
 }
 
 /* --------- Abertura de envio / listas --------- */
@@ -837,6 +781,7 @@ async function carregarModulos(){
   selA.disabled=true;selA.innerHTML="<option>Selecione o módulo primeiro</option>";
   try{
     const r=await fetch(`${API_URL}?action=listModules&curso=${encodeURIComponent(sessao.curso)}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d=await r.json(); const mods=Array.isArray(d.modulos)?d.modulos:[];
     sel.innerHTML="<option value=''>Selecione o módulo</option>";
     mods.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sel.appendChild(o);});
@@ -849,6 +794,7 @@ async function carregarAulas(){
   sel.innerHTML="<option>Carregando aulas...</option>";
   try{
     const r=await fetch(`${API_URL}?action=listLessons&curso=${encodeURIComponent(sessao.curso)}&modulo=${encodeURIComponent(modulo)}`);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const d=await r.json(); const aulas=Array.isArray(d.aulas)?d.aulas:[];
     sel.innerHTML="<option value=''>Selecione a aula</option>";
     aulas.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;sel.appendChild(o);});
@@ -941,7 +887,6 @@ async function enviarExercicio(){
     return;
   }
 
-  // trava também aqui, caso a janela tenha fechado milissegundos antes de clicar
   if (!bootstrap.allowUpload){
     alert("O envio só fica disponível após a nova data de feedback ser publicada.");
     return;
@@ -950,7 +895,6 @@ async function enviarExercicio(){
   const chosen = qsa("#filesWrap input[type='file']").map(i => i.files[0]).filter(Boolean);
   if(!chosen.length) return alert("Envie pelo menos uma imagem.");
   if(chosen.length > MAX_FILES) return alert(`Máximo de ${MAX_FILES} imagens.`);
-
   if(chosen.length > tokensRestantes){
     const resto = tokensRestantes;
     alert(resto > 0
@@ -973,19 +917,25 @@ async function enviarExercicio(){
       files.push({name:f.name,type:f.type,content:base64});
     }
 
-    const body = {
-      action:"uploadExercise",
-      curso:sessao.curso,
-      email:sessao.email,
-      nome:bootstrap.nome,
-      modulo,
-      aula,
-      descricao:desc,
-      files
-    };
+    const fd = new FormData();
+    fd.append("action","uploadExercise");
+    fd.append("curso",  sessao.curso);
+    fd.append("email",  sessao.email);
+    fd.append("nome",   bootstrap.nome || "");
+    fd.append("modulo", modulo);
+    fd.append("aula",   aula);
+    fd.append("descricao", desc);
+    // manda os arquivos como JSON em uma única chave (Apps Script lerá como string)
+    fd.append("files", JSON.stringify(files));
 
-    const r = await fetch(API_URL,{method:"POST",body:JSON.stringify(body)});
-    const d = await r.json();
+    const r = await fetch(API_URL, { method: "POST", body: fd });
+
+    // valida resposta HTTP e JSON
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+    let d;
+    try { d = await r.json(); }
+    catch { throw new Error("Resposta inválida do servidor (não-JSON)."); }
 
     if(!d.ok){
       if (d.message === "limit_exceeded"){
@@ -1050,8 +1000,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refreshBootstrap(); });
 
   updateAddBtnVisibility();
-
-  // tarja “ao vivo” com avaliação fina
   updateLiveBadgeFromBootstrap();
   setInterval(updateLiveBadgeFromBootstrap, 15_000);
 });
@@ -1073,9 +1021,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   </div>
 </body>
 </html>
-
-
-
-
-
-
